@@ -1,5 +1,39 @@
 # Frontend: Componentes e Padrões
 
+## Base UI
+
+- `shadcn/ui` ativo no repo
+- registry: `frontend/components.json`
+- base real: `frontend/@/components/ui/`
+- wrappers e componentes de produto: `frontend/src/components/`
+- ao validar UI, seguir o alias `@/components/ui/*`, não assumir que a base está em `frontend/src/components/ui/*`
+
+Base atual em uso:
+
+- `button.tsx`
+- `input.tsx`
+- `select.tsx`
+- `textarea.tsx`
+- `dialog.tsx`
+- `sheet.tsx`
+- `dropdown-menu.tsx`
+- `card.tsx`
+- `badge.tsx`
+- `form.tsx`
+- `popover.tsx`
+- `calendar.tsx`
+- `label.tsx`
+
+Wrappers locais relevantes:
+
+- `frontend/src/components/ui/Badge.tsx`
+- `frontend/src/components/ui/PasswordInput.tsx`
+- `frontend/src/components/ui/DateTimePicker.tsx`
+- `frontend/src/components/ui/MapModal.tsx`
+- `frontend/src/components/ui/LocationPicker.tsx`
+- `frontend/src/components/ui/BackButton.tsx`
+- `frontend/src/components/ui/AuthImage.tsx`
+
 ## Modal — ESC + backdrop
 
 ```tsx

@@ -1,5 +1,11 @@
 # Frontend: Auth
 
+## Contexto de UI
+
+- auth usa base `shadcn/ui` via `@/components/ui/*`
+- componentes de auth ficam em `frontend/src/components/auth/`
+- ao validar regressão, conferir `frontend/@/components/ui/` antes de concluir que um componente base não existe
+
 ## Constantes — utils/constants.ts
 
 ```typescript
