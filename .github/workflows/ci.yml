@@ -10,9 +10,35 @@ on:
       - main
 
 jobs:
+  validate-branch-name:
+    name: Validate Branch Name
+    runs-on: self-hosted
+
+    steps:
+      - name: Skip validation outside pull requests
+        if: github.event_name != 'pull_request'
+        run: echo "Branch name validation applies only to pull_request events."
+
+      - name: Enforce feat/* or fix/* source branches
+        if: github.event_name == 'pull_request'
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          case "$BRANCH_NAME" in
+            feat/*|fix/*)
+              echo "Accepted branch: $BRANCH_NAME"
+              ;;
+            *)
+              echo "Invalid branch name: $BRANCH_NAME"
+              echo "Use feat/* or fix/* before opening a PR."
+              exit 1
+              ;;
+          esac
+
   lint-backend:
     name: Lint Backend
     runs-on: self-hosted
+    needs: [validate-branch-name]
 
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +62,7 @@ jobs:
   lint-frontend:
     name: Lint Frontend
     runs-on: self-hosted
+    needs: [validate-branch-name]
 
     steps:
       - uses: actions/checkout@v4
@@ -60,6 +87,7 @@ jobs:
   security-backend:
     name: Security Backend
     runs-on: self-hosted
+    needs: [validate-branch-name]
 
     steps:
       - uses: actions/checkout@v4
@@ -83,6 +111,7 @@ jobs:
   security-frontend:
     name: Security Frontend
     runs-on: self-hosted
+    needs: [validate-branch-name]
 
     steps:
       - uses: actions/checkout@v4
