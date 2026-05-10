@@ -1,8 +1,12 @@
-name: Deploy to Production
+name: CI
 
 on:
   push:
     branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
       - main
 
 jobs:
@@ -150,8 +154,7 @@ jobs:
           REDIS_URL: redis://localhost:6379/1
           CELERY_BROKER_URL: redis://localhost:6379/2
           DJANGO_SECRET_KEY: "!hriv@)lzy!os=edv@tf%z#@t@k#k@gp&t4ym&8&3sgrl-#jq9"
-        run: |
-          python -m pytest --tb=short -q --cov=. --cov-report=term-missing --cov-fail-under=60
+        run: python -m pytest --tb=short -q --cov=. --cov-report=term-missing --cov-fail-under=60
 
   test-frontend:
     name: Test Frontend
@@ -173,21 +176,3 @@ jobs:
       - name: Run tests
         working-directory: frontend
         run: npm run test
-
-  deploy:
-    name: Deploy to Contabo
-    runs-on: self-hosted
-    needs: [test-backend, test-frontend]
-
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /root/bora-ali
-            git pull origin main
-            docker compose -f docker-compose.prod.yml up -d --build
-            docker image prune -f
