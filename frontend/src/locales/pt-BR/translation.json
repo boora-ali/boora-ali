@@ -70,10 +70,14 @@
   "pwa": {
     "install": "Instalar app",
     "installAria": "Instalar o Bora Ali no dispositivo",
+    "iosButton": "Como instalar no iPhone",
+    "iosButtonAria": "Ver como instalar o Bora Ali no iPhone ou iPad",
     "iosTitle": "Instalar no iPhone ou iPad",
-    "iosDescription": "No Safari, a instalação usa o menu do navegador em vez de um prompt nativo.",
+    "iosDescription": "No iPhone e iPad, o Bora Ali é instalado pelo menu do navegador. O botão abaixo abre as instruções.",
+    "iosStepSafari": "Se você estiver em outro navegador, abra este site no Safari primeiro.",
     "iosStepShare": "Toque no botão Compartilhar na barra do Safari.",
-    "iosStepAdd": "Escolha 'Adicionar à Tela de Início' e confirme."
+    "iosStepAdd": "Escolha 'Adicionar à Tela de Início' e confirme.",
+    "iosStepFallback": "Se 'Adicionar à Tela de Início' não aparecer, role a lista, toque em 'Editar Ações' e habilite essa opção."
   },
   "account": {
     "title": "Conta",

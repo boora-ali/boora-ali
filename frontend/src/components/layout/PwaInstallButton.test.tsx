@@ -36,8 +36,10 @@ test("opens install instructions on iOS", async () => {
 
   render(<PwaInstallButton />);
 
-  await user.click(screen.getByRole("button", { name: /install bora ali on this device/i }));
+  await user.click(screen.getByRole("button", { name: /see how to install bora ali on iphone or ipad/i }));
 
   expect(screen.getByRole("heading", { name: /install on iphone or ipad/i })).toBeInTheDocument();
-  expect(screen.getByText(/add to home screen/i)).toBeInTheDocument();
+  expect(screen.getByText(/choose 'add to home screen' and confirm/i)).toBeInTheDocument();
+  expect(screen.getByText(/edit actions/i)).toBeInTheDocument();
+  expect(screen.getByText(/open this site in safari first/i)).toBeInTheDocument();
 });

@@ -70,10 +70,14 @@
   "pwa": {
     "install": "Install app",
     "installAria": "Install Bora Ali on this device",
+    "iosButton": "How to install on iPhone",
+    "iosButtonAria": "See how to install Bora Ali on iPhone or iPad",
     "iosTitle": "Install on iPhone or iPad",
-    "iosDescription": "On Safari, installation uses the browser menu instead of a native prompt.",
+    "iosDescription": "On iPhone and iPad, Bora Ali is installed from the browser menu. This button opens the instructions.",
+    "iosStepSafari": "If you are using another browser, open this site in Safari first.",
     "iosStepShare": "Tap the Share button in Safari's toolbar.",
-    "iosStepAdd": "Choose 'Add to Home Screen' and confirm."
+    "iosStepAdd": "Choose 'Add to Home Screen' and confirm.",
+    "iosStepFallback": "If 'Add to Home Screen' is missing, scroll the list, tap 'Edit Actions', and enable it there."
   },
   "account": {
     "title": "Account",
