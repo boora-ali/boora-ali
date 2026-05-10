@@ -50,13 +50,12 @@ npm run dev  # http://localhost:5173
   - `AWS_S3_ENDPOINT_URL=https://...r2.cloudflarestorage.com`
   - credenciais reais do bucket no Cloudflare R2
 
-**Preprod (ngrok)**: substitua `https://your-ngrok-domain.ngrok-free.dev` em `PUBLIC_BASE_URL`, `AWS_S3_PUBLIC_URL`, `AWS_S3_PUBLIC_ENDPOINT`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS` e `VITE_PUBLIC_BASE_URL`. Suba Caddy + ngrok:
+**Preprod**: hoje não existe mais fluxo documentado com `ngrok` dentro do repo. Se precisar expor preprod temporariamente, trate isso como operação externa ao projeto e documente o comando real usado antes de reintroduzir esse passo aqui.
 
-```bash
-caddy run --config Caddyfile
-NGROK_DOMAIN=your-domain.ngrok-free.dev scripts/ngrok-preprod.sh
-npm run dev:preprod  # frontend
-```
+O fluxo ativo de desenvolvimento continua sendo:
+- backend local em `localhost:8000`
+- frontend Vite em `localhost:5173`
+- stack Docker completa em `localhost`
 
 ## Comandos úteis
 
@@ -106,6 +105,15 @@ Checklist mínimo de produção:
 - `PUBLIC_BASE_URL` com domínio final
 
 Gunicorn: 3 workers, 2 threads, gthread. Config em `Dockerfile CMD` e `docker-compose.yml` (manter em sincronia). `entrypoint.sh` roda `migrate` + `compilemessages` antes de iniciar (PID 1).
+
+## Guia operacional do repo
+
+Separação de responsabilidade:
+
+- [SKILLS.md](/home/smovisk/PycharmProjects/boora-ali/SKILLS.md): contrato curto para a LLM
+- `skills/templates/`: padrões/snippets por domínio
+- `docs/development.md`: runbook humano de setup, execução e operação local
+- `docs/testing.md`: runbook humano de testes
 
 ## Observability (OpenTelemetry)
 

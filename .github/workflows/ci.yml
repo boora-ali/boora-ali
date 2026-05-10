@@ -11,17 +11,17 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Enforce feat/* or fix/* source branches
+      - name: Enforce allowed source branch prefixes
         env:
           BRANCH_NAME: ${{ github.head_ref }}
         run: |
           case "$BRANCH_NAME" in
-            feat/*|fix/*)
+            feat/*|fix/*|dependabot/*)
               echo "Accepted branch: $BRANCH_NAME"
               ;;
             *)
               echo "Invalid branch name: $BRANCH_NAME"
-              echo "Use feat/* or fix/* before opening a PR to dev."
+              echo "Use feat/*, fix/*, or dependabot/* before opening a PR to dev."
               exit 1
               ;;
           esac
