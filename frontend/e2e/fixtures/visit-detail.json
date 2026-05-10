@@ -1,0 +1,27 @@
+{
+  "public_id": "visit-1",
+  "place": 1,
+  "visited_at": "2026-04-29T18:30:00Z",
+  "environment_rating": 8,
+  "service_rating": 7,
+  "overall_rating": 7,
+  "would_return": true,
+  "general_notes": "Visit notes that need to wrap naturally on mobile.",
+  "photo": "",
+  "items": [
+    {
+      "public_id": "item-1",
+      "visit": 1,
+      "name": "Extremely long item name that should wrap before it collides with the price",
+      "type": "dessert",
+      "rating": 8,
+      "price": "39.90",
+      "would_order_again": true,
+      "notes": "Good texture and portion size.",
+      "created_at": "2026-04-29T18:30:00Z",
+      "updated_at": "2026-04-29T18:30:00Z"
+    }
+  ],
+  "created_at": "2026-04-29T18:30:00Z",
+  "updated_at": "2026-04-29T18:30:00Z"
+}

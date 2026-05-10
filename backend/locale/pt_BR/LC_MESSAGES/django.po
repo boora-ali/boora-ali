@@ -1,0 +1,141 @@
+# Bora Ali - Portuguese (Brazil) translations
+# Copyright (C) 2026
+msgid ""
+msgstr ""
+"Project-Id-Version: Bora Ali 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-30 00:00+0000\n"
+"PO-Revision-Date: 2026-04-30 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Portuguese (Brazil)\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Passwords do not match."
+msgstr "As senhas não coincidem."
+
+msgid "Invalid token."
+msgstr "Token inválido."
+
+msgid "Want to visit"
+msgstr "Quero visitar"
+
+msgid "Visited"
+msgstr "Visitado"
+
+msgid "Favorite"
+msgstr "Favorito"
+
+msgid "Would not return"
+msgstr "Não voltaria"
+
+msgid "Sweet"
+msgstr "Doce"
+
+msgid "Savory"
+msgstr "Salgado"
+
+msgid "Drink"
+msgstr "Bebida"
+
+msgid "Coffee"
+msgstr "Café"
+
+msgid "Juice"
+msgstr "Suco"
+
+msgid "Dessert"
+msgstr "Sobremesa"
+
+msgid "Other"
+msgstr "Outro"
+
+msgid "place"
+msgstr "lugar"
+
+msgid "places"
+msgstr "lugares"
+
+msgid "visit"
+msgstr "visita"
+
+msgid "visits"
+msgstr "visitas"
+
+msgid "visit item"
+msgstr "item de visita"
+
+msgid "visit items"
+msgstr "itens de visita"
+
+msgid "name"
+msgstr "nome"
+
+msgid "category"
+msgstr "categoria"
+
+msgid "address"
+msgstr "endereço"
+
+msgid "status"
+msgstr "status"
+
+msgid "notes"
+msgstr "notas"
+
+msgid "cover photo"
+msgstr "foto de capa"
+
+msgid "user"
+msgstr "usuário"
+
+msgid "created at"
+msgstr "criado em"
+
+msgid "updated at"
+msgstr "atualizado em"
+
+msgid "visited at"
+msgstr "visitado em"
+
+msgid "environment rating"
+msgstr "avaliação do ambiente"
+
+msgid "service rating"
+msgstr "avaliação do serviço"
+
+msgid "overall rating"
+msgstr "avaliação geral"
+
+msgid "would return"
+msgstr "voltaria"
+
+msgid "general notes"
+msgstr "notas gerais"
+
+msgid "photo"
+msgstr "foto"
+
+msgid "photo path"
+msgstr "caminho da foto"
+
+msgid "type"
+msgstr "tipo"
+
+msgid "rating"
+msgstr "avaliação"
+
+msgid "price"
+msgstr "preço"
+
+msgid "would order again"
+msgstr "pediria novamente"
+
+msgid "instagram url"
+msgstr "URL do Instagram"
+
+msgid "maps url"
+msgstr "URL do Maps"

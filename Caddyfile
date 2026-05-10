@@ -1,0 +1,25 @@
+:8080 {
+    handle /bora-ali/* {
+        reverse_proxy localhost:8081
+    }
+
+    handle /api/* {
+        reverse_proxy localhost:8000
+    }
+
+    handle /admin/* {
+        reverse_proxy localhost:8000
+    }
+
+    handle /media/* {
+        reverse_proxy localhost:8000
+    }
+
+    handle /static/* {
+        reverse_proxy localhost:8000
+    }
+
+    handle {
+        reverse_proxy localhost:5173
+    }
+}

@@ -1,0 +1,24 @@
+.claude
+.remember
+*/.env
+*/node_modules
+docs/superpowers/
+*/__pycache__
+*/.pytest_cache
+.codex
+frontend/.env
+.env.dev
+.env.prod
+.worktrees/
+__pycache__
+.env
+load-tests/
+security/
+.ruff_cache
+
+# Terraform
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfvars
+**/*.tfvars.json

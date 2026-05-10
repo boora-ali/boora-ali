@@ -1,0 +1,289 @@
+{
+  "auth": {
+    "login": {
+      "title": "Bora Ali",
+      "subtitle": "Seu diário gastronômico pessoal",
+      "username": "Usuário",
+      "password": "Senha",
+      "submit": "Entrar",
+      "google": "Entrar com Google",
+      "googleLoading": "Carregando Google...",
+      "googleError": "Falha ao iniciar login com Google",
+      "error": "Credenciais inválidas",
+      "noAccount": "Não tem conta?",
+      "register": "Criar conta",
+      "sessionExpired": "Sua sessão foi encerrada porque você entrou em outro dispositivo.",
+      "emptyFields": "Preencha todos os campos",
+      "turnstileRequired": "Conclua a verificação de segurança.",
+      "turnstileUnavailable": "A verificação de segurança não carregou. Recarregue a página e tente novamente."
+    },
+    "turnstile": {
+      "loading": "Carregando verificação de segurança...",
+      "error": "Não foi possível carregar a verificação de segurança."
+    },
+    "register": {
+      "title": "Criar conta",
+      "username": "Usuário",
+      "email": "E-mail",
+      "password": "Senha",
+      "confirmPassword": "Confirmar senha",
+      "submit": "Criar conta",
+      "error": "Não foi possível criar a conta. Verifique os dados.",
+      "hasAccount": "Já tem conta?",
+      "signIn": "Entrar",
+      "turnstileRequired": "Conclua a verificação de segurança.",
+      "turnstileUnavailable": "A verificação de segurança não carregou. Recarregue a página e tente novamente.",
+      "termsAccept": "Li e aceito os",
+      "termsLink": "Termos de Uso",
+      "termsAnd": "e a",
+      "privacyLink": "Política de Privacidade",
+      "termsRequired": "Você precisa aceitar os Termos de Uso e a Política de Privacidade para criar uma conta."
+    }
+  },
+  "places": {
+    "title": "Bora Ali",
+    "subtitle": "Seu diário gastronômico pessoal",
+    "new": "+ Novo lugar",
+    "logout": "Sair",
+    "search": "Buscar lugares...",
+    "all": "Todos",
+    "error": "Falha ao carregar lugares",
+    "page": "Página {{page}}",
+    "previous": "← Anterior",
+    "next": "Próxima →",
+    "map": {
+      "title": "Mapa dos lugares",
+      "count": "{{count}} pins cadastrados",
+      "ariaLabel": "Mapa dos lugares cadastrados",
+      "showPlace": "Mostrar {{name}} no mapa",
+      "openPlace": "Abrir {{name}}",
+      "closePlace": "Fechar lugar selecionado",
+      "zoomIn": "Aproximar mapa",
+      "zoomOut": "Afastar mapa",
+      "empty": "Nenhum lugar com localização cadastrada."
+    },
+    "empty": {
+      "title": "Nenhum lugar ainda",
+      "description": "Adicione seu primeiro lugar para começar."
+    }
+  },
+  "pwa": {
+    "install": "Instalar app",
+    "installAria": "Instalar o Bora Ali no dispositivo",
+    "iosTitle": "Instalar no iPhone ou iPad",
+    "iosDescription": "No Safari, a instalação usa o menu do navegador em vez de um prompt nativo.",
+    "iosStepShare": "Toque no botão Compartilhar na barra do Safari.",
+    "iosStepAdd": "Escolha 'Adicionar à Tela de Início' e confirme."
+  },
+  "account": {
+    "title": "Conta",
+    "subtitle": "Atualize seus dados, foto de perfil e senha.",
+    "photoAlt": "Foto de perfil",
+    "menu": {
+      "open": "Abrir menu da conta",
+      "account": "Conta",
+      "language": "Idioma",
+      "logout": "Sair"
+    },
+    "profile": {
+      "name": "Nome",
+      "nickname": "Apelido",
+      "username": "Usuário",
+      "email": "E-mail",
+      "changePhoto": "Trocar foto",
+      "save": "Salvar perfil",
+      "saved": "Perfil atualizado.",
+      "error": "Não foi possível atualizar o perfil."
+    },
+    "password": {
+      "title": "Trocar senha",
+      "current": "Senha atual",
+      "next": "Nova senha",
+      "confirm": "Confirmar nova senha",
+      "save": "Salvar senha",
+      "saved": "Senha atualizada.",
+      "error": "Não foi possível trocar a senha."
+    }
+  },
+  "placeDetail": {
+    "edit": "Editar",
+    "delete": "Excluir",
+    "deleteConfirmTitle": "Excluir lugar",
+    "deleteConfirmMessage": "Tem certeza que deseja excluir este lugar?",
+    "deleteConfirmRestore": "Você pode restaurá-lo pela lixeira.",
+    "instagram": "Instagram",
+    "maps": "Maps",
+    "coordsPending": "Coordenadas sendo processadas, o mapa aparecerá em breve.",
+    "coordsFailed": "Não foi possível extrair coordenadas. Edite o lugar e salve novamente para tentar de novo.",
+    "consumables": {
+      "title": "Resumo de consumíveis",
+      "items": "Itens registrados",
+      "avgRating": "Avaliação média",
+      "totalSpent": "Total gasto",
+      "empty": "Adicione uma visita com itens consumidos para acompanhar preços e avaliações."
+    },
+    "visits": {
+      "title": "Visitas ({{count}})",
+      "add": "+ Adicionar visita",
+      "empty": "Nenhuma visita ainda."
+    }
+  },
+  "placeForm": {
+    "name": "Nome",
+    "category": "Categoria",
+    "address": "Endereço",
+    "instagram": "URL do Instagram",
+    "maps": "URL do Maps",
+    "location": "Localização",
+    "locationHint": "Clique para colocar o pin. Arraste o mapa para ajustar a região.",
+    "clearLocation": "Remover localização",
+    "useCurrentLocation": "Usar minha localização",
+    "locating": "Localizando...",
+    "geolocationUnavailable": "Geolocalização não disponível neste dispositivo.",
+    "geolocationDenied": "Permissão de localização negada.",
+    "geolocationError": "Não foi possível obter a localização atual.",
+    "zoomIn": "Aproximar mapa",
+    "zoomOut": "Afastar mapa",
+    "geocoding": "Buscando endereço...",
+    "extractCoords": "Extrair localização de URL completa do Maps",
+    "saveAndResolveMapsUrl": "Salvar e processar URL curta do Maps",
+    "saveAndResolveMapsUrlHint": "URLs curtas do Maps são salvas e processadas imediatamente.",
+    "coordsNotFound": "Coordenadas não encontradas nesta URL. Use a URL completa do Google Maps.",
+    "status": "Status",
+    "notes": "Notas",
+    "coverPhoto": "Foto de capa",
+    "changePhoto": "Trocar foto",
+    "uploadPhoto": "Enviar foto",
+    "removePhoto": "Remover",
+    "save": "Salvar",
+    "nameRequired": "Nome é obrigatório",
+    "saveError": "Falha ao salvar lugar",
+    "coverPreviewAlt": "Prévia da capa"
+  },
+  "newPlace": {
+    "title": "Novo lugar"
+  },
+  "editPlace": {
+    "title": "Editar lugar",
+    "coordsPendingTitle": "Coordenadas em processamento",
+    "coordsPending": "Fique nesta tela. Quando a extração terminar, você será levado ao lugar automaticamente.",
+    "coordsFailedTitle": "Falha ao processar coordenadas",
+    "coordsFailed": "A URL do Maps não pôde ser resolvida agora. Ajuste a URL e salve novamente."
+  },
+  "visitForm": {
+    "visitedAt": "Visitado em",
+    "environmentRating": "Ambiente (0-10)",
+    "serviceRating": "Atendimento (0-10)",
+    "overallRating": "Geral (0-10)",
+    "wouldReturn": "Voltaria",
+    "generalNotes": "Observações gerais",
+    "photo": "Foto",
+    "visitPhotoAlt": "Foto da visita",
+    "consumedTitle": "Comidas e bebidas consumidas",
+    "consumedDescription": "Adicione cada consumível com preço, avaliação e comentários.",
+    "addConsumable": "+ Adicionar consumível",
+    "save": "Salvar visita",
+    "saveError": "Falha ao salvar visita",
+    "newTitle": "Nova visita",
+    "editTitle": "Editar visita",
+    "loadError": "Falha ao carregar a visita"
+  },
+  "status": {
+    "want_to_visit": "Quero visitar",
+    "visited": "Visitado",
+    "favorite": "Favorito",
+    "would_not_return": "Não volto"
+  },
+  "itemType": {
+    "sweet": "Doce",
+    "savory": "Salgado",
+    "drink": "Bebida",
+    "coffee": "Café",
+    "juice": "Suco",
+    "dessert": "Sobremesa",
+    "other": "Outro"
+  },
+  "visitItemForm": {
+    "name": "Nome do item",
+    "namePlaceholder": "Croissant, espresso, suco...",
+    "type": "Tipo",
+    "rating": "Avaliação (0-10)",
+    "price": "Preço (R$)",
+    "notes": "Comentários",
+    "notesPlaceholder": "Textura, sabor, tamanho...",
+    "wouldOrderAgain": "Pediria novamente",
+    "photo": "Foto",
+    "itemPhotoAlt": "Foto do item",
+    "nameRequired": "Nome do item é obrigatório",
+    "addTitle": "Adicionar item",
+    "editTitle": "Editar item"
+  },
+  "visitCard": {
+    "wouldReturn": "Voltaria",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "deleteConfirmTitle": "Excluir visita",
+    "deleteConfirmMessage": "Tem certeza que deseja excluir esta visita? Esta ação não pode ser desfeita.",
+    "overall": "Geral",
+    "environment": "Amb",
+    "service": "Atendimento",
+    "noPhoto": "Sem foto",
+    "details": "Ver consumíveis",
+    "hideDetails": "Ocultar consumíveis",
+    "empty": "Nenhum consumível registrado.",
+    "loadError": "Falha ao carregar os consumíveis"
+  },
+  "dateTimePicker": {
+    "timeCaption": "Horário",
+    "placeholder": "Selecione data e horário"
+  },
+  "languageToggle": {
+    "ariaLabel": "Trocar idioma"
+  },
+  "darkMode": {
+    "toggle": "Alternar modo escuro",
+    "label": "Modo escuro"
+  },
+  "footer": {
+    "terms": "Termos de Uso",
+    "privacy": "Política de Privacidade",
+    "contact": "Contato",
+    "rights": "Todos os direitos reservados."
+  },
+  "common": {
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "open": "Abrir",
+    "back": "Voltar",
+    "home": "Início",
+    "na": "N/A",
+    "photo": "Foto"
+  },
+  "upload": {
+    "invalidType": "Formato não permitido. Use JPEG, PNG ou WEBP.",
+    "tooLarge": "Imagem muito grande. Tamanho máximo: 10 MB."
+  },
+  "trash": {
+    "title": "Lixeira",
+    "subtitle": "Lugares excluídos. Restaure para recuperá-los.",
+    "error": "Falha ao carregar a lixeira",
+    "restore": "Restaurar",
+    "restoring": "Restaurando...",
+    "deletedAt": "Excluído em {{date}}",
+    "empty": {
+      "title": "Lixeira vazia",
+      "description": "Nenhum lugar excluído."
+    }
+  },
+  "termsModal": {
+    "title": "Termos de Uso",
+    "description": "Para continuar usando o Bora Ali, leia e aceite nossos Termos de Uso e Política de Privacidade. Você pode abrir os documentos abaixo antes de aceitar.",
+    "accept": "Li e aceito os Termos de Uso e a Política de Privacidade",
+    "disclaimer": "Ao aceitar, você confirma que tem pelo menos 13 anos de idade.",
+    "error": "Não foi possível registrar o aceite. Tente novamente."
+  }
+}

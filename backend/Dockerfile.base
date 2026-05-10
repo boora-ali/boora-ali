@@ -1,0 +1,39 @@
+FROM python:3.12-alpine AS builder
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_COMPILE=0
+
+RUN apk add --no-cache build-base libffi-dev musl-dev postgresql-dev
+
+COPY requirements.txt .
+RUN python -m venv /venv && \
+    /venv/bin/pip install --upgrade pip --quiet && \
+    /venv/bin/pip install gunicorn --quiet && \
+    /venv/bin/pip install -r requirements.txt --quiet && \
+    find /venv -name "*.pyc" -delete && \
+    find /venv -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true && \
+    find /venv -name "tests" -type d -exec rm -rf {} + 2>/dev/null || true && \
+    find /venv -name "test_*.py" -delete && \
+    find /venv -name "*.dist-info" -exec rm -rf {} + 2>/dev/null || true && \
+    find /venv -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+
+
+FROM python:3.12-alpine
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/venv/bin:$PATH" \
+    DJANGO_SETTINGS_MODULE=config.settings
+
+RUN apk add --no-cache postgresql-libs
+
+COPY --from=builder /venv /venv
+
+RUN addgroup -S app && adduser -S app -G app
+USER app

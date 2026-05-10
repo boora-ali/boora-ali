@@ -1,0 +1,286 @@
+{
+  "auth": {
+    "login": {
+      "title": "Bora Ali",
+      "subtitle": "Your personal food diary",
+      "username": "Username",
+      "password": "Password",
+      "submit": "Sign in",
+      "google": "Sign in with Google",
+      "googleLoading": "Loading Google...",
+      "googleError": "Failed to start Google sign-in",
+      "error": "Invalid credentials",
+      "noAccount": "No account?",
+      "register": "Register",
+      "sessionExpired": "Your session was ended because you signed in on another device.",
+      "emptyFields": "Fill in all fields",
+      "turnstileRequired": "Complete the security check.",
+      "turnstileUnavailable": "The security check did not load. Reload the page and try again."
+    },
+    "turnstile": {
+      "loading": "Loading security check...",
+      "error": "Could not load the security check."
+    },
+    "register": {
+      "title": "Create account",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Create account",
+      "error": "Could not register. Check your details.",
+      "hasAccount": "Have an account?",
+      "signIn": "Sign in",
+      "turnstileRequired": "Complete the security check.",
+      "turnstileUnavailable": "The security check did not load. Reload the page and try again.",
+      "termsAccept": "I have read and accept the",
+      "termsLink": "Terms of Use",
+      "termsAnd": "and the",
+      "privacyLink": "Privacy Policy",
+      "termsRequired": "You must accept the Terms of Use and Privacy Policy to create an account."
+    }
+  },
+  "places": {
+    "title": "Bora Ali",
+    "subtitle": "Your personal food diary",
+    "new": "+ New place",
+    "logout": "Sign out",
+    "search": "Search places...",
+    "all": "All",
+    "error": "Failed to load places",
+    "page": "Page {{page}}",
+    "previous": "← Previous",
+    "next": "Next →",
+    "map": {
+      "title": "Places map",
+      "count": "{{count}} saved pins",
+      "ariaLabel": "Map of saved places",
+      "showPlace": "Show {{name}} on map",
+      "openPlace": "Open {{name}}",
+      "closePlace": "Close selected place",
+      "zoomIn": "Zoom map in",
+      "zoomOut": "Zoom map out",
+      "empty": "No places have a saved location."
+    },
+    "empty": {
+      "title": "No places yet",
+      "description": "Add your first place to get started."
+    }
+  },
+  "pwa": {
+    "install": "Install app",
+    "installAria": "Install Bora Ali on this device",
+    "iosTitle": "Install on iPhone or iPad",
+    "iosDescription": "On Safari, installation uses the browser menu instead of a native prompt.",
+    "iosStepShare": "Tap the Share button in Safari's toolbar.",
+    "iosStepAdd": "Choose 'Add to Home Screen' and confirm."
+  },
+  "account": {
+    "title": "Account",
+    "subtitle": "Update your details, profile photo, and password.",
+    "photoAlt": "Profile photo",
+    "menu": {
+      "open": "Open account menu",
+      "account": "Account",
+      "language": "Language",
+      "logout": "Sign out"
+    },
+    "profile": {
+      "name": "Name",
+      "nickname": "Nickname",
+      "username": "Username",
+      "email": "Email",
+      "changePhoto": "Change photo",
+      "save": "Save profile",
+      "saved": "Profile updated.",
+      "error": "Could not update profile."
+    },
+    "password": {
+      "title": "Change password",
+      "current": "Current password",
+      "next": "New password",
+      "confirm": "Confirm new password",
+      "save": "Save password",
+      "saved": "Password updated.",
+      "error": "Could not change password."
+    }
+  },
+  "placeDetail": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete place",
+    "deleteConfirmMessage": "Are you sure you want to delete this place?",
+    "deleteConfirmRestore": "You can restore it from the trash.",
+    "instagram": "Instagram",
+    "maps": "Maps",
+    "coordsPending": "Coordinates are being processed. The map will appear soon.",
+    "coordsFailed": "Could not extract coordinates. Edit the place and save again to retry.",
+    "consumables": {
+      "title": "Consumables summary",
+      "items": "Items logged",
+      "avgRating": "Average item rating",
+      "totalSpent": "Total spent",
+      "empty": "Add a visit with food or drinks consumed to track prices and average ratings."
+    },
+    "visits": {
+      "title": "Visits ({{count}})",
+      "add": "+ Add visit",
+      "empty": "No visits yet."
+    }
+  },
+  "placeForm": {
+    "name": "Name",
+    "category": "Category",
+    "address": "Address",
+    "instagram": "Instagram URL",
+    "maps": "Maps URL",
+    "location": "Location",
+    "locationHint": "Click to place the pin. Drag the map to adjust the area.",
+    "clearLocation": "Remove location",
+    "useCurrentLocation": "Use my location",
+    "locating": "Locating...",
+    "geolocationUnavailable": "Geolocation is not available on this device.",
+    "geolocationDenied": "Location permission denied.",
+    "geolocationError": "Could not get your current location.",
+    "zoomIn": "Zoom map in",
+    "zoomOut": "Zoom map out",
+    "geocoding": "Looking up address...",
+    "extractCoords": "Extract location from full Maps URL",
+    "saveAndResolveMapsUrl": "Save and process short Maps URL",
+    "saveAndResolveMapsUrlHint": "Short Maps URLs are saved and processed immediately.",
+    "coordsNotFound": "Coordinates not found in this URL. Use the full Google Maps URL.",
+    "status": "Status",
+    "notes": "Notes",
+    "coverPhoto": "Cover photo",
+    "changePhoto": "Change photo",
+    "uploadPhoto": "Upload photo",
+    "removePhoto": "Remove",
+    "save": "Save",
+    "nameRequired": "Name is required",
+    "saveError": "Failed to save place",
+    "coverPreviewAlt": "Cover preview"
+  },
+  "newPlace": {
+    "title": "New place"
+  },
+  "editPlace": {
+    "title": "Edit place",
+    "coordsPendingTitle": "Coordinates processing",
+    "coordsPending": "Stay on this screen. When extraction finishes, you will be taken to the place automatically.",
+    "coordsFailedTitle": "Failed to process coordinates",
+    "coordsFailed": "The Maps URL could not be resolved right now. Adjust the URL and save again."
+  },
+  "visitForm": {
+    "visitedAt": "Visited at",
+    "environmentRating": "Environment (0-10)",
+    "serviceRating": "Service (0-10)",
+    "overallRating": "Overall (0-10)",
+    "wouldReturn": "Would return",
+    "generalNotes": "General notes",
+    "photo": "Photo",
+    "visitPhotoAlt": "Visit photo",
+    "consumedTitle": "Food and drinks consumed",
+    "consumedDescription": "Add each consumable with price, rating, and comments.",
+    "addConsumable": "+ Add consumable",
+    "save": "Save visit",
+    "saveError": "Failed to save visit",
+    "newTitle": "New visit",
+    "editTitle": "Edit visit",
+    "loadError": "Failed to load the visit"
+  },
+  "status": {
+    "want_to_visit": "Want to visit",
+    "visited": "Visited",
+    "favorite": "Favorite",
+    "would_not_return": "Would not return"
+  },
+  "itemType": {
+    "sweet": "Sweet",
+    "savory": "Savory",
+    "drink": "Drink",
+    "coffee": "Coffee",
+    "juice": "Juice",
+    "dessert": "Dessert",
+    "other": "Other"
+  },
+  "visitItemForm": {
+    "name": "Item name",
+    "namePlaceholder": "Croissant, espresso, juice...",
+    "type": "Type",
+    "rating": "Rating (0-10)",
+    "price": "Price",
+    "notes": "Comments",
+    "notesPlaceholder": "Texture, flavor, portion size...",
+    "wouldOrderAgain": "Would order again",
+    "photo": "Photo",
+    "itemPhotoAlt": "Item photo",
+    "addTitle": "Add item",
+    "editTitle": "Edit item"
+  },
+  "visitCard": {
+    "wouldReturn": "Would return",
+    "edit": "Edit",
+    "delete": "Delete",
+    "overall": "Overall",
+    "environment": "Env",
+    "service": "Service",
+    "noPhoto": "No photo",
+    "details": "View consumables",
+    "hideDetails": "Hide consumables",
+    "empty": "No consumables recorded.",
+    "loadError": "Failed to load consumables"
+  },
+  "dateTimePicker": {
+    "timeCaption": "Time",
+    "placeholder": "Select date and time"
+  },
+  "languageToggle": {
+    "ariaLabel": "Change language"
+  },
+  "darkMode": {
+    "toggle": "Toggle dark mode",
+    "label": "Dark mode"
+  },
+  "footer": {
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "contact": "Contact",
+    "rights": "All rights reserved."
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "open": "Open",
+    "back": "Back",
+    "home": "Home",
+    "na": "N/A",
+    "photo": "Photo"
+  },
+  "upload": {
+    "invalidType": "Format not allowed. Use JPEG, PNG or WEBP.",
+    "tooLarge": "Image too large. Maximum size: 10 MB."
+  },
+  "trash": {
+    "title": "Trash",
+    "subtitle": "Deleted places. Restore to recover them.",
+    "error": "Failed to load trash",
+    "restore": "Restore",
+    "restoring": "Restoring...",
+    "deletedAt": "Deleted on {{date}}",
+    "empty": {
+      "title": "Trash is empty",
+      "description": "No deleted places."
+    }
+  },
+  "termsModal": {
+    "title": "Terms of Use",
+    "description": "To continue using Bora Ali, please read and accept our Terms of Use and Privacy Policy. You can open the documents below before accepting.",
+    "accept": "I have read and accept the Terms of Use and Privacy Policy",
+    "disclaimer": "By accepting, you confirm that you are at least 13 years old.",
+    "error": "Could not record your acceptance. Please try again."
+  }
+}

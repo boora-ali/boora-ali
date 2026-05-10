@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - bora_ali_pgdata:/var/lib/postgresql/data
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+  storage:
+    image: ghcr.io/versity/versitygw:v1.4.1
+    restart: unless-stopped
+    ports:
+      - "8081:7070" # S3 API
+      - "8082:7071" # WebGUI
+    environment:
+      ROOT_ACCESS_KEY: ${VERSITYGW_ACCESS_KEY}
+      ROOT_SECRET_KEY: ${VERSITYGW_SECRET_KEY}
+
+      VGW_PORT: ":7070"
+      VGW_BACKEND: posix
+      VGW_BACKEND_ARGS: /data
+
+      VGW_WEBUI_PORT: ":7071"
+      VGW_WEBUI_NO_TLS: "true"
+
+      # Necessário para a WebGUI conversar com o endpoint S3
+      VGW_CORS_ALLOW_ORIGIN: "*"
+
+    volumes:
+      - bora_ali_storage:/data
+
+volumes:
+  bora_ali_pgdata:
+  bora_ali_storage:

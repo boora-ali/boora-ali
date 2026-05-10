@@ -1,0 +1,234 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bora_ali}
+      POSTGRES_USER: ${POSTGRES_USER:-bora}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bora}
+    volumes:
+      - bora_ali_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-bora} -d ${POSTGRES_DB:-bora_ali}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  storage:
+    image: ghcr.io/versity/versitygw:v1.4.1
+    restart: unless-stopped
+    env_file:
+      - .env.dev
+    environment:
+      ROOT_ACCESS_KEY: ${VERSITYGW_ACCESS_KEY:-minioadmin}
+      ROOT_SECRET_KEY: ${VERSITYGW_SECRET_KEY:-minioadmin}
+      VGW_PORT: ":7070"
+      VGW_BACKEND: posix
+      VGW_BACKEND_ARGS: /data
+      VGW_WEBUI_PORT: ":7071"
+      VGW_WEBUI_NO_TLS: "true"
+      VGW_CORS_ALLOW_ORIGIN: "*"
+    volumes:
+      - bora_ali_storage:/data
+    ports:
+      - "8081:7070" # S3 API (browser access para media)
+      - "8082:7071" # WebGUI
+    depends_on:
+      init-storage:
+        condition: service_completed_successfully
+
+  init-storage:
+    image: alpine:3.19
+    env_file:
+      - .env.dev
+    volumes:
+      - bora_ali_storage:/data
+    command: mkdir -p /data/${AWS_STORAGE_BUCKET_NAME:-bora-ali}
+
+  valkey:
+    image: valkey/valkey:9.0.3-alpine
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 128M
+    command: valkey-server --maxmemory 100mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.8"
+          memory: 3372M
+    env_file:
+      - .env.dev
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      AWS_S3_ENDPOINT_URL: http://storage:7070
+      AWS_ACCESS_KEY_ID: ${VERSITYGW_ACCESS_KEY:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${VERSITYGW_SECRET_KEY:-minioadmin}
+      OTEL_SERVICE_NAME: bora-ali
+      REDIS_URL: redis://valkey:6379/1
+      CELERY_BROKER_URL: redis://valkey:6379/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage:
+        condition: service_started
+      valkey:
+        condition: service_healthy
+    volumes:
+      - staticfiles:/app/staticfiles
+
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config inspect ping -d celery@$$HOSTNAME --timeout 5 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    env_file:
+      - .env.dev
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      AWS_S3_ENDPOINT_URL: http://storage:7070
+      AWS_ACCESS_KEY_ID: ${VERSITYGW_ACCESS_KEY:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${VERSITYGW_SECRET_KEY:-minioadmin}
+      OTEL_SERVICE_NAME: bora-ali
+      REDIS_URL: redis://valkey:6379/1
+      CELERY_BROKER_URL: redis://valkey:6379/2
+    command: celery -A config worker -l info -c 1 -Q default,celery
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage:
+        condition: service_started
+      valkey:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: "/api"
+        VITE_GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+      - staticfiles:/staticfiles:ro
+    depends_on:
+      - backend
+      - storage
+
+  zap-api-scan:
+    image: zaproxy/zap-stable
+    container_name: bora-ali-zap-api-scan
+    working_dir: /zap/wrk
+    command: >
+      zap-api-scan.py
+      -t http://frontend/api/schema/
+      -f openapi
+      -O http://frontend/api
+      -r /zap/wrk/zap-api-report.html
+      -J /zap/wrk/zap-api-report.json
+      -I
+    volumes:
+      - ./security/zap:/zap/wrk
+    depends_on:
+      - frontend
+      - backend
+    profiles:
+      - security
+
+  zap-api-auth-scan:
+    image: zaproxy/zap-stable
+    container_name: bora-ali-zap-api-auth-scan
+    working_dir: /zap/wrk
+    environment:
+      ZAP_USERNAME: ${ZAP_USERNAME:-zaptest}
+      ZAP_PASSWORD: ${ZAP_PASSWORD:-Strong-Pass1!}
+      ZAP_LOGIN_URL: http://frontend/api/auth/login/
+      ZAP_SCHEMA_URL: http://frontend/api/schema/
+      ZAP_REPORT_HTML: /zap/wrk/zap-api-auth-report.html
+      ZAP_REPORT_JSON: /zap/wrk/zap-api-auth-report.json
+    command: ["/bin/sh", "/zap/wrk/zap-auth-scan.sh"]
+    volumes:
+      - ./security/zap:/zap/wrk
+    depends_on:
+      - frontend
+      - backend
+    profiles:
+      - security
+
+  zap-baseline:
+    image: zaproxy/zap-stable
+    container_name: bora-ali-zap-baseline
+    working_dir: /zap/wrk
+    command: >
+      zap-baseline.py
+      -t http://frontend
+      -r /zap/wrk/zap-baseline-report.html
+      -J /zap/wrk/zap-baseline-report.json
+      -I
+    volumes:
+      - ./security/zap:/zap/wrk
+    depends_on:
+      - frontend
+    profiles:
+      - security
+
+  httpx-security:
+    image: python:3.12-slim
+    container_name: bora-ali-httpx-security
+    working_dir: /tests
+    volumes:
+      - ./security/httpx:/tests
+    environment:
+      BASE_URL: http://frontend
+      API_BASE_URL: http://frontend/api
+    command: >
+      sh -c "pip install -r requirements.txt && python run_tests.py"
+    depends_on:
+      - frontend
+      - backend
+    profiles:
+      - security
+
+volumes:
+  staticfiles:
+
+  bora_ali_pgdata:
+    external: true
+    name: backend_bora_ali_pgdata
+
+  bora_ali_storage:
+    external: true
+    name: backend_bora_ali_storage

@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /termos-de-uso
+Allow: /politica-de-privacidade
+
+Disallow: /places
+Disallow: /visits
+Disallow: /account
+Disallow: /login
+Disallow: /cadastro
+
+Sitemap: https://booraali.com.br/sitemap.xml

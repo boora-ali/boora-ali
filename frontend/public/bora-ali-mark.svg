@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Bora Ali</title>
+  <desc id="desc">Marca do Bora Ali com pin de localização e prato minimalista.</desc>
+  <path
+    fill="#ea1d2c"
+    d="M256 40c-76.8 0-139 62.2-139 139 0 94.2 139 293 139 293s139-198.8 139-293c0-76.8-62.2-139-139-139z"
+  />
+  <circle cx="256" cy="178" r="78" fill="#fff" />
+  <circle cx="256" cy="178" r="36" fill="#ea1d2c" />
+  <path
+    fill="#1f1f1f"
+    d="M205 246h102c4.4 0 8 3.6 8 8v18c0 4.4-3.6 8-8 8h-102c-4.4 0-8-3.6-8-8v-18c0-4.4 3.6-8 8-8z"
+  />
+</svg>

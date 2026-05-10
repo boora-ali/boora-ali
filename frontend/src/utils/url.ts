@@ -1,0 +1,70 @@
+export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const ALLOWED_IMAGE_ACCEPT = ALLOWED_IMAGE_TYPES.join(",");
+export const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+export type ImageValidationError = "type" | "size" | null;
+
+/**
+ * Valida tipo e tamanho de um arquivo antes do envio (validação de UX).
+ * A validação real de segurança ocorre no backend.
+ */
+export function validateImageFile(file: File): ImageValidationError {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type as typeof ALLOWED_IMAGE_TYPES[number])) {
+    return "type";
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return "size";
+  }
+  return null;
+}
+
+const SAFE_SCHEMES = new Set(["http:", "https:"]);
+const GOOGLE_MAPS_COORD_PATTERNS = [
+  /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+  /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/,
+  /[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/,
+  /\/maps\/search\/(-?\d+\.\d+)[,+\s]+(-?\d+\.\d+)/,
+] as const;
+
+function getParsedUrl(url: string): URL | null {
+  try {
+    return new URL(url);
+  } catch {
+    return null;
+  }
+}
+
+export function isGoogleMapsUrl(url: string): boolean {
+  const parsed = getParsedUrl(url);
+  if (!parsed || !SAFE_SCHEMES.has(parsed.protocol)) return false;
+
+  const host = parsed.hostname.toLowerCase();
+  const path = parsed.pathname || "";
+
+  if (host === "goo.gl" || host === "maps.app.goo.gl") return true;
+  if (host.startsWith("maps.google.") || host === "maps.google.com") return true;
+  if (host.endsWith(".google.com") && path.startsWith("/maps")) return true;
+  if (host === "google.com" && path.startsWith("/maps")) return true;
+  return false;
+}
+
+/**
+ * Retorna a URL original se o scheme for http/https.
+ * Retorna string vazia para javascript:, data:, file: e qualquer outro scheme perigoso.
+ * Usada como camada de defesa no frontend antes de renderizar href vindo da API.
+ */
+export function sanitizeUrl(url: string | undefined | null): string {
+  if (!url) return "";
+  const parsed = getParsedUrl(url);
+  return parsed && SAFE_SCHEMES.has(parsed.protocol) ? url : "";
+}
+
+export function extractGoogleMapsCoords(url: string): { latitude: string; longitude: string } | null {
+  for (const pattern of GOOGLE_MAPS_COORD_PATTERNS) {
+    const match = url.match(pattern);
+    if (match) {
+      return { latitude: match[1], longitude: match[2] };
+    }
+  }
+  return null;
+}

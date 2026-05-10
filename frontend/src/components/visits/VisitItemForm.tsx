@@ -1,0 +1,214 @@
+import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { VisitItem, VisitItemType } from "../../types/visit-item";
+import { VISIT_ITEM_TYPES } from "../../utils/constants";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RatingInput } from "../ui/RatingInput";
+import { CharacterCount } from "../ui/CharacterCount";
+import { validateImageFile, ALLOWED_IMAGE_ACCEPT } from "../../utils/url";
+import { AuthImage } from "../ui/AuthImage";
+import { visitItemSchema, type VisitItemFormValues } from "../../schemas/visit";
+
+type VisitItemPayload = Partial<Omit<VisitItem, "photo" | "price">> & { photo?: string | File; price?: number | string | null };
+
+type Props = {
+  defaultValues?: VisitItemPayload;
+  onSave: (data: VisitItemPayload) => void;
+};
+
+export const VISIT_ITEM_FORM_ID = "visit-item-form";
+
+export function VisitItemForm({ defaultValues, onSave }: Props) {
+  const { t } = useTranslation();
+  const existingPhoto = typeof defaultValues?.photo === "string" ? defaultValues.photo : null;
+  const [preview, setPreview] = useState<string | null>(existingPhoto);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const form = useForm<VisitItemFormValues>({
+    resolver: zodResolver(visitItemSchema),
+    defaultValues: {
+      name: defaultValues?.name ?? "",
+      type: (defaultValues?.type ?? "other") as VisitItemType,
+      rating: Number(defaultValues?.rating ?? 7),
+      price: defaultValues?.price != null ? Number(defaultValues.price) : undefined,
+      notes: defaultValues?.notes ?? "",
+      would_order_again: defaultValues?.would_order_again ?? true,
+    },
+  });
+
+  const { handleSubmit, control } = form;
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    if (!file) {
+      setPhotoFile(null);
+      setPreview(existingPhoto);
+      return;
+    }
+    const err = validateImageFile(file);
+    if (err === "type") { setPhotoError(t("upload.invalidType")); e.target.value = ""; return; }
+    if (err === "size") { setPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
+    setPhotoError("");
+    setPhotoFile(file);
+    setPreview(URL.createObjectURL(file));
+  }
+
+  const onFormSubmit = (data: VisitItemFormValues) => {
+    onSave({
+      ...data,
+      price: data.price != null ? String(data.price) : null,
+      ...(photoFile ? { photo: photoFile } : existingPhoto ? { photo: existingPhoto } : {}),
+    });
+  };
+
+  return (
+    <Form {...form}>
+      <form id={VISIT_ITEM_FORM_ID} onSubmit={handleSubmit(onFormSubmit)} className="space-y-3">
+        <FormField
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("visitItemForm.name")}</FormLabel>
+              <FormControl>
+                <Input maxLength={200} {...field} />
+              </FormControl>
+              <CharacterCount value={field.value} max={200} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("visitItemForm.type")}</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {VISIT_ITEM_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {t(`itemType.${type.value}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="rating"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("visitItemForm.rating")}</FormLabel>
+              <FormControl>
+                <RatingInput value={field.value} onChange={field.onChange} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="price"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("visitItemForm.price")}</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("visitItemForm.notes")}</FormLabel>
+              <FormControl>
+                <Textarea maxLength={5000} {...field} />
+              </FormControl>
+              <CharacterCount value={field.value} max={5000} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="would_order_again"
+          control={control}
+          render={({ field }) => (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!field.value}
+                onChange={(e) => field.onChange(e.target.checked)}
+                className="h-4 w-4 rounded border-border accent-primary"
+              />
+              <span className="text-sm font-medium">{t("visitItemForm.wouldOrderAgain")}</span>
+            </label>
+          )}
+        />
+
+        <div className="space-y-1.5">
+          <span className="text-sm font-medium">{t("visitItemForm.photo")}</span>
+          <input ref={fileRef} type="file" accept={ALLOWED_IMAGE_ACCEPT} className="hidden" onChange={handleFile} />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="group relative flex h-28 w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+          >
+            {preview ? (
+              <>
+                <AuthImage src={preview} alt={t("visitItemForm.itemPhotoAlt")} className="h-full w-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+                  <span className="text-xs font-medium text-white">{t("placeForm.changePhoto")}</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+                <span className="text-2xl leading-none">+</span>
+                <span className="text-xs">{t("placeForm.uploadPhoto")}</span>
+              </div>
+            )}
+          </button>
+          {photoError && <p className="text-sm text-destructive">{photoError}</p>}
+        </div>
+      </form>
+    </Form>
+  );
+}

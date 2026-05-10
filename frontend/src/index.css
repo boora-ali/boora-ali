@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Project design tokens */
+  --color-primary: #C1121F;
+  --color-primary-dark: #8F0D17;
+  --color-accent: #F4A261;
+  --color-background: #FAF7F2;
+  --color-surface: #FFFFFF;
+  --color-text: #1A1208;
+  --color-muted: #6F5D4D;
+  --color-border: #E8E0D8;
+
+  /* shadcn/ui CSS variables (mapped to project palette) */
+  --background: 40 43% 97%;
+  --foreground: 37 53% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 37 53% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 37 53% 8%;
+  --primary: 357 82% 41%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 30 21% 93%;
+  --secondary-foreground: 37 53% 8%;
+  --muted: 30 21% 93%;
+  --muted-foreground: 25 17% 37%;
+  --accent: 28 87% 67%;
+  --accent-foreground: 37 53% 8%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 30 21% 87%;
+  --input: 30 21% 87%;
+  --ring: 357 82% 41%;
+  --radius: 0.75rem;
+  --chart-1: 357 82% 41%;
+  --chart-2: 28 87% 67%;
+  --chart-3: 142 71% 45%;
+  --chart-4: 217 91% 60%;
+  --chart-5: 25 17% 37%;
+}
+
+.dark {
+  --color-background: #1A1208;
+  --color-surface: #261C0F;
+  --color-text: #FAF7F2;
+  --color-muted: #A89880;
+  --color-border: #3D2E20;
+
+  /* shadcn/ui dark mode */
+  --background: 37 53% 8%;
+  --foreground: 40 43% 97%;
+  --card: 32 47% 11%;
+  --card-foreground: 40 43% 97%;
+  --popover: 32 47% 11%;
+  --popover-foreground: 40 43% 97%;
+  --primary: 357 82% 41%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 27 31% 19%;
+  --secondary-foreground: 40 43% 97%;
+  --muted: 27 31% 19%;
+  --muted-foreground: 28 17% 57%;
+  --accent: 28 87% 67%;
+  --accent-foreground: 37 53% 8%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 27 31% 19%;
+  --input: 27 31% 19%;
+  --ring: 357 82% 41%;
+}
+
+body {
+  @apply bg-background text-text;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  position: relative;
+}
+
+/* Subtle grain texture overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Smooth page transitions */
+#root {
+  animation: fadeIn 0.25s ease-out both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
