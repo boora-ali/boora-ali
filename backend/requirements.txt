@@ -13,7 +13,7 @@ python-dotenv==1.2.2
 django-storages[s3]==1.14.2
 google-auth==2.29.0
 requests>=2.32.4
-sentry-sdk[django]==2.20.0
+sentry-sdk[django]==2.59.0
 argon2-cffi==23.1.0
 redis==5.0.8
 httpx==0.27.2
