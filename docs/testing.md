@@ -67,15 +67,6 @@ Config: `frontend/playwright.config.ts` → baseURL `http://localhost:8181`.
 Specs: `frontend/e2e/` — `login/`, `crud/`, `auth/`, `responsive.spec.ts`.
 Happy-path: requer backend vivo. Negative/responsive: mock via `page.route` (sem backend).
 
-## nginx (curl)
-
-```bash
-# Requer docker compose up -d
-bash scripts/test_nginx_security.sh
-```
-
-Verifica: security headers em `/`, `/index.html`, `/assets/*`, `/api/*`; `/api/rota-inexistente` → 404 (não SPA); source maps ausentes; `.env`/`docker-compose.yml`/`nginx.conf` não servidos; `client_max_body_size` → 413 com 11MB.
-
 ## Load test (Locust)
 
 ```bash
@@ -89,3 +80,11 @@ locust -f locustfile_realistic.py --host=http://localhost \
 ```
 
 Baseline local: 0% falhas, median 22ms, p95 55ms com 100 usuários.
+
+## Escopo deste documento
+
+Este arquivo é um runbook humano de teste.
+
+- padrões curtos para a LLM ficam em [SKILLS.md](/home/smovisk/PycharmProjects/boora-ali/SKILLS.md)
+- snippets por domínio ficam em `skills/templates/`
+- se um teste operacional depender de script dedicado, ele só deve aparecer aqui quando o script existir no repo

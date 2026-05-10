@@ -4,61 +4,46 @@ Diário pessoal de lugares. `User → Place → Visit → VisitItem`.
 
 ## Stack
 
-- **backend/**: Django 5.2 + DRF + SimpleJWT + PostgreSQL + Valkey
-- **frontend/**: React + Vite + TypeScript + Tailwind + RHF + Zod
-- **infra**: nginx (`/api/` → backend:8000), docker-compose (frontend, backend, postgres, valkey, VersityGW)
+- `backend/`: Django + DRF + SimpleJWT + PostgreSQL + Valkey
+- `frontend/`: React + Vite + TypeScript + Tailwind + RHF + Zod
+- `infra`: nginx, docker-compose, VersityGW no dev local
 
 ## Comandos
 
 ```bash
-# backend/ (ativar venv: backend/.venv)
-pytest / pytest accounts/ / pytest -k test_name
+# backend/
+pytest
 python manage.py makemigrations && python manage.py migrate
 ruff format --check . && ruff check .
 
 # frontend/
-npm run build   # SEMPRE antes de buildar Docker (usa tsc -b, pega mais erros que tsc --noEmit)
-npm run dev / npm run lint / npm test
+npm run dev
+npm run lint
+npm run test
+npm run build
 
 # root
 docker compose up -d --build
 ```
 
-## Invariantes globais — afetam TODO código novo
+## Invariantes globais
 
-**Ownership**: queryset SEMPRE filtra por usuário.
-```python
-Place.objects.filter(user=request.user)
-Visit.objects.filter(place__user=request.user)
-VisitItem.objects.filter(visit__place__user=request.user)
-```
+- queryset sempre filtrado por `request.user`
+- `public_id` exposto; `id` só interno
+- exceções backend via `core.exceptions`
+- imagens via `core.image_service.ImageService`
+- não mexer automaticamente em `backend/*/migrations/`
+- forms frontend com React Hook Form + Zod
 
-**public_id**: UUID exposto em URLs/payloads. `id` = PK interno, só para FK internas. `lookup_field = "public_id"`.
+## Carregamento gradual
 
-**Erros backend**: sempre `from core.exceptions import ...` — nunca DRF cru nem `raise Exception`.
+- este arquivo: só contexto mínimo do repo
+- [SKILLS.md](/home/smovisk/PycharmProjects/boora-ali/SKILLS.md): roteador curto para a LLM
+- `skills/templates/`: abrir só o template do domínio em uso
+- [backend/CLAUDE.md](/home/smovisk/PycharmProjects/boora-ali/backend/CLAUDE.md): detalhes backend sob demanda
+- [frontend/CLAUDE.md](/home/smovisk/PycharmProjects/boora-ali/frontend/CLAUDE.md): detalhes frontend sob demanda
+- `docs/*.md`: runbooks humanos, não contexto base
 
-**Imagens**: sempre `core.image_service.ImageService` — nunca salvar direto no ImageField.
+## Sincronia
 
-**Migrations**: nunca reformatar migrations antigas. Mudanças manuais e isoladas.
-
-**Formulários frontend**: React Hook Form + Zod em todos. `applyApiErrors(setError, fieldErrors)` em todo catch.
-
-## Skills — injeção incremental por domínio
-
-Invocar antes de qualquer trabalho no domínio. Cada skill é self-contained, sem leituras secundárias.
-
-| Domínio | Skill |
-|---------|-------|
-| Backend (models, API, auth, migrations, testes) | `/bora-ali-backend` |
-| Frontend (forms, components, services, i18n) | `/bora-ali-frontend` |
-| Serializers, viewsets, ORM avançado | `/django-expert` |
-| Arquitetura, cache, signals, middleware | `/django-patterns` |
-| Auditoria de segurança | `/security-review` |
-
-## Referências detalhadas (ler só quando necessário)
-
-```
-backend/CLAUDE.md   → detalhes de auth, throttle, Celery, storage
-frontend/CLAUDE.md  → detalhes de schemas, VisitItemForm, componentes forwardRef
-skills/             → guias por domínio: models, api, tests, migrations, infra
-```
+`AGENTS.md` deve permanecer idêntico a este arquivo.

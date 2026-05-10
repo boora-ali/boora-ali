@@ -4,7 +4,17 @@ Diário pessoal de lugares — cafés, restaurantes, bares. Catalogue, avalie, r
 
 **Stack**: Django + DRF + SimpleJWT + PostgreSQL + Valkey · Celery (tarefas assíncronas) · React + Vite + TypeScript + Tailwind · nginx · Cloudflare R2 (produção) · VersityGW (desenvolvimento local) · Jaeger
 
-→ [Arquitetura & modelo de dados](docs/architecture.md) · [Guia de desenvolvimento](docs/development.md) · [Testes](docs/testing.md)
+Leitura rápida:
+- [Arquitetura & modelo de dados](docs/architecture.md)
+- [Guia de desenvolvimento](docs/development.md)
+- [Testes](docs/testing.md)
+- [SKILLS.md](SKILLS.md) para contrato curto da LLM
+
+Superfícies do repo:
+- `README.md`: visão geral humana
+- `docs/*.md`: runbooks humanos
+- `SKILLS.md`: contrato mínimo para a LLM
+- `skills/templates/*`: snippets e padrões de implementação
 
 ---
 
