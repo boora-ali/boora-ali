@@ -1,13 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - dev
   pull_request:
     branches:
       - dev
-      - main
 
 jobs:
   validate-branch-name:
@@ -15,12 +11,7 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Skip validation outside pull requests
-        if: github.event_name != 'pull_request'
-        run: echo "Branch name validation applies only to pull_request events."
-
       - name: Enforce feat/* or fix/* source branches
-        if: github.event_name == 'pull_request'
         env:
           BRANCH_NAME: ${{ github.head_ref }}
         run: |
@@ -30,7 +21,7 @@ jobs:
               ;;
             *)
               echo "Invalid branch name: $BRANCH_NAME"
-              echo "Use feat/* or fix/* before opening a PR."
+              echo "Use feat/* or fix/* before opening a PR to dev."
               exit 1
               ;;
           esac

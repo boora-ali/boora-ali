@@ -1,0 +1,25 @@
+name: Promote Dev To Main
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-promotion-source:
+    name: Validate Promotion Source
+    runs-on: self-hosted
+
+    steps:
+      - name: Enforce dev as the only source branch for main
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          if [ "$BRANCH_NAME" = "dev" ]; then
+            echo "Accepted promotion source: $BRANCH_NAME"
+            exit 0
+          fi
+
+          echo "Invalid source branch for main: $BRANCH_NAME"
+          echo "Only pull requests from dev to main are allowed."
+          exit 1
