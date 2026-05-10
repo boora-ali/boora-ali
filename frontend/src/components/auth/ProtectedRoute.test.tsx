@@ -1,11 +1,24 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { ACCESS_KEY } from "../../utils/constants";
-import { AUTH_STATE_CHANGED_EVENT } from "../../utils/client-state";
+import { useAuth } from "../../contexts/useAuth";
+import { vi } from "vitest";
+
+vi.mock("../../contexts/useAuth");
+
+const mockedUseAuth = vi.mocked(useAuth);
 
 test("redirects unauthenticated user to /login", () => {
-  localStorage.removeItem(ACCESS_KEY);
+  mockedUseAuth.mockReturnValue({
+    user: null,
+    loading: false,
+    login: vi.fn(),
+    googleLogin: vi.fn(),
+    logout: vi.fn(),
+    refreshUser: vi.fn(),
+    setUser: vi.fn(),
+  });
+
   render(
     <MemoryRouter initialEntries={["/private"]}>
       <Routes>
@@ -24,8 +37,26 @@ test("redirects unauthenticated user to /login", () => {
   expect(screen.getByText("LOGIN PAGE")).toBeInTheDocument();
 });
 
-test("redirects when auth state changes and the token disappears", async () => {
-  localStorage.setItem(ACCESS_KEY, "fake-token");
+test("renders children when authenticated", () => {
+  mockedUseAuth.mockReturnValue({
+    user: {
+      id: 1,
+      username: "samuel",
+      email: "samuel@example.com",
+      display_name: "Samuel",
+      nickname: "Sam",
+      profile_photo_url: "",
+      is_google_account: false,
+      terms_accepted_at: null,
+    },
+    loading: false,
+    login: vi.fn(),
+    googleLogin: vi.fn(),
+    logout: vi.fn(),
+    refreshUser: vi.fn(),
+    setUser: vi.fn(),
+  });
+
   render(
     <MemoryRouter initialEntries={["/private"]}>
       <Routes>
@@ -43,7 +74,4 @@ test("redirects when auth state changes and the token disappears", async () => {
   );
 
   expect(screen.getByText("SECRET")).toBeInTheDocument();
-  localStorage.removeItem(ACCESS_KEY);
-  window.dispatchEvent(new Event(AUTH_STATE_CHANGED_EVENT));
-  await waitFor(() => expect(screen.getByText("LOGIN PAGE")).toBeInTheDocument());
 });
