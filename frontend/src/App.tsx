@@ -5,7 +5,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PublicRoute } from "./components/auth/PublicRoute";
 import { ProtectedLayout } from "./components/layout/ProtectedLayout";
 import { GlobalLoadingBar } from "./components/ui/GlobalLoadingBar";
-import { useAuthToken } from "./hooks/useAuthToken";
+import { useAuth } from "./contexts/useAuth";
 import { LoadingState } from "./components/ui/LoadingState";
 const LoginPage = lazy(() => import("./routes/LoginPage"));
 const RegisterPage = lazy(() => import("./routes/RegisterPage"));
@@ -22,8 +22,17 @@ const TrashPage = lazy(() => import("./routes/TrashPage"));
 const NotFoundPage = lazy(() => import("./routes/NotFoundPage"));
 
 function RootRedirect() {
-  const token = useAuthToken();
-  return token ? <Navigate to="/places" replace /> : <Navigate to="/login" replace />;
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen p-4">
+        <LoadingState />
+      </div>
+    );
+  }
+
+  return user ? <Navigate to="/places" replace /> : <Navigate to="/login" replace />;
 }
 
 export default function App() {
@@ -138,9 +147,11 @@ export default function App() {
             <Route
               path="*"
               element={
-                <ProtectedLayout>
-                  <NotFoundPage />
-                </ProtectedLayout>
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <NotFoundPage />
+                  </ProtectedLayout>
+                </ProtectedRoute>
               }
             />
           </Routes>

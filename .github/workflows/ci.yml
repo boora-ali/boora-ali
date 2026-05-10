@@ -1,0 +1,207 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+      - main
+
+jobs:
+  validate-branch-name:
+    name: Validate Branch Name
+    runs-on: self-hosted
+
+    steps:
+      - name: Skip validation outside pull requests
+        if: github.event_name != 'pull_request'
+        run: echo "Branch name validation applies only to pull_request events."
+
+      - name: Enforce feat/* or fix/* source branches
+        if: github.event_name == 'pull_request'
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          case "$BRANCH_NAME" in
+            feat/*|fix/*)
+              echo "Accepted branch: $BRANCH_NAME"
+              ;;
+            *)
+              echo "Invalid branch name: $BRANCH_NAME"
+              echo "Use feat/* or fix/* before opening a PR."
+              exit 1
+              ;;
+          esac
+
+  lint-backend:
+    name: Lint Backend
+    runs-on: self-hosted
+    needs: [validate-branch-name]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff==0.11.9
+
+      - name: Ruff lint
+        working-directory: backend
+        run: ruff check .
+
+      - name: Ruff format check
+        working-directory: backend
+        run: ruff format --check .
+
+  lint-frontend:
+    name: Lint Frontend
+    runs-on: self-hosted
+    needs: [validate-branch-name]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: ESLint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: TypeScript type check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+  security-backend:
+    name: Security Backend
+    runs-on: self-hosted
+    needs: [validate-branch-name]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install security tools
+        run: pip install bandit==1.8.3 pip-audit==2.9.0
+
+      - name: Bandit SAST
+        working-directory: backend
+        run: bandit -r . -c pyproject.toml -ll -q
+
+      - name: pip-audit (CVE check)
+        working-directory: backend
+        run: pip-audit -r requirements.txt --skip-editable
+
+  security-frontend:
+    name: Security Frontend
+    runs-on: self-hosted
+    needs: [validate-branch-name]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: npm audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+  test-backend:
+    name: Test Backend
+    runs-on: self-hosted
+    needs: [lint-backend, security-backend]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: bora_ali_test
+          POSTGRES_USER: bora
+          POSTGRES_PASSWORD: bora
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 5432:5432
+
+      redis:
+        image: valkey/valkey:9.0.3-alpine
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Run tests with coverage
+        working-directory: backend
+        env:
+          DJANGO_SETTINGS_MODULE: config.test_settings
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: bora_ali_test
+          POSTGRES_USER: bora
+          POSTGRES_PASSWORD: bora
+          REDIS_URL: redis://localhost:6379/1
+          CELERY_BROKER_URL: redis://localhost:6379/2
+          DJANGO_SECRET_KEY: "!hriv@)lzy!os=edv@tf%z#@t@k#k@gp&t4ym&8&3sgrl-#jq9"
+        run: python -m pytest --tb=short -q --cov=. --cov-report=term-missing --cov-fail-under=60
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: self-hosted
+    needs: [lint-frontend, security-frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm run test
