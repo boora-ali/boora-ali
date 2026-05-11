@@ -106,6 +106,14 @@ class PlaceViewSet(ViewSetBase):
             VisitItem.objects.filter(visit__place=place).update(deleted_at=None)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=True, methods=["delete"], url_path="permanent")
+    def permanent_delete(self, request, public_id=None):
+        place = get_object_or_404(
+            Place, public_id=public_id, user=request.user, deleted_at__isnull=False
+        )
+        place.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=True, methods=["get", "post"], url_path="visits")
     def visits(self, request, public_id=None):
         place = self.get_object()

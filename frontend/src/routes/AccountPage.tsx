@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { authService } from "../services/auth.service";
 import { getApiErrorState } from "../services/api-errors";
 import { applyApiErrors } from "../utils/form-errors";
@@ -63,11 +64,13 @@ export default function AccountPage() {
     }
     const err = validateImageFile(file);
     if (err === "type") {
+      toast.error(t("upload.invalidType"));
       setProfilePhotoError(t("upload.invalidType"));
       event.target.value = "";
       return;
     }
     if (err === "size") {
+      toast.error(t("upload.tooLarge"));
       setProfilePhotoError(t("upload.tooLarge"));
       event.target.value = "";
       return;
@@ -99,6 +102,7 @@ export default function AccountPage() {
       });
     } catch (error) {
       const apiError = getApiErrorState(error, t("account.profile.error"));
+      toast.error(apiError.message);
       profileForm.setError("root", { message: apiError.message });
       applyApiErrors(profileForm.setError, apiError.fieldErrors);
     }
@@ -116,6 +120,7 @@ export default function AccountPage() {
       setPasswordMessage(t("account.password.saved"));
     } catch (error) {
       const apiError = getApiErrorState(error, t("account.password.error"));
+      toast.error(apiError.message);
       passwordForm.setError("root", { message: apiError.message });
       applyApiErrors(passwordForm.setError, apiError.fieldErrors);
     }

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { vi } from "vitest";
 import PlacesPage from "./PlacesPage";
@@ -53,6 +53,7 @@ test("renders list of places", async () => {
     </MemoryRouter>
   );
   await waitFor(() => expect(screen.getByText("Padaria Bom Pão")).toBeInTheDocument());
+  fireEvent.click(screen.getByRole("button", { name: "Show map" }));
   expect(screen.getByText("1 saved pins")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Zoom map in" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Zoom map out" })).toBeInTheDocument();

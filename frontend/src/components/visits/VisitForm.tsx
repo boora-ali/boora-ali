@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import type { Visit } from "../../types/visit";
 import type { VisitItem } from "../../types/visit-item";
 import { DateTimePicker } from "../ui/DateTimePicker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Form,
   FormControl,
@@ -25,6 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { AuthImage } from "../ui/AuthImage";
 import { CharacterCount } from "../ui/CharacterCount";
+import { FormSection } from "../ui/FormSection";
+import { ResponsiveCardCarousel } from "../ui/ResponsiveCardCarousel";
 import { getApiErrorState } from "../../services/api-errors";
 import { applyApiErrors } from "../../utils/form-errors";
 import { visitItemsService } from "../../services/visit-items.service";
@@ -87,6 +91,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
   const { t } = useTranslation();
   const [items, setItems] = useState<ItemPayload[]>(initialItems);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [removedPhoto, setRemovedPhoto] = useState(false);
   const [preview, setPreview] = useState<string | null>(initial.photo ?? null);
   const [removeError, setRemoveError] = useState("");
   const [itemSaveError, setItemSaveError] = useState("");
@@ -140,9 +145,10 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
     const file = e.target.files?.[0] ?? null;
     if (!file) { setPhotoFile(null); setPreviewFromFile(null); return; }
     const err = validateImageFile(file);
-    if (err === "type") { setError("root", { message: t("upload.invalidType") }); e.target.value = ""; return; }
-    if (err === "size") { setError("root", { message: t("upload.tooLarge") }); e.target.value = ""; return; }
+    if (err === "type") { toast.error(t("upload.invalidType")); setError("root", { message: t("upload.invalidType") }); e.target.value = ""; return; }
+    if (err === "size") { toast.error(t("upload.tooLarge")); setError("root", { message: t("upload.tooLarge") }); e.target.value = ""; return; }
     setPhotoFile(file);
+    setRemovedPhoto(false);
     setPreviewFromFile(file);
   }
 
@@ -151,12 +157,15 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
     if (item.public_id) {
       try {
         await visitItemsService.remove(item.public_id);
-      } catch {
-        setRemoveError(t("visitForm.removeItemError"));
+      } catch (error) {
+        const apiError = getApiErrorState(error, t("visitForm.removeItemError"));
+        toast.error(apiError.message);
+        setRemoveError(apiError.message);
         return;
       }
     }
     setItems((prev) => prev.filter((_, i) => i !== index));
+    setRemoveError("");
   }
 
   function openAdd() {
@@ -190,6 +199,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
       setModalOpen(false);
     } catch (error) {
       const apiError = getApiErrorState(error, t("visitForm.saveError"));
+      toast.error(apiError.message);
       setItemSaveError(apiError.message);
     } finally {
       setIsSavingItem(false);
@@ -199,11 +209,12 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
   const onFormSubmit = async (data: VisitFormValues) => {
     try {
       await onSubmit(
-        { ...data, ...(photoFile ? { photo: photoFile } : {}) },
+        { ...data, ...(photoFile ? { photo: photoFile } : removedPhoto ? { photo: "" } : {}) },
         items,
       );
     } catch (error) {
       const apiError = getApiErrorState(error, t("visitForm.saveError"));
+      toast.error(apiError.message);
       setError("root", { message: apiError.message });
       applyApiErrors(setError, apiError.fieldErrors);
     }
@@ -211,7 +222,8 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
+        <FormSection title={t("visitForm.sections.when")}>
         <FormField
           control={control}
           name="visited_at"
@@ -225,6 +237,9 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
             </FormItem>
           )}
         />
+        </FormSection>
+
+        <FormSection title={t("visitForm.sections.experience")}>
         <FormField
           control={control}
           name="environment_rating"
@@ -269,16 +284,18 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
           control={control}
           render={({ field }) => (
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
+              <Switch
                 checked={!!field.value}
-                onChange={(e) => field.onChange(e.target.checked)}
-                className="h-4 w-4 rounded border-border accent-primary"
+                onCheckedChange={field.onChange}
+                aria-label={t("visitForm.wouldReturn")}
               />
               <span className="text-sm font-medium">{t("visitForm.wouldReturn")}</span>
             </label>
           )}
         />
+        </FormSection>
+
+        <FormSection title={t("visitForm.sections.notes")}>
         <FormField
           control={control}
           name="general_notes"
@@ -293,8 +310,10 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
             </FormItem>
           )}
         />
+        </FormSection>
 
-        <div className="space-y-1.5">
+        <FormSection title={t("visitForm.sections.photo")}>
+        <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium">{t("visitForm.photo")}</span>
           <input ref={fileRef} type="file" accept={ALLOWED_IMAGE_ACCEPT} className="hidden" onChange={handleFile} />
           <button
@@ -319,58 +338,73 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
           {preview && (
             <button
               type="button"
-              onClick={() => { setPhotoFile(null); setPreview(null); }}
+              onClick={() => {
+                setPhotoFile(null);
+                setRemovedPhoto(true);
+                setPreview(null);
+                if (fileRef.current) fileRef.current.value = "";
+              }}
               className="text-xs text-muted-foreground transition hover:text-destructive"
             >
               {t("placeForm.removePhoto")}
             </button>
           )}
         </div>
+        </FormSection>
 
-        <div className="space-y-2">
+        <FormSection title={t("visitForm.sections.consumed")} description={t("visitForm.consumedDescription")}>
+        <div className="flex flex-col gap-2">
           <span className="text-sm font-medium">{t("visitForm.consumedTitle")}</span>
           {removeError && <p className="text-sm text-destructive">{removeError}</p>}
-          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {items.map((item, i) => (
-              <li key={i} className="overflow-hidden rounded-xl border border-border bg-card text-sm">
-                <div className="relative">
-                  {item.photo ? (
-                    <VisitItemPhoto photo={item.photo} alt={item.name ?? ""} fallbackText={t("visitCard.noPhoto")} />
-                  ) : (
-                    <div className="flex h-24 w-full items-center justify-center bg-muted/10 text-xs text-muted-foreground">
-                      {t("visitCard.noPhoto")}
+          {items.length > 0 && (
+            <ResponsiveCardCarousel
+              ariaLabel={t("visitForm.consumedTitle")}
+              items={items}
+              getKey={(item, i) => item.public_id ?? `${item.name ?? "item"}-${i}`}
+              mobilePageSize={4}
+              desktopPageSize={5}
+              mobileColumns={2}
+              desktopColumns={5}
+              renderItem={(item, i) => (
+                <div className="overflow-hidden rounded-xl border border-border bg-card text-sm">
+                  <div className="relative">
+                    {item.photo ? (
+                      <VisitItemPhoto photo={item.photo} alt={item.name ?? ""} fallbackText={t("visitCard.noPhoto")} />
+                    ) : (
+                      <div className="flex h-24 w-full items-center justify-center bg-muted/10 text-xs text-muted-foreground">
+                        {t("visitCard.noPhoto")}
+                      </div>
+                    )}
+                    <div className="absolute right-1 top-1 flex gap-1">
+                      <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(i)}
+                        className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
+                        ✎
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" aria-label="Remover" onClick={() => handleRemoveItem(i)}
+                        className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
+                        ✕
+                      </Button>
                     </div>
-                  )}
-                  <div className="absolute right-1 top-1 flex gap-1">
-                    <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(i)}
-                      className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
-                      ✎
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" aria-label="Remover" onClick={() => handleRemoveItem(i)}
-                      className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
-                      ✕
-                    </Button>
+                  </div>
+                  <div className="space-y-0.5 p-2">
+                    <p className="truncate font-medium">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">{t(`itemType.${item.type}`)}</p>
+                    <RatingDots value={Number(item.rating ?? 0)} />
                   </div>
                 </div>
-                <div className="space-y-0.5 p-2">
-                  <p className="truncate font-medium">{item.name}</p>
-                  <p className="text-xs text-muted-foreground">{t(`itemType.${item.type}`)}</p>
-                  <RatingDots value={Number(item.rating ?? 0)} />
-                </div>
-              </li>
-            ))}
-            <li>
-              <button
-                type="button"
-                onClick={openAdd}
-                className="flex h-full min-h-[140px] w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border text-muted-foreground transition hover:border-primary/40 hover:text-primary"
-              >
-                <span className="text-2xl leading-none">+</span>
-                <span className="text-xs">{t("visitItemForm.addTitle")}</span>
-              </button>
-            </li>
-          </ul>
+              )}
+            />
+          )}
+          <button
+            type="button"
+            onClick={openAdd}
+            className="flex min-h-[110px] w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+          >
+            <span className="text-2xl leading-none">+</span>
+            <span className="text-xs">{t("visitItemForm.addTitle")}</span>
+          </button>
         </div>
+        </FormSection>
 
         {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
         <Button type="submit" className="w-full" disabled={isSubmitting}>

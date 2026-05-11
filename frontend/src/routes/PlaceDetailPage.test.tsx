@@ -50,8 +50,8 @@ test("shows pending coordinates banner and disables map button", async () => {
       screen.getByText(/coordinates are being processed/i),
     ).toBeInTheDocument()
   );
-  expect(screen.queryByRole("button", { name: "Maps" })).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Maps" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "View on Maps" })).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "View on Maps" })).toBeInTheDocument();
 });
 
 test("polls pending coordinates until the worker resolves them", async () => {
@@ -74,10 +74,10 @@ test("polls pending coordinates until the worker resolves them", async () => {
   expect(
     await screen.findByText(/coordinates are being processed/i),
   ).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Maps" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "View on Maps" })).not.toBeInTheDocument();
 
   await waitFor(
-    () => expect(screen.getByRole("button", { name: "Maps" })).toBeEnabled(),
+    () => expect(screen.getByRole("button", { name: "View on Maps" })).toBeEnabled(),
     { timeout: 2000 },
   );
   expect(screen.queryByText(/coordinates are being processed/i)).not.toBeInTheDocument();
@@ -98,8 +98,8 @@ test("shows failed coordinates banner and disables map button", async () => {
       screen.getByText(/could not extract coordinates/i),
     ).toBeInTheDocument()
   );
-  expect(screen.queryByRole("button", { name: "Maps" })).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Maps" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "View on Maps" })).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "View on Maps" })).toBeInTheDocument();
 });
 
 test("opens the map modal when coordinates are resolved", async () => {
@@ -113,8 +113,8 @@ test("opens the map modal when coordinates are resolved", async () => {
 
   renderDetail();
 
-  await waitFor(() => expect(screen.getByRole("button", { name: "Maps" })).toBeEnabled());
-  fireEvent.click(screen.getByRole("button", { name: "Maps" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "View on Maps" })).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: "View on Maps" }));
 
   expect(await screen.findByRole("dialog")).toBeInTheDocument();
   expect(screen.getByTitle("Café X")).toHaveAttribute(

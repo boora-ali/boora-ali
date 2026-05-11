@@ -56,6 +56,39 @@ Object.defineProperty(window, "matchMedia", {
   })),
 });
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+class IntersectionObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() { return []; }
+}
+
+Object.defineProperty(window, "ResizeObserver", {
+  writable: true,
+  value: ResizeObserverMock,
+});
+
+Object.defineProperty(globalThis, "ResizeObserver", {
+  writable: true,
+  value: ResizeObserverMock,
+});
+
+Object.defineProperty(window, "IntersectionObserver", {
+  writable: true,
+  value: IntersectionObserverMock,
+});
+
+Object.defineProperty(globalThis, "IntersectionObserver", {
+  writable: true,
+  value: IntersectionObserverMock,
+});
+
 beforeEach(async () => {
   window.localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");
   await i18n.changeLanguage("en");

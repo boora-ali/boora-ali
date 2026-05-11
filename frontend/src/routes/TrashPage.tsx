@@ -4,6 +4,7 @@ import { placesService, type Page } from "../services/places.service";
 import type { Place } from "../types/place";
 import { BackButton } from "../components/ui/BackButton";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState } from "../components/ui/EmptyState";
 import { LoadingState } from "../components/ui/LoadingState";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
@@ -24,6 +25,8 @@ export default function TrashPage() {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [restoring, setRestoring] = useState<string | null>(null);
+  const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<Place | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     startTransition(() => { setLoading(true); });
@@ -46,6 +49,23 @@ export default function TrashPage() {
       );
     } finally {
       setRestoring(null);
+    }
+  }
+
+  async function handlePermanentDelete() {
+    if (!permanentDeleteTarget) return;
+    setDeleting(true);
+    try {
+      await placesService.permanentDelete(permanentDeleteTarget.public_id);
+      notifyPlacesChanged();
+      setData((prev) =>
+        prev
+          ? { ...prev, count: prev.count - 1, results: prev.results.filter((p) => p.public_id !== permanentDeleteTarget.public_id) }
+          : prev
+      );
+      setPermanentDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -80,14 +100,24 @@ export default function TrashPage() {
                   )}
                 </p>
               </div>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => handleRestore(place.public_id)}
-                disabled={restoring === place.public_id}
-              >
-                {restoring === place.public_id ? t("trash.restoring") : t("trash.restore")}
-              </Button>
+              <div className="flex gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => handleRestore(place.public_id)}
+                  disabled={restoring === place.public_id}
+                >
+                  {restoring === place.public_id ? t("trash.restoring") : t("trash.restore")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => setPermanentDeleteTarget(place)}
+                  disabled={restoring === place.public_id}
+                >
+                  {t("trash.permanentDelete")}
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -104,6 +134,38 @@ export default function TrashPage() {
           </Button>
         </div>
       )}
+
+      <Dialog
+        open={Boolean(permanentDeleteTarget)}
+        onOpenChange={(o) => { if (!o) setPermanentDeleteTarget(null); }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("trash.permanentDeleteTitle")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t("trash.permanentDeleteMessage")}</p>
+            <div className="flex gap-2 pt-1">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setPermanentDeleteTarget(null)}
+                disabled={deleting}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handlePermanentDelete}
+                disabled={deleting}
+              >
+                {deleting ? t("trash.permanentDeleting") : t("trash.permanentDelete")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
