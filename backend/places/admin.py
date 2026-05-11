@@ -1,9 +1,20 @@
 from django.contrib import admin
+from django.db.models import Count
 from django.utils.html import format_html
+from simple_history.admin import SimpleHistoryAdmin
+from unfold.admin import ModelAdmin, TabularInline
+from unfold.contrib.filters.admin import (
+    ChoicesDropdownFilter,
+    RangeDateTimeFilter,
+    RangeNumericFilter,
+    RelatedDropdownFilter,
+)
 
 from config.admin_site import site as admin_site
 
 from .models import Place, Visit, VisitItem
+
+ADMIN_LIST_PER_PAGE = 10
 
 
 def image_preview(image_field):
@@ -12,47 +23,109 @@ def image_preview(image_field):
             '<img src="{}" style="max-height:120px;border-radius:4px;">',
             image_field.url,
         )
-    return "—"
+    return "-"
+
+
+def persist_photo_path_with_history(request, obj):
+    if obj.photo and not obj.photo_path:
+        obj.photo_path = obj.photo.name
+        obj._history_user = request.user
+        obj.save(update_fields=["photo_path"])
 
 
 @admin.register(Place, site=admin_site)
-class PlaceAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "status", "user", "cover_preview", "created_at")
-    list_filter = ("status", "category")
-    search_fields = ("name", "category", "address")
-    readonly_fields = ("cover_preview", "created_at", "updated_at")
+class PlaceAdmin(SimpleHistoryAdmin, ModelAdmin):
+    list_display = (
+        "name",
+        "category",
+        "status",
+        "coords_status",
+        "user",
+        "visit_count",
+        "cover_preview",
+        "created_at",
+    )
+    list_filter = (
+        ("status", ChoicesDropdownFilter),
+        ("coords_status", ChoicesDropdownFilter),
+        "category",
+        ("created_at", RangeDateTimeFilter),
+    )
+    list_filter_submit = True
+    search_fields = ("name", "category", "address", "user__username", "user__email")
+    list_select_related = ("user",)
+    autocomplete_fields = ("user",)
+    readonly_fields = ("public_id", "cover_preview", "created_at", "updated_at")
+    list_per_page = ADMIN_LIST_PER_PAGE
+    list_fullwidth = True
+    compressed_fields = True
+    warn_unsaved_form = True
     fieldsets = (
-        (None, {"fields": ("user", "name", "category", "address", "status", "notes")}),
-        ("Links", {"fields": ("instagram_url", "maps_url"), "classes": ("collapse",)}),
-        ("Cover photo", {"fields": ("cover_photo", "cover_preview")}),
         (
-            "Timestamps",
-            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+            "Lugar",
+            {
+                "classes": ("tab",),
+                "fields": ("user", "name", "category", "address", "status", "notes"),
+            },
+        ),
+        (
+            "Mapa",
+            {
+                "classes": ("tab",),
+                "fields": ("maps_url", "coords_status", "latitude", "longitude"),
+            },
+        ),
+        (
+            "Links e foto",
+            {
+                "classes": ("tab",),
+                "fields": ("instagram_url", "cover_photo", "cover_preview"),
+            },
+        ),
+        (
+            "Sistema",
+            {
+                "classes": ("tab",),
+                "fields": ("public_id", "deleted_at", "created_at", "updated_at"),
+            },
         ),
     )
+
+    def get_queryset(self, request):
+        queryset = (
+            super()
+            .get_queryset(request)
+            .annotate(visits_count=Count("visits", distinct=True))
+        )
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(user=request.user)
+
+    @admin.display(description="Visits", ordering="visits_count")
+    def visit_count(self, obj):
+        return obj.visits_count
 
     @admin.display(description="Cover")
     def cover_preview(self, obj):
         return image_preview(obj.cover_photo)
 
 
-class VisitItemInline(admin.TabularInline):
+class VisitItemInline(TabularInline):
     model = VisitItem
     extra = 0
-    fields = ("name", "type", "rating", "price", "would_order_again", "notes", "photo")
+    tab = True
+    show_count = True
+    fields = (
+        "name",
+        "type",
+        "rating",
+        "price",
+        "would_order_again",
+        "notes",
+        "photo",
+        "photo_preview",
+    )
     readonly_fields = ("photo_preview",)
-
-    def get_fields(self, request, obj=None):
-        return (
-            "name",
-            "type",
-            "rating",
-            "price",
-            "would_order_again",
-            "notes",
-            "photo",
-            "photo_preview",
-        )
 
     @admin.display(description="Preview")
     def photo_preview(self, obj):
@@ -60,30 +133,83 @@ class VisitItemInline(admin.TabularInline):
 
 
 @admin.register(Visit, site=admin_site)
-class VisitAdmin(admin.ModelAdmin):
+class VisitAdmin(SimpleHistoryAdmin, ModelAdmin):
     list_display = (
         "place",
         "visited_at",
+        "environment_rating",
+        "service_rating",
         "overall_rating",
         "would_return",
+        "item_count",
         "photo_preview",
     )
-    list_filter = ("would_return",)
-    search_fields = ("place__name",)
-    readonly_fields = ("photo_preview", "created_at", "updated_at")
+    list_filter = (
+        ("place", RelatedDropdownFilter),
+        "would_return",
+        ("visited_at", RangeDateTimeFilter),
+        ("overall_rating", RangeNumericFilter),
+    )
+    list_filter_submit = True
+    search_fields = ("place__name", "place__category", "place__user__username")
+    list_select_related = ("place", "place__user")
+    autocomplete_fields = ("place",)
+    readonly_fields = (
+        "public_id",
+        "photo_preview",
+        "photo_path",
+        "created_at",
+        "updated_at",
+    )
     inlines = (VisitItemInline,)
+    list_per_page = ADMIN_LIST_PER_PAGE
+    list_fullwidth = True
+    compressed_fields = True
+    warn_unsaved_form = True
     fieldsets = (
-        (None, {"fields": ("place", "visited_at", "would_return", "general_notes")}),
         (
-            "Ratings",
-            {"fields": ("environment_rating", "service_rating", "overall_rating")},
+            "Visita",
+            {
+                "classes": ("tab",),
+                "fields": ("place", "visited_at", "would_return", "general_notes"),
+            },
         ),
-        ("Photo", {"fields": ("photo", "photo_preview")}),
         (
-            "Timestamps",
-            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+            "Notas",
+            {
+                "classes": ("tab",),
+                "fields": ("environment_rating", "service_rating", "overall_rating"),
+            },
+        ),
+        ("Foto", {"classes": ("tab",), "fields": ("photo", "photo_preview")}),
+        (
+            "Sistema",
+            {
+                "classes": ("tab",),
+                "fields": (
+                    "public_id",
+                    "photo_path",
+                    "deleted_at",
+                    "created_at",
+                    "updated_at",
+                ),
+            },
         ),
     )
+
+    def get_queryset(self, request):
+        queryset = (
+            super()
+            .get_queryset(request)
+            .annotate(items_count=Count("items", distinct=True))
+        )
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(place__user=request.user)
+
+    @admin.display(description="Items", ordering="items_count")
+    def item_count(self, obj):
+        return obj.items_count
 
     @admin.display(description="Photo")
     def photo_preview(self, obj):
@@ -91,21 +217,47 @@ class VisitAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        if obj.photo and not obj.photo_path:
-            obj.photo_path = obj.photo.name
-            Visit.objects.filter(pk=obj.pk).update(photo_path=obj.photo_path)
+        persist_photo_path_with_history(request, obj)
 
 
 @admin.register(VisitItem, site=admin_site)
-class VisitItemAdmin(admin.ModelAdmin):
-    list_display = ("name", "visit", "type", "rating", "price", "photo_preview")
-    list_filter = ("type", "would_order_again")
-    search_fields = ("name",)
-    readonly_fields = ("photo_preview", "created_at", "updated_at")
+class VisitItemAdmin(SimpleHistoryAdmin, ModelAdmin):
+    list_display = (
+        "name",
+        "visit",
+        "place_name",
+        "type",
+        "rating",
+        "price",
+        "would_order_again",
+        "photo_preview",
+    )
+    list_filter = (
+        ("type", ChoicesDropdownFilter),
+        "would_order_again",
+        ("rating", RangeNumericFilter),
+        ("price", RangeNumericFilter),
+    )
+    list_filter_submit = True
+    search_fields = ("name", "visit__place__name", "visit__place__category")
+    list_select_related = ("visit", "visit__place", "visit__place__user")
+    autocomplete_fields = ("visit",)
+    readonly_fields = (
+        "public_id",
+        "photo_preview",
+        "photo_path",
+        "created_at",
+        "updated_at",
+    )
+    list_per_page = ADMIN_LIST_PER_PAGE
+    list_fullwidth = True
+    compressed_fields = True
+    warn_unsaved_form = True
     fieldsets = (
         (
-            None,
+            "Item",
             {
+                "classes": ("tab",),
                 "fields": (
                     "visit",
                     "name",
@@ -114,15 +266,34 @@ class VisitItemAdmin(admin.ModelAdmin):
                     "price",
                     "would_order_again",
                     "notes",
-                )
+                ),
             },
         ),
-        ("Photo", {"fields": ("photo", "photo_preview")}),
+        ("Foto", {"classes": ("tab",), "fields": ("photo", "photo_preview")}),
         (
-            "Timestamps",
-            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+            "Sistema",
+            {
+                "classes": ("tab",),
+                "fields": (
+                    "public_id",
+                    "photo_path",
+                    "deleted_at",
+                    "created_at",
+                    "updated_at",
+                ),
+            },
         ),
     )
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(visit__place__user=request.user)
+
+    @admin.display(description="Place", ordering="visit__place__name")
+    def place_name(self, obj):
+        return obj.visit.place.name
 
     @admin.display(description="Photo")
     def photo_preview(self, obj):
@@ -130,6 +301,4 @@ class VisitItemAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        if obj.photo and not obj.photo_path:
-            obj.photo_path = obj.photo.name
-            VisitItem.objects.filter(pk=obj.pk).update(photo_path=obj.photo_path)
+        persist_photo_path_with_history(request, obj)

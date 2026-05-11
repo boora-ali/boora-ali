@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from simple_history.models import HistoricalRecords
 
 from core.models import PublicIdModel
 
@@ -50,6 +51,7 @@ class VisitItemType(models.TextChoices):
 
 class Place(PublicIdModel, TimeStampedModel):
     objects = PlaceQuerySet.as_manager()
+    history = HistoricalRecords()
 
     deleted_at = models.DateTimeField(
         null=True, blank=True, verbose_name="deleted at", db_column="deleted_at"
@@ -129,6 +131,7 @@ class Place(PublicIdModel, TimeStampedModel):
 
 class Visit(PublicIdModel, TimeStampedModel):
     objects = VisitQuerySet.as_manager()
+    history = HistoricalRecords()
 
     deleted_at = models.DateTimeField(
         null=True, blank=True, verbose_name="deleted at", db_column="deleted_at"
@@ -207,6 +210,7 @@ class Visit(PublicIdModel, TimeStampedModel):
 
 class VisitItem(PublicIdModel, TimeStampedModel):
     objects = VisitItemQuerySet.as_manager()
+    history = HistoricalRecords()
 
     deleted_at = models.DateTimeField(
         null=True, blank=True, verbose_name="deleted at", db_column="deleted_at"
