@@ -23,17 +23,16 @@ WORKDIR /app
 COPY . .
 
 RUN addgroup -S app && adduser -S app -G app && \
-    chmod +x entrypoint.sh && \
+    chmod +x /app/entrypoint.sh && \
     mkdir -p /app/staticfiles && \
-    chown -R app:app /app && \
-    chmod -R 775 /app/staticfiles
+    chmod -R 777 /app/staticfiles
 
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD wget -qO- http://127.0.0.1:8000/api/health/ || exit 1
 
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["gunicorn", "config.wsgi:application", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "2", \
