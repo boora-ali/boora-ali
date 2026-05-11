@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { useAuth } from "../contexts/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +57,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     if (hasTurnstile && !turnstileToken) {
+      toast.error(t(turnstileError ? "auth.login.turnstileUnavailable" : "auth.login.turnstileRequired"));
       form.setError("root", {
         message: t(turnstileError ? "auth.login.turnstileUnavailable" : "auth.login.turnstileRequired"),
       });
@@ -67,6 +69,7 @@ export default function LoginPage() {
       nav("/places");
     } catch (error) {
       const apiError = getApiErrorState(error, t("auth.login.error"));
+      toast.error(apiError.message);
       form.setError("root", { message: apiError.message });
       applyApiErrors(form.setError, apiError.fieldErrors);
       setTurnstileReset((n) => n + 1);
@@ -149,6 +152,7 @@ export default function LoginPage() {
                   nav("/places");
                 } catch (error) {
                   const apiError = getApiErrorState(error, t("auth.login.error"));
+                  toast.error(apiError.message);
                   form.setError("root", { message: apiError.message });
                   applyApiErrors(form.setError, apiError.fieldErrors);
                 }

@@ -48,9 +48,9 @@ test("renders translated visit item labels instead of raw i18n keys", async () =
   expect(screen.queryByText("visitForm.notes")).not.toBeInTheDocument();
   expect(screen.queryByText("visitForm.items")).not.toBeInTheDocument();
 
-  await user.click(screen.getByRole("button", { name: /add item/i }));
+  await user.click(screen.getByRole("button", { name: /add food or drink/i }));
 
-  expect(screen.getAllByText("Add item").length).toBeGreaterThanOrEqual(1);
+  expect(screen.getAllByText("Add food or drink").length).toBeGreaterThanOrEqual(1);
   expect(screen.getByRole("combobox")).toHaveTextContent("Other");
   expect(screen.getAllByText("Photo").length).toBeGreaterThanOrEqual(2);
   expect(screen.queryByText("visitItemType.other")).not.toBeInTheDocument();

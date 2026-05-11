@@ -293,7 +293,7 @@ class TestPagination:
         r = auth_client.get("/api/places/")
         assert r.status_code == 200
         assert r.data["count"] == 25
-        assert len(r.data["results"]) == 20
+        assert len(r.data["results"]) == 4
 
     def test_next_page_exists(self, auth_client, user):
         baker.make("places.Place", user=user, _quantity=25)

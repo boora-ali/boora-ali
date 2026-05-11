@@ -84,6 +84,15 @@ export function AccountMenu() {
                 {t("account.menu.account")}
               </Link>
             )}
+            {pathname !== "/places/trash" && (
+              <Link
+                to="/places/trash"
+                onClick={() => setOpen(false)}
+                className="block rounded-xl px-3 py-2 text-sm font-medium text-text transition hover:bg-background"
+              >
+                {t("account.menu.trash")}
+              </Link>
+            )}
             <div className="flex items-center justify-between gap-3 px-3">
               <span className="text-sm text-muted">{t("account.menu.language")}</span>
               <LanguageToggle />

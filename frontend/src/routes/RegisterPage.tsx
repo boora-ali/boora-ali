@@ -3,9 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { authService } from "../services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Form,
   FormControl,
@@ -50,6 +52,7 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     if (hasTurnstile && !turnstileToken) {
+      toast.error(t(turnstileError ? "auth.register.turnstileUnavailable" : "auth.register.turnstileRequired"));
       form.setError("root", {
         message: t(turnstileError ? "auth.register.turnstileUnavailable" : "auth.register.turnstileRequired"),
       });
@@ -69,6 +72,7 @@ export default function RegisterPage() {
       nav("/login");
     } catch (error) {
       const apiError = getApiErrorState(error, t("auth.register.error"));
+      toast.error(apiError.message);
       form.setError("root", { message: apiError.message });
       applyApiErrors(form.setError, apiError.fieldErrors);
       setTurnstileReset((n) => n + 1);
@@ -158,14 +162,14 @@ export default function RegisterPage() {
               control={form.control}
               render={({ field }) => (
                 <label className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
+                  <Switch
                     checked={!!field.value}
-                    onChange={(e) => {
-                      field.onChange(e.target.checked || undefined);
-                      if (e.target.checked) form.clearErrors("root");
+                    onCheckedChange={(checked) => {
+                      field.onChange(checked || undefined);
+                      if (checked) form.clearErrors("root");
                     }}
-                    className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                    className="mt-0.5"
+                    aria-label={t("auth.register.termsAccept")}
                   />
                   <span className="text-sm text-muted-foreground leading-snug">
                     {t("auth.register.termsAccept")}{" "}

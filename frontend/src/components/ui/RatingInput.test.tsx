@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { RatingInput } from "./RatingInput";
 
@@ -7,16 +7,12 @@ function Wrapper() {
   return <RatingInput label="Rating" value={v} onChange={setV} />;
 }
 
-test("rejects values below 0 or above 10", () => {
+test("renders a 0 to 10 slider with the current rating", () => {
   render(<Wrapper />);
-  const input = screen.getByLabelText("Rating") as HTMLInputElement;
+  const slider = screen.getByRole("slider", { name: "Rating" });
 
-  fireEvent.change(input, { target: { value: "11" } });
-  expect(input.value).toBe("5");
-
-  fireEvent.change(input, { target: { value: "-1" } });
-  expect(input.value).toBe("5");
-
-  fireEvent.change(input, { target: { value: "7" } });
-  expect(input.value).toBe("7");
+  expect(slider).toHaveAttribute("aria-valuemin", "0");
+  expect(slider).toHaveAttribute("aria-valuemax", "10");
+  expect(slider).toHaveAttribute("aria-valuenow", "5");
+  expect(screen.getByText("5/10")).toBeInTheDocument();
 });

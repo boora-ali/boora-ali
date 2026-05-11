@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import type { VisitItem, VisitItemType } from "../../types/visit-item";
 import { VISIT_ITEM_TYPES } from "../../utils/constants";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { RatingInput } from "../ui/RatingInput";
 import { CharacterCount } from "../ui/CharacterCount";
+import { Switch } from "@/components/ui/switch";
 import { validateImageFile, ALLOWED_IMAGE_ACCEPT } from "../../utils/url";
 import { AuthImage } from "../ui/AuthImage";
 import { visitItemSchema, type VisitItemFormValues } from "../../schemas/visit";
@@ -41,6 +43,7 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
   const existingPhoto = typeof defaultValues?.photo === "string" ? defaultValues.photo : null;
   const [preview, setPreview] = useState<string | null>(existingPhoto);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [removedPhoto, setRemovedPhoto] = useState(false);
   const [photoError, setPhotoError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -66,10 +69,11 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
       return;
     }
     const err = validateImageFile(file);
-    if (err === "type") { setPhotoError(t("upload.invalidType")); e.target.value = ""; return; }
-    if (err === "size") { setPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
+    if (err === "type") { toast.error(t("upload.invalidType")); setPhotoError(t("upload.invalidType")); e.target.value = ""; return; }
+    if (err === "size") { toast.error(t("upload.tooLarge")); setPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
     setPhotoError("");
     setPhotoFile(file);
+    setRemovedPhoto(false);
     setPreview(URL.createObjectURL(file));
   }
 
@@ -77,7 +81,13 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
     onSave({
       ...data,
       price: data.price != null ? String(data.price) : null,
-      ...(photoFile ? { photo: photoFile } : existingPhoto ? { photo: existingPhoto } : {}),
+      ...(photoFile
+        ? { photo: photoFile }
+        : removedPhoto
+        ? { photo: "" }
+        : existingPhoto
+        ? { photo: existingPhoto }
+        : {}),
     });
   };
 
@@ -173,11 +183,10 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
           control={control}
           render={({ field }) => (
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
+              <Switch
                 checked={!!field.value}
-                onChange={(e) => field.onChange(e.target.checked)}
-                className="h-4 w-4 rounded border-border accent-primary"
+                onCheckedChange={field.onChange}
+                aria-label={t("visitItemForm.wouldOrderAgain")}
               />
               <span className="text-sm font-medium">{t("visitItemForm.wouldOrderAgain")}</span>
             </label>
@@ -206,6 +215,20 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
               </div>
             )}
           </button>
+          {preview && (
+            <button
+              type="button"
+              onClick={() => {
+                setPhotoFile(null);
+                setRemovedPhoto(true);
+                setPreview(null);
+                if (fileRef.current) fileRef.current.value = "";
+              }}
+              className="text-xs text-muted-foreground transition hover:text-destructive"
+            >
+              {t("placeForm.removePhoto")}
+            </button>
+          )}
           {photoError && <p className="text-sm text-destructive">{photoError}</p>}
         </div>
       </form>

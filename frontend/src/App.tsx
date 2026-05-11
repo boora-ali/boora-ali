@@ -7,6 +7,7 @@ import { ProtectedLayout } from "./components/layout/ProtectedLayout";
 import { GlobalLoadingBar } from "./components/ui/GlobalLoadingBar";
 import { useAuth } from "./contexts/useAuth";
 import { LoadingState } from "./components/ui/LoadingState";
+import { Toaster } from "@/components/ui/sonner";
 const LoginPage = lazy(() => import("./routes/LoginPage"));
 const RegisterPage = lazy(() => import("./routes/RegisterPage"));
 const PrivacyPolicyPage = lazy(() => import("./routes/PrivacyPolicyPage"));
@@ -39,6 +40,7 @@ export default function App() {
   return (
     <AuthProvider>
       <GlobalLoadingBar />
+      <Toaster position="top-center" richColors />
       <BrowserRouter>
         <Suspense fallback={<div className="min-h-screen p-4"><LoadingState /></div>}>
           <Routes>

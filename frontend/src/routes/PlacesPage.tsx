@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { placesService, type Page } from "../services/places.service";
@@ -14,6 +14,15 @@ import { LoadingState } from "../components/ui/LoadingState";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { PlacesMap } from "../components/places/PlacesMap";
 import { isSessionExpiredError } from "../services/api-errors";
+import { PaginationDots } from "../components/ui/PaginationDots";
+import {
+  type CarouselApi,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+
+const PAGE_SIZE = 4;
 
 const STATUS_ICONS: Record<string, string> = {
   want_to_visit: "👁",
@@ -34,6 +43,7 @@ export default function PlacesPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [data, setData] = useState<Page<Place> | null>(null);
+  const [pageCache, setPageCache] = useState<Record<number, Place[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -42,6 +52,9 @@ export default function PlacesPage() {
   const [page, setPage] = useState(1);
   const [mapPlaces, setMapPlaces] = useState<Place[]>([]);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [showMap, setShowMap] = useState(false);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const skipNextSelect = useRef(false);
 
   useEffect(() => {
     const handlePlacesChanged = () => setRefreshTick((value) => value + 1);
@@ -49,29 +62,49 @@ export default function PlacesPage() {
     return () => window.removeEventListener(PLACES_CHANGED_EVENT, handlePlacesChanged);
   }, []);
 
+  // Reset cache and page when filters/search change (React docs pattern: storing prev render info)
+  const [prevFilters, setPrevFilters] = useState({ debouncedSearch, status, refreshTick });
+  if (
+    prevFilters.debouncedSearch !== debouncedSearch ||
+    prevFilters.status !== status ||
+    prevFilters.refreshTick !== refreshTick
+  ) {
+    setPrevFilters({ debouncedSearch, status, refreshTick });
+    setPageCache({});
+    setPage(1);
+  }
+
   useEffect(() => {
+    let cancelled = false;
     startTransition(() => {
       setLoading(true);
     });
     placesService
       .list({ page, search: debouncedSearch || undefined, status: (status as PlaceStatus) || undefined })
       .then((nextData) => {
+        if (cancelled) return;
         setData(nextData);
+        setPageCache((prev) => ({ ...prev, [page]: nextData.results }));
         setError("");
       })
       .catch((err) => {
+        if (cancelled) return;
         if (isSessionExpiredError(err)) {
           navigate("/login", { replace: true });
           return;
         }
         setError(t("places.error"));
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [navigate, debouncedSearch, status, page, t, location.key, refreshTick]);
 
   useEffect(() => {
     let cancelled = false;
-
     placesService
       .listAll({ search: debouncedSearch || undefined, status: (status as PlaceStatus) || undefined })
       .then((places) => {
@@ -80,11 +113,36 @@ export default function PlacesPage() {
       .catch(() => {
         if (!cancelled) setMapPlaces([]);
       });
-
     return () => {
       cancelled = true;
     };
   }, [debouncedSearch, status, location.key, refreshTick]);
+
+  const totalPages = data ? Math.max(1, Math.ceil(data.count / PAGE_SIZE)) : 1;
+
+  // Sync carousel position with `page` state (e.g. when filters reset to 1)
+  useEffect(() => {
+    if (!carouselApi) return;
+    if (carouselApi.selectedScrollSnap() === page - 1) return;
+    skipNextSelect.current = true;
+    carouselApi.scrollTo(page - 1, true);
+  }, [carouselApi, page, totalPages]);
+
+  // Listen to swipe / drag → setPage
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => {
+      if (skipNextSelect.current) {
+        skipNextSelect.current = false;
+        return;
+      }
+      setPage(carouselApi.selectedScrollSnap() + 1);
+    };
+    carouselApi.on("select", onSelect);
+    return () => {
+      carouselApi.off("select", onSelect);
+    };
+  }, [carouselApi]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
@@ -97,14 +155,6 @@ export default function PlacesPage() {
           <p className="text-muted text-sm mt-1">{t("places.subtitle")}</p>
         </div>
         <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
-          <Link to="/places/trash" className="flex-1 sm:flex-none">
-            <Button size="sm" variant="secondary" className="w-full sm:w-auto gap-1.5">
-              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-              </svg>
-              {t("trash.title")}
-            </Button>
-          </Link>
           <Link to="/places/new" className="flex-1 sm:flex-none" data-testid="places-new-place-link">
             <Button size="sm" className="w-full sm:w-auto" data-testid="places-new-place-button">
               {t("places.new")}
@@ -151,35 +201,73 @@ export default function PlacesPage() {
       </div>
 
       {/* Content */}
-      {loading && <LoadingState />}
+      {loading && !data && <LoadingState />}
       {!loading && error && <ErrorMessage message={error} />}
       {!loading && !error && data?.count === 0 && (
         <EmptyState
-          title={t("places.empty.title")}
-          description={t("places.empty.description")}
+          title={debouncedSearch ? t("places.emptySearch.title") : t("places.empty.title")}
+          description={debouncedSearch ? t("places.emptySearch.description") : t("places.empty.description")}
+          action={!debouncedSearch ? (
+            <Link to="/places/new">
+              <Button>{t("places.new")}</Button>
+            </Link>
+          ) : undefined}
         />
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {!loading && !error && data?.results.map((p, i) => (
-          <PlaceCard key={p.public_id} place={p} index={i} />
-        ))}
-      </div>
+      {!error && data && data.results.length > 0 && (
+        <Carousel
+          aria-label={t("places.title")}
+          className="w-full"
+          opts={{ align: "start", dragFree: false, startIndex: page - 1 }}
+          setApi={setCarouselApi}
+        >
+          <CarouselContent>
+            {Array.from({ length: totalPages }, (_, i) => {
+              const slidePlaces = pageCache[i + 1];
+              return (
+                <CarouselItem key={i}>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {slidePlaces
+                      ? slidePlaces.map((place, idx) => (
+                          <PlaceCard key={place.public_id} place={place} index={idx} />
+                        ))
+                      : Array.from({ length: PAGE_SIZE }, (_, j) => (
+                          <div
+                            key={j}
+                            className="h-64 rounded-2xl bg-muted-foreground/10 animate-pulse"
+                          />
+                        ))}
+                  </div>
+                </CarouselItem>
+              );
+            })}
+          </CarouselContent>
+        </Carousel>
+      )}
 
-      {/* Pagination */}
-      {data && (data.next || data.previous) && (
-        <div className="flex items-center justify-between gap-3 pt-2">
-          <Button variant="secondary" disabled={!data.previous} onClick={() => setPage((n) => n - 1)}>
-            {t("places.previous")}
-          </Button>
-          <span className="text-muted text-sm">{t("places.page", { page })}</span>
-          <Button variant="secondary" disabled={!data.next} onClick={() => setPage((n) => n + 1)}>
-            {t("places.next")}
+      {!error && data && totalPages > 1 && (
+        <PaginationDots
+          count={totalPages}
+          current={page - 1}
+          onChange={(idx) => carouselApi?.scrollTo(idx)}
+          ariaLabel={t("places.title")}
+        />
+      )}
+
+      {!loading && !error && data && data.count > 0 && (
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setShowMap((value) => !value)}
+          >
+            {showMap ? t("places.map.hide") : t("places.map.show")}
           </Button>
         </div>
       )}
 
-      {!loading && !error && data && data.count > 0 && (
+      {!loading && !error && data && data.count > 0 && showMap && (
         <PlacesMap places={mapPlaces.length > 0 ? mapPlaces : data.results} />
       )}
     </div>
