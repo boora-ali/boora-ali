@@ -4,6 +4,7 @@ Diário pessoal de lugares — cafés, restaurantes, bares. Catalogue, avalie, r
 
 **Stack**: Django + DRF + SimpleJWT + PostgreSQL + Valkey · Celery (tarefas assíncronas) · React + Vite + TypeScript + Tailwind · nginx · Cloudflare R2 (produção) · VersityGW (desenvolvimento local) · Jaeger
 
+
 Leitura rápida:
 - [Arquitetura & modelo de dados](docs/architecture.md)
 - [Guia de desenvolvimento](docs/development.md)
