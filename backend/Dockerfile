@@ -23,9 +23,9 @@ WORKDIR /app
 COPY . .
 
 RUN addgroup -S app && adduser -S app -G app && \
-    chown -R app:app /app && \
     chmod +x entrypoint.sh && \
-    DJANGO_SKIP_SECRET_KEY_CHECK=True python manage.py collectstatic --noinput
+    DJANGO_SKIP_SECRET_KEY_CHECK=True python manage.py collectstatic --noinput && \
+    chown -R app:app /app
 
 USER app
 
