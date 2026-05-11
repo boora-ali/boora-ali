@@ -3,9 +3,12 @@ import uuid
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from simple_history.models import HistoricalRecords
 
 
 class UserSession(models.Model):
+    history = HistoricalRecords()
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -27,11 +30,13 @@ class UserSession(models.Model):
         from .authentication import invalidate_session_cache
 
         self.session_key = uuid.uuid4()
-        type(self).objects.filter(pk=self.pk).update(session_key=self.session_key)
+        self.save(update_fields=["session_key"])
         invalidate_session_cache(self.user_id)
 
 
 class UserProfile(models.Model):
+    history = HistoricalRecords()
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -67,6 +72,8 @@ class UserProfile(models.Model):
 
 
 class GoogleIdentity(models.Model):
+    history = HistoricalRecords()
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

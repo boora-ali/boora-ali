@@ -2,17 +2,17 @@ services:
   postgres:
     image: postgres:16
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-bora_ali}
-      POSTGRES_USER: ${POSTGRES_USER:-bora}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bora}
+    env_file:
+      - .env.dev
     volumes:
       - bora_ali_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # PostgreSQL para comandos locais do Django
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-bora} -d ${POSTGRES_DB:-bora_ali}",
+          "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB",
         ]
       interval: 5s
       timeout: 5s
@@ -58,6 +58,8 @@ services:
           cpus: "0.1"
           memory: 128M
     command: valkey-server --maxmemory 100mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379" # Redis/Valkey para comandos locais do Django/Celery
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
@@ -92,6 +94,8 @@ services:
         condition: service_started
       valkey:
         condition: service_healthy
+    ports:
+      - "8000:8000" # Django direto, além do proxy em localhost:8080
     volumes:
       - staticfiles:/app/staticfiles
 
@@ -123,6 +127,29 @@ services:
         condition: service_healthy
       storage:
         condition: service_started
+      valkey:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.dev
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      AWS_S3_ENDPOINT_URL: http://storage:7070
+      AWS_ACCESS_KEY_ID: ${VERSITYGW_ACCESS_KEY:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${VERSITYGW_SECRET_KEY:-minioadmin}
+      OTEL_SERVICE_NAME: bora-ali
+      REDIS_URL: redis://valkey:6379/1
+      CELERY_BROKER_URL: redis://valkey:6379/2
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
       valkey:
         condition: service_healthy
 

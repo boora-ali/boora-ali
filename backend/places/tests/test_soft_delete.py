@@ -60,6 +60,8 @@ class TestPlaceSoftDelete:
         place = baker.make("places.Place", user=user)
         visit = baker.make("places.Visit", place=place)
         item = baker.make("places.VisitItem", visit=visit)
+        visit_history_count = visit.history.count()
+        item_history_count = item.history.count()
         api_client.force_authenticate(user)
 
         api_client.delete(f"/api/places/{place.public_id}/")
@@ -68,6 +70,8 @@ class TestPlaceSoftDelete:
         item.refresh_from_db()
         assert visit.deleted_at is not None
         assert item.deleted_at is not None
+        assert visit.history.count() == visit_history_count + 1
+        assert item.history.count() == item_history_count + 1
 
     def test_deleted_place_hidden_from_list(self, api_client, user):
         baker.make("places.Place", user=user, deleted_at="2026-01-01T00:00:00Z")
@@ -124,6 +128,9 @@ class TestTrashAndRestore:
         item = baker.make(
             "places.VisitItem", visit=visit, deleted_at="2026-01-01T00:00:00Z"
         )
+        place_history_count = place.history.count()
+        visit_history_count = visit.history.count()
+        item_history_count = item.history.count()
         api_client.force_authenticate(user)
 
         response = api_client.post(f"/api/places/{place.public_id}/restore/")
@@ -135,6 +142,9 @@ class TestTrashAndRestore:
         assert place.deleted_at is None
         assert visit.deleted_at is None
         assert item.deleted_at is None
+        assert place.history.count() == place_history_count + 1
+        assert visit.history.count() == visit_history_count + 1
+        assert item.history.count() == item_history_count + 1
 
     def test_restore_rejects_other_user(self, api_client, user):
         other_user = baker.make("auth.User")

@@ -23,6 +23,12 @@ from .serializers import (
 from .tasks import resolve_place_coords
 
 
+def save_deleted_at_with_history(queryset, deleted_at):
+    for instance in queryset.iterator():
+        instance.deleted_at = deleted_at
+        instance.save(update_fields=["deleted_at"])
+
+
 class PlaceViewSet(ViewSetBase):
     queryset = Place.objects.all()
     lookup_field = "public_id"
@@ -69,11 +75,15 @@ class PlaceViewSet(ViewSetBase):
     def perform_destroy(self, instance):
         now = timezone.now()
         with transaction.atomic():
-            VisitItem.objects.filter(
-                visit__place=instance, deleted_at__isnull=True
-            ).update(deleted_at=now)
-            Visit.objects.filter(place=instance, deleted_at__isnull=True).update(
-                deleted_at=now
+            save_deleted_at_with_history(
+                VisitItem.objects.filter(
+                    visit__place=instance, deleted_at__isnull=True
+                ),
+                now,
+            )
+            save_deleted_at_with_history(
+                Visit.objects.filter(place=instance, deleted_at__isnull=True),
+                now,
             )
             instance.deleted_at = now
             instance.save(update_fields=["deleted_at"])
@@ -102,8 +112,10 @@ class PlaceViewSet(ViewSetBase):
         with transaction.atomic():
             place.deleted_at = None
             place.save(update_fields=["deleted_at"])
-            Visit.objects.filter(place=place).update(deleted_at=None)
-            VisitItem.objects.filter(visit__place=place).update(deleted_at=None)
+            save_deleted_at_with_history(Visit.objects.filter(place=place), None)
+            save_deleted_at_with_history(
+                VisitItem.objects.filter(visit__place=place), None
+            )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["delete"], url_path="permanent")
@@ -174,8 +186,9 @@ class VisitViewSet(WriteViewSetBase):
     def perform_destroy(self, instance):
         now = timezone.now()
         with transaction.atomic():
-            VisitItem.objects.filter(visit=instance, deleted_at__isnull=True).update(
-                deleted_at=now
+            save_deleted_at_with_history(
+                VisitItem.objects.filter(visit=instance, deleted_at__isnull=True),
+                now,
             )
             instance.deleted_at = now
             instance.save(update_fields=["deleted_at"])

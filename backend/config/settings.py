@@ -3,6 +3,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
 
 _log = logging.getLogger(__name__)
@@ -101,6 +103,11 @@ if not DEBUG:
     SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 INSTALLED_APPS = [
+    "unfold",
+    "unfold.contrib.filters",
+    "unfold.contrib.forms",
+    "unfold.contrib.inlines",
+    "unfold.contrib.simple_history",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -113,9 +120,231 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "drf_spectacular",
+    "simple_history",
+    "django_celery_beat",
     "accounts",
     "places",
 ]
+
+UNFOLD = {
+    "SITE_TITLE": _("Bora Ali Admin"),
+    "SITE_HEADER": _("Bora Ali"),
+    "SITE_SUBHEADER": _("Diário pessoal de lugares"),
+    "SITE_SYMBOL": "travel_explore",
+    "SITE_URL": "/",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": False,
+    "SHOW_BACK_BUTTON": True,
+    "BORDER_RADIUS": "8px",
+    "COLORS": {
+        "primary": {
+            "50": "oklch(97.6% .018 166.113)",
+            "100": "oklch(95% .052 163.051)",
+            "200": "oklch(90.5% .093 164.15)",
+            "300": "oklch(84.5% .143 164.978)",
+            "400": "oklch(76.5% .177 163.223)",
+            "500": "oklch(69.6% .17 162.48)",
+            "600": "oklch(59.6% .145 163.225)",
+            "700": "oklch(50.8% .118 165.612)",
+            "800": "oklch(43.2% .095 166.913)",
+            "900": "oklch(37.8% .077 168.94)",
+            "950": "oklch(26.2% .051 172.552)",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "command_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": _("Insights"),
+                "separator": True,
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": _("Dashboard"),
+                        "icon": "dashboard",
+                        "link": reverse_lazy("boraali_admin:index"),
+                    },
+                    {
+                        "title": _("Lugares"),
+                        "icon": "location_on",
+                        "link": reverse_lazy("boraali_admin:places_place_changelist"),
+                    },
+                    {
+                        "title": _("Visitas"),
+                        "icon": "event_available",
+                        "link": reverse_lazy("boraali_admin:places_visit_changelist"),
+                    },
+                    {
+                        "title": _("Itens consumidos"),
+                        "icon": "restaurant",
+                        "link": reverse_lazy(
+                            "boraali_admin:places_visititem_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": _("Contas"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Usuários"),
+                        "icon": "people",
+                        "link": reverse_lazy("boraali_admin:auth_user_changelist"),
+                    },
+                    {
+                        "title": _("Grupos"),
+                        "icon": "groups",
+                        "link": reverse_lazy("boraali_admin:auth_group_changelist"),
+                    },
+                    {
+                        "title": _("Perfis"),
+                        "icon": "account_circle",
+                        "link": reverse_lazy(
+                            "boraali_admin:accounts_userprofile_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Google"),
+                        "icon": "passkey",
+                        "link": reverse_lazy(
+                            "boraali_admin:accounts_googleidentity_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Sessões de usuário"),
+                        "icon": "devices",
+                        "link": reverse_lazy(
+                            "boraali_admin:accounts_usersession_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": _("Segurança"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Tokens ativos"),
+                        "icon": "key",
+                        "link": reverse_lazy(
+                            "boraali_admin:token_blacklist_outstandingtoken_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Tokens bloqueados"),
+                        "icon": "block",
+                        "link": reverse_lazy(
+                            "boraali_admin:token_blacklist_blacklistedtoken_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": _("Operações"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Tasks periódicas"),
+                        "icon": "task_alt",
+                        "link": reverse_lazy(
+                            "boraali_admin:django_celery_beat_periodictask_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Crontabs"),
+                        "icon": "schedule",
+                        "link": reverse_lazy(
+                            "boraali_admin:django_celery_beat_crontabschedule_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Intervalos"),
+                        "icon": "timer",
+                        "link": reverse_lazy(
+                            "boraali_admin:django_celery_beat_intervalschedule_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Solar"),
+                        "icon": "wb_sunny",
+                        "link": reverse_lazy(
+                            "boraali_admin:django_celery_beat_solarschedule_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Execução única"),
+                        "icon": "event",
+                        "link": reverse_lazy(
+                            "boraali_admin:django_celery_beat_clockedschedule_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Estado do beat"),
+                        "icon": "update",
+                        "link": reverse_lazy(
+                            "boraali_admin:django_celery_beat_periodictasks_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": _("Sistema"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Sessões Django"),
+                        "icon": "storage",
+                        "link": reverse_lazy(
+                            "boraali_admin:sessions_session_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Tipos de conteúdo"),
+                        "icon": "category",
+                        "link": reverse_lazy(
+                            "boraali_admin:contenttypes_contenttype_changelist"
+                        ),
+                    },
+                ],
+            },
+        ],
+    },
+    "TABS": [
+        {
+            "models": [
+                "places.place",
+                "places.visit",
+                "places.visititem",
+                {"name": "places.place", "detail": True},
+                {"name": "places.visit", "detail": True},
+                {"name": "places.visititem", "detail": True},
+            ],
+            "items": [
+                {
+                    "title": _("Lugares"),
+                    "link": reverse_lazy("boraali_admin:places_place_changelist"),
+                },
+                {
+                    "title": _("Visitas"),
+                    "link": reverse_lazy("boraali_admin:places_visit_changelist"),
+                },
+                {
+                    "title": _("Itens"),
+                    "link": reverse_lazy("boraali_admin:places_visititem_changelist"),
+                },
+            ],
+        },
+    ],
+}
+
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -126,6 +355,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "simple_history.middleware.HistoryRequestMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

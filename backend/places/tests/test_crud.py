@@ -154,11 +154,13 @@ class TestVisitCRUD:
     def test_delete_cascades_to_items(self, auth_client, user):
         visit = baker.make("places.Visit", place__user=user)
         item = baker.make("places.VisitItem", visit=visit)
+        item_history_count = item.history.count()
 
         auth_client.delete(f"/api/visits/{visit.public_id}/")
 
         item.refresh_from_db()
         assert item.deleted_at is not None
+        assert item.history.count() == item_history_count + 1
 
 
 # ═════════════════════════════════════════════════════════════
