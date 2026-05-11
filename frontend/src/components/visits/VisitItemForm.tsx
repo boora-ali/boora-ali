@@ -43,6 +43,7 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
   const existingPhoto = typeof defaultValues?.photo === "string" ? defaultValues.photo : null;
   const [preview, setPreview] = useState<string | null>(existingPhoto);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [removedPhoto, setRemovedPhoto] = useState(false);
   const [photoError, setPhotoError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -72,6 +73,7 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
     if (err === "size") { toast.error(t("upload.tooLarge")); setPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
     setPhotoError("");
     setPhotoFile(file);
+    setRemovedPhoto(false);
     setPreview(URL.createObjectURL(file));
   }
 
@@ -79,7 +81,13 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
     onSave({
       ...data,
       price: data.price != null ? String(data.price) : null,
-      ...(photoFile ? { photo: photoFile } : existingPhoto ? { photo: existingPhoto } : {}),
+      ...(photoFile
+        ? { photo: photoFile }
+        : removedPhoto
+        ? { photo: "" }
+        : existingPhoto
+        ? { photo: existingPhoto }
+        : {}),
     });
   };
 
@@ -207,6 +215,20 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
               </div>
             )}
           </button>
+          {preview && (
+            <button
+              type="button"
+              onClick={() => {
+                setPhotoFile(null);
+                setRemovedPhoto(true);
+                setPreview(null);
+                if (fileRef.current) fileRef.current.value = "";
+              }}
+              className="text-xs text-muted-foreground transition hover:text-destructive"
+            >
+              {t("placeForm.removePhoto")}
+            </button>
+          )}
           {photoError && <p className="text-sm text-destructive">{photoError}</p>}
         </div>
       </form>

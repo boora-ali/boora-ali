@@ -20,6 +20,7 @@ import { VisitCard } from "../components/visits/VisitCard";
 import { BackButton } from "../components/ui/BackButton";
 import { MapModal } from "../components/ui/MapModal";
 import { AuthImage } from "../components/ui/AuthImage";
+import { ResponsiveCardCarousel } from "../components/ui/ResponsiveCardCarousel";
 import { fmtPrice, fmtRating } from "../utils/formatters";
 import { sanitizeUrl } from "../utils/url";
 import { notifyPlacesChanged } from "../utils/places-state";
@@ -284,17 +285,25 @@ export default function PlaceDetailPage() {
           )}
         />
       ) : (
-        place.visits.map((v) => (
-          <VisitCard
-            key={v.public_id}
-            visit={v}
-            onEdit={() => nav(`/visits/${v.public_id}/edit`, { state: { visit: v } })}
-            onDelete={async () => {
-              await visitsService.remove(v.public_id);
-              setPlace({ ...place, visits: place.visits.filter((x) => x.public_id !== v.public_id) });
-            }}
-          />
-        ))
+        <ResponsiveCardCarousel
+          ariaLabel={t("placeDetail.visits.title", { count: place.visits.length })}
+          items={place.visits}
+          getKey={(v) => v.public_id}
+          mobilePageSize={1}
+          desktopPageSize={Math.max(place.visits.length, 1)}
+          mobileColumns={1}
+          desktopColumns={1}
+          renderItem={(v) => (
+            <VisitCard
+              visit={v}
+              onEdit={() => nav(`/visits/${v.public_id}/edit`, { state: { visit: v } })}
+              onDelete={async () => {
+                await visitsService.remove(v.public_id);
+                setPlace({ ...place, visits: place.visits.filter((x) => x.public_id !== v.public_id) });
+              }}
+            />
+          )}
+        />
       )}
 
       {canOpenMap && (

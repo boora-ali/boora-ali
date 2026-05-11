@@ -206,6 +206,7 @@
     "addConsumable": "+ Add food or drink",
     "save": "Save visit",
     "saveError": "Failed to save visit",
+    "removeItemError": "Failed to remove item",
     "newTitle": "New visit",
     "editTitle": "Edit visit",
     "loadError": "Failed to load the visit",

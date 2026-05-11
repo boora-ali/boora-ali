@@ -39,7 +39,7 @@ class PlaceQuerySet(models.QuerySet):
         if "visits.items" in expand_set:
             from .models import Visit, VisitItem
 
-            visit_items_queryset = VisitItem.objects.order_by("-created_at")
+            visit_items_queryset = VisitItem.objects.live().order_by("-created_at")
             visits_queryset = Visit.objects.order_by("-visited_at").prefetch_related(
                 Prefetch("items", queryset=visit_items_queryset)
             )
@@ -60,7 +60,7 @@ class PlaceQuerySet(models.QuerySet):
         visits_queryset = Visit.objects.order_by("-visited_at")
 
         if "visits.items" in expand_set:
-            visit_items_queryset = VisitItem.objects.order_by("-created_at")
+            visit_items_queryset = VisitItem.objects.live().order_by("-created_at")
             visits_queryset = visits_queryset.prefetch_related(
                 Prefetch("items", queryset=visit_items_queryset)
             )
@@ -101,7 +101,7 @@ class VisitQuerySet(models.QuerySet):
         if "items" in expand_set:
             from .models import VisitItem
 
-            item_queryset = VisitItem.objects.order_by("-created_at")
+            item_queryset = VisitItem.objects.live().order_by("-created_at")
             queryset = queryset.prefetch_related(
                 Prefetch("items", queryset=item_queryset)
             )
@@ -115,7 +115,7 @@ class VisitQuerySet(models.QuerySet):
         if "items" not in expand_set:
             from .models import VisitItem
 
-            item_queryset = VisitItem.objects.order_by("-created_at")
+            item_queryset = VisitItem.objects.live().order_by("-created_at")
             queryset = queryset.prefetch_related(
                 Prefetch("items", queryset=item_queryset)
             )

@@ -131,7 +131,7 @@ export function ResponsiveCardCarousel<T>({
               className={`h-2.5 rounded-full transition-all ${
                 current === index
                   ? "w-7 bg-primary"
-                  : "w-2.5 bg-muted/40 hover:bg-muted"
+                  : "w-2.5 bg-muted-foreground/30 hover:bg-muted-foreground/60"
               }`}
             />
           ))}

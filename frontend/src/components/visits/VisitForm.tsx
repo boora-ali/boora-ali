@@ -91,6 +91,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
   const { t } = useTranslation();
   const [items, setItems] = useState<ItemPayload[]>(initialItems);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [removedPhoto, setRemovedPhoto] = useState(false);
   const [preview, setPreview] = useState<string | null>(initial.photo ?? null);
   const [removeError, setRemoveError] = useState("");
   const [itemSaveError, setItemSaveError] = useState("");
@@ -147,6 +148,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
     if (err === "type") { toast.error(t("upload.invalidType")); setError("root", { message: t("upload.invalidType") }); e.target.value = ""; return; }
     if (err === "size") { toast.error(t("upload.tooLarge")); setError("root", { message: t("upload.tooLarge") }); e.target.value = ""; return; }
     setPhotoFile(file);
+    setRemovedPhoto(false);
     setPreviewFromFile(file);
   }
 
@@ -155,13 +157,15 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
     if (item.public_id) {
       try {
         await visitItemsService.remove(item.public_id);
-      } catch {
-        toast.error(t("visitForm.removeItemError"));
-        setRemoveError(t("visitForm.removeItemError"));
+      } catch (error) {
+        const apiError = getApiErrorState(error, t("visitForm.removeItemError"));
+        toast.error(apiError.message);
+        setRemoveError(apiError.message);
         return;
       }
     }
     setItems((prev) => prev.filter((_, i) => i !== index));
+    setRemoveError("");
   }
 
   function openAdd() {
@@ -205,7 +209,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
   const onFormSubmit = async (data: VisitFormValues) => {
     try {
       await onSubmit(
-        { ...data, ...(photoFile ? { photo: photoFile } : {}) },
+        { ...data, ...(photoFile ? { photo: photoFile } : removedPhoto ? { photo: "" } : {}) },
         items,
       );
     } catch (error) {
@@ -334,7 +338,12 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
           {preview && (
             <button
               type="button"
-              onClick={() => { setPhotoFile(null); setPreview(null); }}
+              onClick={() => {
+                setPhotoFile(null);
+                setRemovedPhoto(true);
+                setPreview(null);
+                if (fileRef.current) fileRef.current.value = "";
+              }}
               className="text-xs text-muted-foreground transition hover:text-destructive"
             >
               {t("placeForm.removePhoto")}
