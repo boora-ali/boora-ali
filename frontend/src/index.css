@@ -45,7 +45,7 @@
   --color-background: #1A1208;
   --color-surface: #261C0F;
   --color-text: #FAF7F2;
-  --color-muted: #A89880;
+  --color-muted: #B9A898;
   --color-border: #3D2E20;
 
   /* shadcn/ui dark mode */
@@ -60,7 +60,7 @@
   --secondary: 27 31% 19%;
   --secondary-foreground: 40 43% 97%;
   --muted: 27 31% 19%;
-  --muted-foreground: 28 17% 57%;
+  --muted-foreground: 28 20% 66%;
   --accent: 28 87% 67%;
   --accent-foreground: 37 53% 8%;
   --destructive: 0 63% 31%;

@@ -2,7 +2,7 @@
   "auth": {
     "login": {
       "title": "Bora Ali",
-      "subtitle": "Seu diário gastronômico pessoal",
+      "subtitle": "Registre lugares, visitas e pratos que valem lembrar.",
       "username": "Usuário",
       "password": "Senha",
       "submit": "Entrar",
@@ -45,7 +45,7 @@
     "subtitle": "Seu diário gastronômico pessoal",
     "new": "+ Novo lugar",
     "logout": "Sair",
-    "search": "Buscar lugares...",
+    "search": "Buscar por nome, categoria ou observação...",
     "all": "Todos",
     "error": "Falha ao carregar lugares",
     "page": "Página {{page}}",
@@ -53,6 +53,8 @@
     "next": "Próxima →",
     "map": {
       "title": "Mapa dos lugares",
+      "show": "Mostrar mapa",
+      "hide": "Ocultar mapa",
       "count": "{{count}} pins cadastrados",
       "ariaLabel": "Mapa dos lugares cadastrados",
       "showPlace": "Mostrar {{name}} no mapa",
@@ -65,6 +67,10 @@
     "empty": {
       "title": "Nenhum lugar ainda",
       "description": "Adicione seu primeiro lugar para começar."
+    },
+    "emptySearch": {
+      "title": "Nenhum lugar encontrado",
+      "description": "Tente buscar por outro nome, categoria ou observação."
     }
   },
   "pwa": {
@@ -86,6 +92,7 @@
     "menu": {
       "open": "Abrir menu da conta",
       "account": "Conta",
+      "trash": "Lixeira",
       "language": "Idioma",
       "logout": "Sair"
     },
@@ -116,7 +123,8 @@
     "deleteConfirmMessage": "Tem certeza que deseja excluir este lugar?",
     "deleteConfirmRestore": "Você pode restaurá-lo pela lixeira.",
     "instagram": "Instagram",
-    "maps": "Maps",
+    "maps": "Ver no Maps",
+    "actions": "Mais ações",
     "coordsPending": "Coordenadas sendo processadas, o mapa aparecerá em breve.",
     "coordsFailed": "Não foi possível extrair coordenadas. Edite o lugar e salve novamente para tentar de novo.",
     "consumables": {
@@ -137,7 +145,7 @@
     "category": "Categoria",
     "address": "Endereço",
     "instagram": "URL do Instagram",
-    "maps": "URL do Maps",
+    "maps": "Link do Google Maps",
     "location": "Localização",
     "locationHint": "Clique para colocar o pin. Arraste o mapa para ajustar a região.",
     "clearLocation": "Remover localização",
@@ -158,11 +166,21 @@
     "coverPhoto": "Foto de capa",
     "changePhoto": "Trocar foto",
     "uploadPhoto": "Enviar foto",
-    "removePhoto": "Remover",
+    "removePhoto": "Remover foto",
     "save": "Salvar",
     "nameRequired": "Nome é obrigatório",
     "saveError": "Falha ao salvar lugar",
-    "coverPreviewAlt": "Prévia da capa"
+    "coverPreviewAlt": "Prévia da capa",
+    "sections": {
+      "basic": "Informações básicas",
+      "basicDescription": "Nome, categoria e status do lugar.",
+      "location": "Localização",
+      "locationDescription": "Endereço, link do Google Maps e pin no mapa.",
+      "notes": "Notas e status",
+      "notesDescription": "O que vale lembrar antes de voltar.",
+      "photo": "Foto",
+      "photoDescription": "Imagem de capa para reconhecer o lugar rápido."
+    }
   },
   "newPlace": {
     "title": "Novo lugar"
@@ -179,18 +197,25 @@
     "environmentRating": "Ambiente (0-10)",
     "serviceRating": "Atendimento (0-10)",
     "overallRating": "Geral (0-10)",
-    "wouldReturn": "Voltaria",
+    "wouldReturn": "Eu voltaria nesse lugar",
     "generalNotes": "Observações gerais",
     "photo": "Foto",
     "visitPhotoAlt": "Foto da visita",
     "consumedTitle": "Comidas e bebidas consumidas",
     "consumedDescription": "Adicione cada consumível com preço, avaliação e comentários.",
-    "addConsumable": "+ Adicionar consumível",
+    "addConsumable": "+ Adicionar comida ou bebida",
     "save": "Salvar visita",
     "saveError": "Falha ao salvar visita",
     "newTitle": "Nova visita",
     "editTitle": "Editar visita",
-    "loadError": "Falha ao carregar a visita"
+    "loadError": "Falha ao carregar a visita",
+    "sections": {
+      "when": "Quando foi?",
+      "experience": "Como foi a experiência?",
+      "notes": "Observações",
+      "consumed": "O que consumiu?",
+      "photo": "Foto da visita"
+    }
   },
   "status": {
     "want_to_visit": "Quero visitar",
@@ -215,11 +240,11 @@
     "price": "Preço (R$)",
     "notes": "Comentários",
     "notesPlaceholder": "Textura, sabor, tamanho...",
-    "wouldOrderAgain": "Pediria novamente",
+    "wouldOrderAgain": "Pediria de novo?",
     "photo": "Foto",
     "itemPhotoAlt": "Foto do item",
     "nameRequired": "Nome do item é obrigatório",
-    "addTitle": "Adicionar item",
+    "addTitle": "Adicionar comida ou bebida",
     "editTitle": "Editar item"
   },
   "visitCard": {
@@ -261,7 +286,7 @@
     "close": "Fechar",
     "delete": "Excluir",
     "edit": "Editar",
-    "open": "Abrir",
+    "open": "Ver diário",
     "back": "Voltar",
     "home": "Início",
     "na": "N/A",

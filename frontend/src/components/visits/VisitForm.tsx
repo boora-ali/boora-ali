@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { AuthImage } from "../ui/AuthImage";
 import { CharacterCount } from "../ui/CharacterCount";
+import { FormSection } from "../ui/FormSection";
 import { getApiErrorState } from "../../services/api-errors";
 import { applyApiErrors } from "../../utils/form-errors";
 import { visitItemsService } from "../../services/visit-items.service";
@@ -211,7 +212,8 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
+        <FormSection title={t("visitForm.sections.when")}>
         <FormField
           control={control}
           name="visited_at"
@@ -225,6 +227,9 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
             </FormItem>
           )}
         />
+        </FormSection>
+
+        <FormSection title={t("visitForm.sections.experience")}>
         <FormField
           control={control}
           name="environment_rating"
@@ -279,6 +284,9 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
             </label>
           )}
         />
+        </FormSection>
+
+        <FormSection title={t("visitForm.sections.notes")}>
         <FormField
           control={control}
           name="general_notes"
@@ -293,8 +301,10 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
             </FormItem>
           )}
         />
+        </FormSection>
 
-        <div className="space-y-1.5">
+        <FormSection title={t("visitForm.sections.photo")}>
+        <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium">{t("visitForm.photo")}</span>
           <input ref={fileRef} type="file" accept={ALLOWED_IMAGE_ACCEPT} className="hidden" onChange={handleFile} />
           <button
@@ -326,8 +336,10 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
             </button>
           )}
         </div>
+        </FormSection>
 
-        <div className="space-y-2">
+        <FormSection title={t("visitForm.sections.consumed")} description={t("visitForm.consumedDescription")}>
+        <div className="flex flex-col gap-2">
           <span className="text-sm font-medium">{t("visitForm.consumedTitle")}</span>
           {removeError && <p className="text-sm text-destructive">{removeError}</p>}
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -371,6 +383,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
             </li>
           </ul>
         </div>
+        </FormSection>
 
         {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
         <Button type="submit" className="w-full" disabled={isSubmitting}>

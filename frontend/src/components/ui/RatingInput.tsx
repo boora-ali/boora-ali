@@ -1,3 +1,5 @@
+import { Slider } from "@/components/ui/slider";
+
 type Props = {
   label?: string;
   value: number;
@@ -7,25 +9,26 @@ type Props = {
 
 export function RatingInput({ label, value, onChange, error }: Props) {
   const id = label?.toLowerCase().replace(/\s+/g, "-");
+  const displayValue = Number.isFinite(value) ? value : 0;
+
   return (
-    <label className="block" htmlFor={id}>
-      {label && <span className="block text-sm font-medium mb-1">{label}</span>}
-      <input
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-3">
+        {label && <span className="text-sm font-medium">{label}</span>}
+        <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs font-semibold text-text">
+          {displayValue}/10
+        </span>
+      </div>
+      <Slider
         id={id}
-        type="number"
         min={0}
         max={10}
-        step={0.1}
-        value={value}
-        onFocus={(e) => e.target.select()}
-        onChange={(e) => {
-          const n = Number(e.target.value);
-          if (Number.isNaN(n) || n < 0 || n > 10) return;
-          onChange(n);
-        }}
-        className="w-full rounded-xl border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+        step={1}
+        value={[displayValue]}
+        onValueChange={([nextValue]) => onChange(nextValue ?? 0)}
+        aria-label={label}
       />
       {error && <span className="text-danger text-xs mt-1 block">{error}</span>}
-    </label>
+    </div>
   );
 }

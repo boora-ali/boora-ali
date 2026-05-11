@@ -25,6 +25,7 @@ import {
 import { LocationPicker } from "../ui/LocationPicker";
 import { AuthImage } from "../ui/AuthImage";
 import { CharacterCount } from "../ui/CharacterCount";
+import { FormSection } from "../ui/FormSection";
 import { getApiErrorState } from "../../services/api-errors";
 import { applyApiErrors } from "../../utils/form-errors";
 import {
@@ -168,35 +169,83 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-3">
-        <FormField
-          control={control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("placeForm.name")} <span className="text-primary ml-0.5" aria-hidden="true">*</span></FormLabel>
-              <FormControl>
-                <Input maxLength={200} {...field} />
-              </FormControl>
-              <CharacterCount value={field.value} max={200} />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("placeForm.category")}</FormLabel>
-              <FormControl>
-                <Input maxLength={100} {...field} />
-              </FormControl>
-              <CharacterCount value={field.value} max={100} />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
+        <FormSection
+          title={t("placeForm.sections.basic")}
+          description={t("placeForm.sections.basicDescription")}
+        >
+          <FormField
+            control={control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("placeForm.name")} <span className="text-primary ml-0.5" aria-hidden="true">*</span></FormLabel>
+                <FormControl>
+                  <Input maxLength={200} {...field} />
+                </FormControl>
+                <CharacterCount value={field.value} max={200} />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("placeForm.category")}</FormLabel>
+                <FormControl>
+                  <Input maxLength={100} {...field} />
+                </FormControl>
+                <CharacterCount value={field.value} max={100} />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("placeForm.status")}</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {PLACE_STATUSES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>
+                        {t(`status.${s.value}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="instagram_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("placeForm.instagram")}</FormLabel>
+                <FormControl>
+                  <Input maxLength={200} {...field} />
+                </FormControl>
+                <CharacterCount value={field.value} max={200} />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </FormSection>
+
+        <FormSection
+          title={t("placeForm.sections.location")}
+          description={t("placeForm.sections.locationDescription")}
+        >
         <FormField
           control={control}
           name="address"
@@ -218,22 +267,8 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
             </FormItem>
           )}
         />
-        <FormField
-          control={control}
-          name="instagram_url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("placeForm.instagram")}</FormLabel>
-              <FormControl>
-                <Input maxLength={200} {...field} />
-              </FormControl>
-              <CharacterCount value={field.value} max={200} />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium">{t("placeForm.maps")}</span>
           <div className="flex gap-2">
             <Input
@@ -284,32 +319,12 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
             setValue("longitude", lng);
           }}
         />
+        </FormSection>
 
-        <FormField
-          control={control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("placeForm.status")}</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {PLACE_STATUSES.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
-                      {t(`status.${s.value}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
+        <FormSection
+          title={t("placeForm.sections.notes")}
+          description={t("placeForm.sections.notesDescription")}
+        >
         <FormField
           control={control}
           name="notes"
@@ -324,8 +339,13 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
             </FormItem>
           )}
         />
+        </FormSection>
 
-        <div className="space-y-1.5">
+        <FormSection
+          title={t("placeForm.sections.photo")}
+          description={t("placeForm.sections.photoDescription")}
+        >
+        <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium">{t("placeForm.coverPhoto")}</span>
           <input ref={fileRef} type="file" accept={ALLOWED_IMAGE_ACCEPT} className="hidden" onChange={handleFile} />
           <button
@@ -358,6 +378,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
           )}
           {coverPhotoError && <p className="text-sm text-destructive">{coverPhotoError}</p>}
         </div>
+        </FormSection>
 
         {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
         <Button type="submit" className="w-full" disabled={isSubmitting}>

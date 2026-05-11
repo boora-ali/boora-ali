@@ -3,7 +3,7 @@ import { z } from "zod";
 const VISIT_ITEM_TYPES = ["sweet", "savory", "drink", "coffee", "juice", "dessert", "other"] as const;
 
 export const visitItemSchema = z.object({
-  name: z.string().min(1).max(200),
+  name: z.string().min(1, "Name is required").max(200),
   type: z.enum(VISIT_ITEM_TYPES),
   rating: z.number().min(0).max(10),
   price: z.number().nullable().optional(),

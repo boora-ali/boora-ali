@@ -56,6 +56,22 @@ Object.defineProperty(window, "matchMedia", {
   })),
 });
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+Object.defineProperty(window, "ResizeObserver", {
+  writable: true,
+  value: ResizeObserverMock,
+});
+
+Object.defineProperty(globalThis, "ResizeObserver", {
+  writable: true,
+  value: ResizeObserverMock,
+});
+
 beforeEach(async () => {
   window.localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");
   await i18n.changeLanguage("en");

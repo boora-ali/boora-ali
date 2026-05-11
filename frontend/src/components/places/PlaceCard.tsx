@@ -43,7 +43,7 @@ export function PlaceCard({ place, index = 0 }: { place: Place; index?: number }
           <h3 className="font-fraunces font-semibold text-[1.05rem] leading-snug truncate text-text">
             {place.name}
           </h3>
-          <p className="text-muted text-sm mt-0.5">{place.category}</p>
+          <p className="text-muted text-sm mt-0.5 truncate">{place.category}</p>
           {place.address && (
             <p className="text-muted text-xs mt-1 truncate">{place.address}</p>
           )}
@@ -87,10 +87,12 @@ export function PlaceCard({ place, index = 0 }: { place: Place; index?: number }
               {t("placeDetail.maps")}
             </a>
           )}
+        </div>
 
+        <div>
           <Link
             to={`/places/${place.public_id}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/15"
+            className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary/15"
           >
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />

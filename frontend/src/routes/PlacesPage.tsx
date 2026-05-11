@@ -42,6 +42,7 @@ export default function PlacesPage() {
   const [page, setPage] = useState(1);
   const [mapPlaces, setMapPlaces] = useState<Place[]>([]);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     const handlePlacesChanged = () => setRefreshTick((value) => value + 1);
@@ -97,14 +98,6 @@ export default function PlacesPage() {
           <p className="text-muted text-sm mt-1">{t("places.subtitle")}</p>
         </div>
         <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
-          <Link to="/places/trash" className="flex-1 sm:flex-none">
-            <Button size="sm" variant="secondary" className="w-full sm:w-auto gap-1.5">
-              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-              </svg>
-              {t("trash.title")}
-            </Button>
-          </Link>
           <Link to="/places/new" className="flex-1 sm:flex-none" data-testid="places-new-place-link">
             <Button size="sm" className="w-full sm:w-auto" data-testid="places-new-place-button">
               {t("places.new")}
@@ -155,8 +148,13 @@ export default function PlacesPage() {
       {!loading && error && <ErrorMessage message={error} />}
       {!loading && !error && data?.count === 0 && (
         <EmptyState
-          title={t("places.empty.title")}
-          description={t("places.empty.description")}
+          title={debouncedSearch ? t("places.emptySearch.title") : t("places.empty.title")}
+          description={debouncedSearch ? t("places.emptySearch.description") : t("places.empty.description")}
+          action={!debouncedSearch ? (
+            <Link to="/places/new">
+              <Button>{t("places.new")}</Button>
+            </Link>
+          ) : undefined}
         />
       )}
 
@@ -180,6 +178,18 @@ export default function PlacesPage() {
       )}
 
       {!loading && !error && data && data.count > 0 && (
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setShowMap((value) => !value)}
+          >
+            {showMap ? t("places.map.hide") : t("places.map.show")}
+          </Button>
+        </div>
+      )}
+
+      {!loading && !error && data && data.count > 0 && showMap && (
         <PlacesMap places={mapPlaces.length > 0 ? mapPlaces : data.results} />
       )}
     </div>

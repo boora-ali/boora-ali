@@ -6,11 +6,20 @@ import { visitsService } from "../services/visits.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "../components/ui/Badge";
 import { LoadingState } from "../components/ui/LoadingState";
+import { EmptyState } from "../components/ui/EmptyState";
 import { VisitCard } from "../components/visits/VisitCard";
 import { BackButton } from "../components/ui/BackButton";
 import { MapModal } from "../components/ui/MapModal";
+import { AuthImage } from "../components/ui/AuthImage";
 import { fmtPrice, fmtRating } from "../utils/formatters";
 import { sanitizeUrl } from "../utils/url";
 import { notifyPlacesChanged } from "../utils/places-state";
@@ -68,7 +77,7 @@ export default function PlaceDetailPage() {
     return <NotFoundPage />;
   }
 
-  if (!place) return <LoadingState />;
+  if (!place) return <LoadingState variant="detail" />;
 
   const hasConsumables = place.consumables_count > 0;
   const coordsStatus =
@@ -82,47 +91,63 @@ export default function PlaceDetailPage() {
     <div className="max-w-2xl mx-auto p-4 space-y-4">
       <BackButton />
       <Card>
-        <CardContent className="pt-4 space-y-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <h1 className="break-words text-2xl font-bold leading-tight">{place.name}</h1>
-            <p className="mt-1 text-sm text-muted">{place.category}</p>
-            <div className="mt-2">
-              <Badge status={place.status} />
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-4">
+            <div className="overflow-hidden rounded-2xl border border-border bg-background">
+              {place.cover_photo ? (
+                <AuthImage
+                  src={place.cover_photo}
+                  alt={place.name}
+                  className="h-56 w-full object-cover sm:h-72"
+                />
+              ) : (
+                <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-background to-border/60 text-5xl opacity-40 sm:h-56">
+                  🍽
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <h1 className="break-words font-fraunces text-3xl font-bold leading-tight text-text">{place.name}</h1>
+                <p className="mt-1 text-sm text-muted">{place.category}</p>
+                <div className="mt-2">
+                  <Badge status={place.status} />
+                </div>
+              </div>
+
+              <div className="grid w-full grid-cols-[1fr_auto] gap-2 sm:w-auto sm:min-w-[280px]">
+                <Link to={`/places/${place.public_id}/visits/new`} className="w-full">
+                  <Button size="sm" className="w-full">{t("placeDetail.visits.add")}</Button>
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" size="sm" aria-label={t("placeDetail.actions")}>
+                      ⋯
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to={`/places/${place.public_id}/edit`}
+                          data-testid="place-detail-edit-link"
+                        >
+                          {t("placeDetail.edit")}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onSelect={() => setDeleteConfirmOpen(true)}
+                      >
+                        {t("placeDetail.delete")}
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
-
-          <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:min-w-[250px]">
-            <Link
-              to={`/places/${place.public_id}/edit`}
-              className="w-full"
-              data-testid="place-detail-edit-link"
-            >
-              <Button
-                variant="secondary"
-                size="sm"
-                className="w-full gap-1.5"
-                data-testid="place-detail-edit-button"
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 3.487a2.1 2.1 0 112.971 2.971L8.438 17.853 4 19l1.147-4.438L16.862 3.487z" />
-                </svg>
-                {t("placeDetail.edit")}
-              </Button>
-            </Link>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="w-full gap-1.5"
-              onClick={() => setDeleteConfirmOpen(true)}
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 7.5l-1.05 10.73A2.25 2.25 0 0116.21 20.25H7.79a2.25 2.25 0 01-2.24-2.02L4.5 7.5m3-3h9m-7.5 0V3.75A.75.75 0 019.75 3h4.5a.75.75 0 01.75.75V4.5m-9.75 3h13.5" />
-              </svg>
-              {t("placeDetail.delete")}
-            </Button>
-          </div>
-        </div>
 
         {(place.address || place.instagram_url || place.maps_url || (place.latitude && place.longitude)) && (
           <div className="space-y-3 rounded-xl border border-border bg-background/60 p-3">
@@ -247,13 +272,17 @@ export default function PlaceDetailPage() {
         <h2 className="text-xl font-semibold">
           {t("placeDetail.visits.title", { count: place.visits.length })}
         </h2>
-        <Link to={`/places/${place.public_id}/visits/new`} className="w-full sm:w-auto">
-          <Button size="sm" className="w-full sm:w-auto">{t("placeDetail.visits.add")}</Button>
-        </Link>
       </div>
 
       {place.visits.length === 0 ? (
-        <p className="text-muted text-sm text-center py-6">{t("placeDetail.visits.empty")}</p>
+        <EmptyState
+          title={t("placeDetail.visits.empty")}
+          action={(
+            <Link to={`/places/${place.public_id}/visits/new`}>
+              <Button>{t("placeDetail.visits.add")}</Button>
+            </Link>
+          )}
+        />
       ) : (
         place.visits.map((v) => (
           <VisitCard
