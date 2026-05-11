@@ -62,6 +62,13 @@ class ResizeObserverMock {
   disconnect() {}
 }
 
+class IntersectionObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() { return []; }
+}
+
 Object.defineProperty(window, "ResizeObserver", {
   writable: true,
   value: ResizeObserverMock,
@@ -70,6 +77,16 @@ Object.defineProperty(window, "ResizeObserver", {
 Object.defineProperty(globalThis, "ResizeObserver", {
   writable: true,
   value: ResizeObserverMock,
+});
+
+Object.defineProperty(window, "IntersectionObserver", {
+  writable: true,
+  value: IntersectionObserverMock,
+});
+
+Object.defineProperty(globalThis, "IntersectionObserver", {
+  writable: true,
+  value: IntersectionObserverMock,
 });
 
 beforeEach(async () => {

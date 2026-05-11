@@ -303,6 +303,10 @@
     "restore": "Restaurar",
     "restoring": "Restaurando...",
     "deletedAt": "Excluído em {{date}}",
+    "permanentDelete": "Excluir permanentemente",
+    "permanentDeleting": "Excluindo...",
+    "permanentDeleteTitle": "Excluir permanentemente",
+    "permanentDeleteMessage": "Esta ação não pode ser desfeita. O lugar e todos os seus dados serão removidos para sempre.",
     "empty": {
       "title": "Lixeira vazia",
       "description": "Nenhum lugar excluído."

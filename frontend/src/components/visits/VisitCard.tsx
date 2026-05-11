@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { fmtDate, fmtRating, fmtPrice } from "../../utils/formatters";
 import { AuthImage } from "../ui/AuthImage";
 import { visitsService } from "../../services/visits.service";
+import { ResponsiveCardCarousel } from "../ui/ResponsiveCardCarousel";
 
 type Props = {
   visit: Visit;
@@ -103,28 +104,37 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
       </div>
       {loadError && <p className="mt-2 text-sm text-danger">{loadError}</p>}
       {open && visibleItems.length > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 sm:grid-cols-3">
-          {visibleItems.map((it) => (
-            <div key={it.public_id} className="overflow-hidden rounded-xl border border-border bg-surface text-sm">
-              {it.photo ? (
-                <AuthImage
-                  src={it.photo}
-                  alt={it.name}
-                  className="h-24 w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-24 w-full items-center justify-center bg-muted/10 text-xs text-muted">
-                  {t("visitCard.noPhoto")}
+        <div className="mt-3 border-t border-border pt-3">
+          <ResponsiveCardCarousel
+            ariaLabel={t("visitCard.details")}
+            items={visibleItems}
+            getKey={(item) => item.public_id}
+            mobilePageSize={4}
+            desktopPageSize={5}
+            mobileColumns={2}
+            desktopColumns={5}
+            renderItem={(it) => (
+              <div className="overflow-hidden rounded-xl border border-border bg-surface text-sm">
+                {it.photo ? (
+                  <AuthImage
+                    src={it.photo}
+                    alt={it.name}
+                    className="h-24 w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-24 w-full items-center justify-center bg-muted/10 text-xs text-muted">
+                    {t("visitCard.noPhoto")}
+                  </div>
+                )}
+                <div className="space-y-0.5 p-2">
+                  <p className="truncate font-medium">{it.name}</p>
+                  <p className="text-xs text-muted">{t(`itemType.${it.type}`)}</p>
+                  <p className="text-xs text-muted">{fmtRating(it.rating)} · {fmtPrice(it.price)}</p>
+                  {it.notes && <p className="truncate text-xs text-muted">{it.notes}</p>}
                 </div>
-              )}
-              <div className="space-y-0.5 p-2">
-                <p className="truncate font-medium">{it.name}</p>
-                <p className="text-xs text-muted">{t(`itemType.${it.type}`)}</p>
-                <p className="text-xs text-muted">{fmtRating(it.rating)} · {fmtPrice(it.price)}</p>
-                {it.notes && <p className="truncate text-xs text-muted">{it.notes}</p>}
               </div>
-            </div>
-          ))}
+            )}
+          />
         </div>
       )}
       {open && !loadingDetails && !loadError && visibleItems.length === 0 && (

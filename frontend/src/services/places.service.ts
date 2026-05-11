@@ -67,4 +67,6 @@ export const placesService = {
 
   restore: (publicId: string) =>
     api.post(`/places/${publicId}/restore/`).then((r) => r.data),
+
+  permanentDelete: (publicId: string) => api.delete(`/places/${publicId}/permanent/`),
 };

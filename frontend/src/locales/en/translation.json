@@ -300,6 +300,10 @@
     "restore": "Restore",
     "restoring": "Restoring...",
     "deletedAt": "Deleted on {{date}}",
+    "permanentDelete": "Delete permanently",
+    "permanentDeleting": "Deleting...",
+    "permanentDeleteTitle": "Delete permanently",
+    "permanentDeleteMessage": "This action cannot be undone. The place and all its data will be permanently removed.",
     "empty": {
       "title": "Trash is empty",
       "description": "No deleted places."

@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import type { Visit } from "../../types/visit";
 import type { VisitItem } from "../../types/visit-item";
 import { DateTimePicker } from "../ui/DateTimePicker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Form,
   FormControl,
@@ -26,6 +28,7 @@ import {
 import { AuthImage } from "../ui/AuthImage";
 import { CharacterCount } from "../ui/CharacterCount";
 import { FormSection } from "../ui/FormSection";
+import { ResponsiveCardCarousel } from "../ui/ResponsiveCardCarousel";
 import { getApiErrorState } from "../../services/api-errors";
 import { applyApiErrors } from "../../utils/form-errors";
 import { visitItemsService } from "../../services/visit-items.service";
@@ -141,8 +144,8 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
     const file = e.target.files?.[0] ?? null;
     if (!file) { setPhotoFile(null); setPreviewFromFile(null); return; }
     const err = validateImageFile(file);
-    if (err === "type") { setError("root", { message: t("upload.invalidType") }); e.target.value = ""; return; }
-    if (err === "size") { setError("root", { message: t("upload.tooLarge") }); e.target.value = ""; return; }
+    if (err === "type") { toast.error(t("upload.invalidType")); setError("root", { message: t("upload.invalidType") }); e.target.value = ""; return; }
+    if (err === "size") { toast.error(t("upload.tooLarge")); setError("root", { message: t("upload.tooLarge") }); e.target.value = ""; return; }
     setPhotoFile(file);
     setPreviewFromFile(file);
   }
@@ -153,6 +156,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
       try {
         await visitItemsService.remove(item.public_id);
       } catch {
+        toast.error(t("visitForm.removeItemError"));
         setRemoveError(t("visitForm.removeItemError"));
         return;
       }
@@ -191,6 +195,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
       setModalOpen(false);
     } catch (error) {
       const apiError = getApiErrorState(error, t("visitForm.saveError"));
+      toast.error(apiError.message);
       setItemSaveError(apiError.message);
     } finally {
       setIsSavingItem(false);
@@ -205,6 +210,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
       );
     } catch (error) {
       const apiError = getApiErrorState(error, t("visitForm.saveError"));
+      toast.error(apiError.message);
       setError("root", { message: apiError.message });
       applyApiErrors(setError, apiError.fieldErrors);
     }
@@ -274,11 +280,10 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
           control={control}
           render={({ field }) => (
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
+              <Switch
                 checked={!!field.value}
-                onChange={(e) => field.onChange(e.target.checked)}
-                className="h-4 w-4 rounded border-border accent-primary"
+                onCheckedChange={field.onChange}
+                aria-label={t("visitForm.wouldReturn")}
               />
               <span className="text-sm font-medium">{t("visitForm.wouldReturn")}</span>
             </label>
@@ -342,46 +347,53 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium">{t("visitForm.consumedTitle")}</span>
           {removeError && <p className="text-sm text-destructive">{removeError}</p>}
-          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {items.map((item, i) => (
-              <li key={i} className="overflow-hidden rounded-xl border border-border bg-card text-sm">
-                <div className="relative">
-                  {item.photo ? (
-                    <VisitItemPhoto photo={item.photo} alt={item.name ?? ""} fallbackText={t("visitCard.noPhoto")} />
-                  ) : (
-                    <div className="flex h-24 w-full items-center justify-center bg-muted/10 text-xs text-muted-foreground">
-                      {t("visitCard.noPhoto")}
+          {items.length > 0 && (
+            <ResponsiveCardCarousel
+              ariaLabel={t("visitForm.consumedTitle")}
+              items={items}
+              getKey={(item, i) => item.public_id ?? `${item.name ?? "item"}-${i}`}
+              mobilePageSize={4}
+              desktopPageSize={5}
+              mobileColumns={2}
+              desktopColumns={5}
+              renderItem={(item, i) => (
+                <div className="overflow-hidden rounded-xl border border-border bg-card text-sm">
+                  <div className="relative">
+                    {item.photo ? (
+                      <VisitItemPhoto photo={item.photo} alt={item.name ?? ""} fallbackText={t("visitCard.noPhoto")} />
+                    ) : (
+                      <div className="flex h-24 w-full items-center justify-center bg-muted/10 text-xs text-muted-foreground">
+                        {t("visitCard.noPhoto")}
+                      </div>
+                    )}
+                    <div className="absolute right-1 top-1 flex gap-1">
+                      <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(i)}
+                        className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
+                        ✎
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" aria-label="Remover" onClick={() => handleRemoveItem(i)}
+                        className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
+                        ✕
+                      </Button>
                     </div>
-                  )}
-                  <div className="absolute right-1 top-1 flex gap-1">
-                    <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(i)}
-                      className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
-                      ✎
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" aria-label="Remover" onClick={() => handleRemoveItem(i)}
-                      className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
-                      ✕
-                    </Button>
+                  </div>
+                  <div className="space-y-0.5 p-2">
+                    <p className="truncate font-medium">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">{t(`itemType.${item.type}`)}</p>
+                    <RatingDots value={Number(item.rating ?? 0)} />
                   </div>
                 </div>
-                <div className="space-y-0.5 p-2">
-                  <p className="truncate font-medium">{item.name}</p>
-                  <p className="text-xs text-muted-foreground">{t(`itemType.${item.type}`)}</p>
-                  <RatingDots value={Number(item.rating ?? 0)} />
-                </div>
-              </li>
-            ))}
-            <li>
-              <button
-                type="button"
-                onClick={openAdd}
-                className="flex h-full min-h-[140px] w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border text-muted-foreground transition hover:border-primary/40 hover:text-primary"
-              >
-                <span className="text-2xl leading-none">+</span>
-                <span className="text-xs">{t("visitItemForm.addTitle")}</span>
-              </button>
-            </li>
-          </ul>
+              )}
+            />
+          )}
+          <button
+            type="button"
+            onClick={openAdd}
+            className="flex min-h-[110px] w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+          >
+            <span className="text-2xl leading-none">+</span>
+            <span className="text-xs">{t("visitItemForm.addTitle")}</span>
+          </button>
         </div>
         </FormSection>
 

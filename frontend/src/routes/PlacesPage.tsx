@@ -14,6 +14,7 @@ import { LoadingState } from "../components/ui/LoadingState";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { PlacesMap } from "../components/places/PlacesMap";
 import { isSessionExpiredError } from "../services/api-errors";
+import { ResponsiveCardCarousel } from "../components/ui/ResponsiveCardCarousel";
 
 const STATUS_ICONS: Record<string, string> = {
   want_to_visit: "👁",
@@ -158,11 +159,18 @@ export default function PlacesPage() {
         />
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {!loading && !error && data?.results.map((p, i) => (
-          <PlaceCard key={p.public_id} place={p} index={i} />
-        ))}
-      </div>
+      {!loading && !error && data && data.results.length > 0 && (
+        <ResponsiveCardCarousel
+          ariaLabel={t("places.title")}
+          items={data.results}
+          getKey={(place) => place.public_id}
+          mobilePageSize={4}
+          desktopPageSize={8}
+          mobileColumns={2}
+          desktopColumns={4}
+          renderItem={(place, index) => <PlaceCard place={place} index={index} />}
+        />
+      )}
 
       {/* Pagination */}
       {data && (data.next || data.previous) && (

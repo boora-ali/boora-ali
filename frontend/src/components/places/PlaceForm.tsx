@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import type { Place, PlaceStatus } from "../../types/place";
 import { PLACE_STATUSES } from "../../utils/constants";
 import { Input } from "@/components/ui/input";
@@ -147,8 +148,8 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
       return;
     }
     const err = validateImageFile(file);
-    if (err === "type") { setCoverPhotoError(t("upload.invalidType")); e.target.value = ""; return; }
-    if (err === "size") { setCoverPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
+    if (err === "type") { toast.error(t("upload.invalidType")); setCoverPhotoError(t("upload.invalidType")); e.target.value = ""; return; }
+    if (err === "size") { toast.error(t("upload.tooLarge")); setCoverPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
     setCoverPhotoError("");
     setCoverFile(file);
     setPreview(URL.createObjectURL(file));
@@ -162,6 +163,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
       });
     } catch (error) {
       const apiError = getApiErrorState(error, t("placeForm.saveError"));
+      toast.error(apiError.message);
       setError("root", { message: apiError.message });
       applyApiErrors(setError, apiError.fieldErrors);
     }

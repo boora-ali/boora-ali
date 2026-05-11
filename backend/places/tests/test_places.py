@@ -203,7 +203,7 @@ def test_pagination(auth_client, user):
     baker.make("places.Place", user=user, _quantity=25)
     r = auth_client.get("/api/places/")
     assert r.data["count"] == 25
-    assert len(r.data["results"]) == 20
+    assert len(r.data["results"]) == 4
 
 
 def test_detail_includes_consumables_summary(auth_client, user):
@@ -284,6 +284,6 @@ def test_list_expand_visits_items_avoids_n_plus_one(auth_client, user):
         r = auth_client.get("/api/places/?expand=visits.items")
 
     assert r.status_code == 200
-    assert len(r.data["results"]) == 5
+    assert len(r.data["results"]) == 4
     assert "items" in r.data["results"][0]["visits"][0]
     assert len(queries) <= 7

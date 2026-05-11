@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import type { VisitItem, VisitItemType } from "../../types/visit-item";
 import { VISIT_ITEM_TYPES } from "../../utils/constants";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { RatingInput } from "../ui/RatingInput";
 import { CharacterCount } from "../ui/CharacterCount";
+import { Switch } from "@/components/ui/switch";
 import { validateImageFile, ALLOWED_IMAGE_ACCEPT } from "../../utils/url";
 import { AuthImage } from "../ui/AuthImage";
 import { visitItemSchema, type VisitItemFormValues } from "../../schemas/visit";
@@ -66,8 +68,8 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
       return;
     }
     const err = validateImageFile(file);
-    if (err === "type") { setPhotoError(t("upload.invalidType")); e.target.value = ""; return; }
-    if (err === "size") { setPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
+    if (err === "type") { toast.error(t("upload.invalidType")); setPhotoError(t("upload.invalidType")); e.target.value = ""; return; }
+    if (err === "size") { toast.error(t("upload.tooLarge")); setPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
     setPhotoError("");
     setPhotoFile(file);
     setPreview(URL.createObjectURL(file));
@@ -173,11 +175,10 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
           control={control}
           render={({ field }) => (
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
+              <Switch
                 checked={!!field.value}
-                onChange={(e) => field.onChange(e.target.checked)}
-                className="h-4 w-4 rounded border-border accent-primary"
+                onCheckedChange={field.onChange}
+                aria-label={t("visitItemForm.wouldOrderAgain")}
               />
               <span className="text-sm font-medium">{t("visitItemForm.wouldOrderAgain")}</span>
             </label>
