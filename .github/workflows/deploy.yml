@@ -22,7 +22,8 @@ jobs:
 
             cd /root/bora-ali
 
-            git fetch https://${{ secrets.USER }}:${{ secrets.GH_PAT }}@github.com/samuel-aka-viana/bora-ali.git main
+            git remote set-url origin https://github.com/boora-ali/boora-ali.git
+            git fetch https://${{ secrets.USER }}:${{ secrets.GH_PAT }}@github.com/boora-ali/boora-ali.git main
             git reset --hard FETCH_HEAD
             git clean -fd
 
