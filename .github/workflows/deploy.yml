@@ -18,7 +18,14 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
+
             cd /root/bora-ali
-            git pull origin main
-            docker compose -f docker-compose.prod.yml build --no-cache && docker compose -f docker-compose.prod.yml up -d
+
+            git fetch https://${{ secrets.USER }}:${{ secrets.GH_PAT }}@github.com/samuel-aka-viana/bora-ali.git main
+            git reset --hard FETCH_HEAD
+            git clean -fd
+
+            docker compose -f docker-compose.prod.yml build --no-cache
+            docker compose -f docker-compose.prod.yml up -d --force-recreate
             docker image prune -f
