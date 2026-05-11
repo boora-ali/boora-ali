@@ -15,7 +15,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=config.settings
 
-RUN apk add --no-cache postgresql-libs libffi gettext
+RUN apk add --no-cache postgresql-libs libffi gettext su-exec
 
 COPY --from=builder /install /usr/local
 
@@ -24,10 +24,9 @@ COPY . .
 
 RUN addgroup -S app && adduser -S app -G app && \
     chmod +x entrypoint.sh && \
-    DJANGO_SKIP_SECRET_KEY_CHECK=True python manage.py collectstatic --noinput && \
-    chown -R app:app /app
-
-USER app
+    mkdir -p /app/staticfiles && \
+    chown -R app:app /app && \
+    chmod -R 775 /app/staticfiles
 
 EXPOSE 8000
 
