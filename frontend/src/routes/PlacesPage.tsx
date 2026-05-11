@@ -62,11 +62,17 @@ export default function PlacesPage() {
     return () => window.removeEventListener(PLACES_CHANGED_EVENT, handlePlacesChanged);
   }, []);
 
-  // Reset cache and page when filters/search change
-  useEffect(() => {
+  // Reset cache and page when filters/search change (React docs pattern: storing prev render info)
+  const [prevFilters, setPrevFilters] = useState({ debouncedSearch, status, refreshTick });
+  if (
+    prevFilters.debouncedSearch !== debouncedSearch ||
+    prevFilters.status !== status ||
+    prevFilters.refreshTick !== refreshTick
+  ) {
+    setPrevFilters({ debouncedSearch, status, refreshTick });
     setPageCache({});
     setPage(1);
-  }, [debouncedSearch, status, refreshTick]);
+  }
 
   useEffect(() => {
     let cancelled = false;
