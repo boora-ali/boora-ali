@@ -6,9 +6,33 @@ on:
       - main
 
 jobs:
+  deploy-control:
+    name: Deploy Control
+    runs-on: self-hosted
+    outputs:
+      skip: ${{ steps.skip.outputs.skip }}
+
+    steps:
+      - name: Detect skip marker
+        id: skip
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          case "$COMMIT_MESSAGE" in
+            *"[skip deploy]"*|*"[deploy skip]"*|*"[skip ci]"*|*"[ci skip]"*)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "Deploy skipped by commit marker."
+              ;;
+            *)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
   deploy:
     name: Deploy to Contabo
     runs-on: self-hosted
+    needs: [deploy-control]
+    if: needs.deploy-control.outputs.skip != 'true'
 
     steps:
       - name: Deploy via SSH
