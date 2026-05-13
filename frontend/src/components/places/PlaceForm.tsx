@@ -27,6 +27,7 @@ import { LocationPicker } from "../ui/LocationPicker";
 import { AuthImage } from "../ui/AuthImage";
 import { CharacterCount } from "../ui/CharacterCount";
 import { FormSection } from "../ui/FormSection";
+import { LottieState } from "../ui/LottieState";
 import { getApiErrorState } from "../../services/api-errors";
 import { applyApiErrors } from "../../utils/form-errors";
 import {
@@ -358,6 +359,16 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
             {preview ? (
               <>
                 <AuthImage src={preview} alt={t("placeForm.coverPreviewAlt")} className="h-full w-full object-cover" />
+                {coverFile && (
+                  <div className="absolute right-2 top-2 flex h-16 w-16 items-center justify-center rounded-xl border border-white/70 bg-background/90 shadow-sm">
+                    <LottieState
+                      animation="photo-uploading"
+                      label={t("placeForm.uploadPhoto")}
+                      fallback="+"
+                      className="h-14 w-14"
+                    />
+                  </div>
+                )}
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
                   <span className="text-xs font-medium text-white">{t("placeForm.changePhoto")}</span>
                 </div>
