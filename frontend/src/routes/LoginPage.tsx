@@ -19,6 +19,7 @@ import { PasswordInput } from "../components/ui/PasswordInput";
 import { LanguageToggle } from "../components/ui/LanguageToggle";
 import { GoogleSignInButton } from "../components/auth/GoogleSignInButton";
 import { TurnstileWidget } from "../components/auth/TurnstileWidget";
+import { LottieState } from "../components/ui/LottieState";
 import { getApiErrorState } from "../services/api-errors";
 import { applyApiErrors } from "../utils/form-errors";
 import { SESSION_INVALIDATED_KEY } from "../utils/constants";
@@ -81,11 +82,18 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col">
       <div className="flex-1 mx-auto w-full mt-12 max-w-sm space-y-5 px-6 py-8 pb-0">
         <div className="flex flex-col items-center gap-4">
-          <img
-            src="/bora-ali-mark.svg"
-            alt="Bora Ali"
-            className="h-28 w-28 select-none object-contain drop-shadow-sm"
-            draggable={false}
+          <LottieState
+            animation="login-pin"
+            label="Bora Ali"
+            className="h-28 w-28 scale-[2.7]"
+            fallback={
+              <img
+                src="/bora-ali-mark.svg"
+                alt=""
+                className="h-28 w-28 select-none object-contain drop-shadow-sm"
+                draggable={false}
+              />
+            }
           />
           <div className="text-center">
             <h1 className="font-fraunces text-3xl font-bold text-foreground">{t("auth.login.title")}</h1>

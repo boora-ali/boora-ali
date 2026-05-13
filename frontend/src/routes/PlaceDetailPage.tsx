@@ -16,6 +16,7 @@ import {
 import { Badge } from "../components/ui/Badge";
 import { LoadingState } from "../components/ui/LoadingState";
 import { EmptyState } from "../components/ui/EmptyState";
+import { LottieState } from "../components/ui/LottieState";
 import { VisitCard } from "../components/visits/VisitCard";
 import { BackButton } from "../components/ui/BackButton";
 import { MapModal } from "../components/ui/MapModal";
@@ -164,15 +165,27 @@ export default function PlaceDetailPage() {
 
           {coordsStatus !== "resolved" && (
             <div
-              className={`rounded-xl border px-3 py-2 text-sm ${
+              className={`flex items-center gap-3 rounded-xl border px-3 py-2 text-sm ${
                 coordsStatus === "pending"
                   ? "border-sky-200 bg-sky-50 text-sky-900"
                   : "border-amber-200 bg-amber-50 text-amber-900"
               }`}
             >
-              {coordsStatus === "pending"
-                ? t("placeDetail.coordsPending")
-                : t("placeDetail.coordsFailed")}
+              {coordsStatus === "pending" && (
+                <div className="h-14 w-14 shrink-0">
+                  <LottieState
+                    animation="map-resolving"
+                    label={t("placeDetail.coordsPending")}
+                    fallback="⌖"
+                    className="h-full w-full"
+                  />
+                </div>
+              )}
+              <span>
+                {coordsStatus === "pending"
+                  ? t("placeDetail.coordsPending")
+                  : t("placeDetail.coordsFailed")}
+              </span>
             </div>
           )}
 
@@ -277,6 +290,7 @@ export default function PlaceDetailPage() {
 
       {place.visits.length === 0 ? (
         <EmptyState
+          animation="empty-visits"
           title={t("placeDetail.visits.empty")}
           action={(
             <Link to={`/places/${place.public_id}/visits/new`}>
