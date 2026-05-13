@@ -6,9 +6,37 @@ on:
       - dev
 
 jobs:
+  ci-control:
+    name: CI Control
+    runs-on: self-hosted
+    outputs:
+      skip: ${{ steps.skip.outputs.skip }}
+
+    steps:
+      - name: Detect skip marker
+        id: skip
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          text="$PR_TITLE
+          $PR_BODY"
+
+          case "$text" in
+            *"[skip ci]"*|*"[ci skip]"*)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "CI skipped by PR marker."
+              ;;
+            *)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
   validate-branch-name:
     name: Validate Branch Name
     runs-on: self-hosted
+    needs: [ci-control]
+    if: needs.ci-control.outputs.skip != 'true'
 
     steps:
       - name: Enforce allowed source branch prefixes
@@ -29,7 +57,8 @@ jobs:
   lint-backend:
     name: Lint Backend
     runs-on: self-hosted
-    needs: [validate-branch-name]
+    needs: [ci-control, validate-branch-name]
+    if: needs.ci-control.outputs.skip != 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -53,7 +82,8 @@ jobs:
   lint-frontend:
     name: Lint Frontend
     runs-on: self-hosted
-    needs: [validate-branch-name]
+    needs: [ci-control, validate-branch-name]
+    if: needs.ci-control.outputs.skip != 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -78,7 +108,8 @@ jobs:
   security-backend:
     name: Security Backend
     runs-on: self-hosted
-    needs: [validate-branch-name]
+    needs: [ci-control, validate-branch-name]
+    if: needs.ci-control.outputs.skip != 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -102,7 +133,8 @@ jobs:
   security-frontend:
     name: Security Frontend
     runs-on: self-hosted
-    needs: [validate-branch-name]
+    needs: [ci-control, validate-branch-name]
+    if: needs.ci-control.outputs.skip != 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -123,7 +155,8 @@ jobs:
   test-backend:
     name: Test Backend
     runs-on: self-hosted
-    needs: [lint-backend, security-backend]
+    needs: [ci-control, lint-backend, security-backend]
+    if: needs.ci-control.outputs.skip != 'true'
 
     services:
       postgres:
@@ -179,7 +212,8 @@ jobs:
   test-frontend:
     name: Test Frontend
     runs-on: self-hosted
-    needs: [lint-frontend, security-frontend]
+    needs: [ci-control, lint-frontend, security-frontend]
+    if: needs.ci-control.outputs.skip != 'true'
 
     steps:
       - uses: actions/checkout@v4
