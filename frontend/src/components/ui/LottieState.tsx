@@ -11,9 +11,11 @@ import emptyVisitsAnimation from "../../assets/lottie/empty-visits.json?url";
 import loginPinAnimation from "../../assets/lottie/login-pin.json?url";
 import mapResolvingAnimation from "../../assets/lottie/map-resolving.json?url";
 import photoUploadingAnimation from "../../assets/lottie/photo-uploading.json?url";
+import dotLottieWasmUrl from "@lottiefiles/dotlottie-web/dotlottie-player.wasm?url";
 
 const DotLottieReact = lazy(async () => {
   const module = await import("@lottiefiles/dotlottie-react");
+  module.setWasmUrl(dotLottieWasmUrl);
   return { default: module.DotLottieReact as ComponentType<DotLottieReactProps> };
 });
 
