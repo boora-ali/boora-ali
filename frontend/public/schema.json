@@ -2,16 +2,43 @@
   "site": [
     {
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "My Site",
-      "url": "https://example.com"
+      "@type": "WebApplication",
+      "name": "Bora Ali",
+      "url": "https://booraali.com.br",
+      "description": "Diário pessoal de lugares e experiências gastronômicas. Registre lugares, visitas e pratos que valem lembrar.",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Web, Android, iOS",
+      "inLanguage": "pt-BR",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "BRL"
+      }
     },
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "My Site",
-      "url": "https://example.com"
+      "name": "Bora Ali",
+      "url": "https://booraali.com.br",
+      "logo": "https://booraali.com.br/icon-512.png"
     }
   ],
-  "pages": {}
+  "pages": {
+    "/": {
+      "@type": "WebPage",
+      "name": "Bora Ali — Diário de lugares e experiências",
+      "description": "Salve lugares, registre visitas, avalie pratos e guarde memórias de cada experiência gastronômica.",
+      "url": "https://booraali.com.br/"
+    },
+    "/termos-de-uso": {
+      "@type": "WebPage",
+      "name": "Termos de Uso — Bora Ali",
+      "url": "https://booraali.com.br/termos-de-uso"
+    },
+    "/politica-de-privacidade": {
+      "@type": "WebPage",
+      "name": "Política de Privacidade — Bora Ali",
+      "url": "https://booraali.com.br/politica-de-privacidade"
+    }
+  }
 }

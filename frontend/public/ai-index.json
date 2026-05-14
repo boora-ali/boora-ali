@@ -1,19 +1,32 @@
 {
   "version": "1.0",
-  "generated": "2026-05-14T16:19:47.490Z",
+  "generated": "2026-05-14",
   "site": {
-    "title": "My Site",
-    "description": "",
-    "url": "https://example.com"
+    "title": "Bora Ali",
+    "description": "Diário pessoal de lugares e experiências gastronômicas. Registre lugares, visitas e pratos que valem lembrar.",
+    "url": "https://booraali.com.br"
   },
-  "entries": [],
-  "metadata": {
-    "totalEntries": 0,
-    "generator": "aeo.js",
-    "generatorUrl": "https://aeojs.org",
-    "embedding": {
-      "recommended": "text-embedding-ada-002",
-      "dimensions": 1536
+  "entries": [
+    {
+      "url": "https://booraali.com.br/",
+      "title": "Bora Ali — Diário de lugares e experiências",
+      "description": "Salve lugares, registre visitas, avalie pratos e guarde memórias de cada experiência gastronômica.",
+      "type": "homepage"
+    },
+    {
+      "url": "https://booraali.com.br/termos-de-uso",
+      "title": "Termos de Uso — Bora Ali",
+      "type": "legal"
+    },
+    {
+      "url": "https://booraali.com.br/politica-de-privacidade",
+      "title": "Política de Privacidade — Bora Ali",
+      "type": "legal"
     }
+  ],
+  "metadata": {
+    "totalEntries": 3,
+    "generator": "aeo.js",
+    "generatorUrl": "https://aeojs.org"
   }
 }
