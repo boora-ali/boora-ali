@@ -58,9 +58,11 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(async () => {
           if (request.destination === "image") {
-            return caches.match("/bora-ali-mark.svg");
+            const img = await caches.match("/bora-ali-mark.svg");
+            return img ?? new Response("", { status: 503 });
           }
-          return caches.match("/offline.html");
+          const offline = await caches.match("/offline.html");
+          return offline ?? new Response("Offline", { status: 503, headers: { "Content-Type": "text/plain" } });
         });
     })
   );
