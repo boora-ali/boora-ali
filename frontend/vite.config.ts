@@ -52,6 +52,23 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: "jsdom",
       setupFiles: "./src/test/setup.ts",
+      coverage: {
+        provider: "v8",
+        reporter: ["text", "lcov"],
+        exclude: [
+          "**/node_modules/**",
+          "**/dist/**",
+          "src/test/**",
+          "**/*.d.ts",
+          "**/vite.config.*",
+        ],
+        thresholds: {
+          lines: 59,
+          functions: 54,
+          branches: 49,
+          statements: 57,
+        },
+      },
     },
   };
 });
