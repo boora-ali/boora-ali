@@ -83,7 +83,12 @@
     "iosStepSafari": "Se você estiver em outro navegador, abra este site no Safari primeiro.",
     "iosStepShare": "Toque no botão Compartilhar na barra do Safari.",
     "iosStepAdd": "Escolha 'Adicionar à Tela de Início' e confirme.",
-    "iosStepFallback": "Se 'Adicionar à Tela de Início' não aparecer, role a lista, toque em 'Editar Ações' e habilite essa opção."
+    "iosStepFallback": "Se 'Adicionar à Tela de Início' não aparecer, role a lista, toque em 'Editar Ações' e habilite essa opção.",
+    "androidTitle": "Instalar no Android",
+    "androidDescription": "No Android, o Chrome pode liberar o botão nativo de instalação ou pedir que você instale pelo menu do navegador.",
+    "androidStepMenu": "Toque no menu de três pontos do navegador.",
+    "androidStepInstall": "Escolha 'Instalar app' ou 'Adicionar à tela inicial' e confirme.",
+    "androidStepFallback": "Se a opção não aparecer, atualize a página e tente novamente depois que ela terminar de carregar."
   },
   "account": {
     "title": "Conta",
@@ -101,7 +106,9 @@
       "nickname": "Apelido",
       "username": "Usuário",
       "email": "E-mail",
+      "photo": "Foto de perfil",
       "changePhoto": "Trocar foto",
+      "removePhoto": "Remover foto",
       "save": "Salvar perfil",
       "saved": "Perfil atualizado.",
       "error": "Não foi possível atualizar o perfil."

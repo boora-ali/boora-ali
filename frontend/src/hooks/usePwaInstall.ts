@@ -16,10 +16,16 @@ function isIosDevice() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
+function isAndroidDevice() {
+  return /android/i.test(window.navigator.userAgent);
+}
+
 export function usePwaInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIos] = useState(() => isIosDevice());
+  const [isAndroid] = useState(() => isAndroidDevice());
   const [isStandalone] = useState(() => isStandaloneMode());
+  const hasNativePrompt = Boolean(deferredPrompt);
 
   useEffect(() => {
     const onBeforeInstallPrompt = (event: Event) => {
@@ -40,7 +46,9 @@ export function usePwaInstall() {
   }
 
   return {
-    canInstall: Boolean(deferredPrompt) || isIos,
+    canInstall: hasNativePrompt || isIos || isAndroid,
+    hasNativePrompt,
+    isAndroid,
     isIos,
     isStandalone,
     install,

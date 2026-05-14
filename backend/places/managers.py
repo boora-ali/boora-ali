@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from django.db import models
-from django.db.models import Avg, Count, Prefetch, Sum
+from django.db.models import Avg, Count, Prefetch, Q, Sum
 
 
 def parse_expands(raw_value: str | Iterable[str] | None) -> set[str]:
@@ -27,10 +27,18 @@ class PlaceQuerySet(models.QuerySet):
         return self.filter(user=user).live()
 
     def with_consumable_stats(self):
+        live_consumables = Q(
+            visits__deleted_at__isnull=True,
+            visits__items__deleted_at__isnull=True,
+        )
         return self.annotate(
-            consumables_count=Count("visits__items", distinct=True),
-            average_consumable_rating=Avg("visits__items__rating"),
-            total_consumed_amount=Sum("visits__items__price"),
+            consumables_count=Count(
+                "visits__items", filter=live_consumables, distinct=True
+            ),
+            average_consumable_rating=Avg(
+                "visits__items__rating", filter=live_consumables
+            ),
+            total_consumed_amount=Sum("visits__items__price", filter=live_consumables),
         )
 
     def with_list_expansion(self, expands: str | Iterable[str] | None = None):
@@ -40,15 +48,17 @@ class PlaceQuerySet(models.QuerySet):
             from .models import Visit, VisitItem
 
             visit_items_queryset = VisitItem.objects.live().order_by("-created_at")
-            visits_queryset = Visit.objects.order_by("-visited_at").prefetch_related(
-                Prefetch("items", queryset=visit_items_queryset)
+            visits_queryset = (
+                Visit.objects.live()
+                .order_by("-visited_at")
+                .prefetch_related(Prefetch("items", queryset=visit_items_queryset))
             )
             return self.prefetch_related(Prefetch("visits", queryset=visits_queryset))
 
         if "visits" in expand_set:
             from .models import Visit
 
-            visits_queryset = Visit.objects.order_by("-visited_at")
+            visits_queryset = Visit.objects.live().order_by("-visited_at")
             return self.prefetch_related(Prefetch("visits", queryset=visits_queryset))
 
         return self
@@ -57,7 +67,7 @@ class PlaceQuerySet(models.QuerySet):
         expand_set = parse_expands(expands)
         from .models import Visit, VisitItem
 
-        visits_queryset = Visit.objects.order_by("-visited_at")
+        visits_queryset = Visit.objects.live().order_by("-visited_at")
 
         if "visits.items" in expand_set:
             visit_items_queryset = VisitItem.objects.live().order_by("-created_at")
@@ -91,7 +101,7 @@ class VisitQuerySet(models.QuerySet):
         return self.filter(deleted_at__isnull=False)
 
     def for_user(self, user):
-        return self.filter(place__user=user).live()
+        return self.filter(place__user=user, place__deleted_at__isnull=True).live()
 
     def with_expansion(self, expands: str | Iterable[str] | None = None):
         expand_set = parse_expands(expands)
@@ -147,7 +157,11 @@ class VisitItemQuerySet(models.QuerySet):
         return self.filter(deleted_at__isnull=False)
 
     def for_user(self, user):
-        return self.filter(visit__place__user=user).live()
+        return self.filter(
+            visit__place__user=user,
+            visit__place__deleted_at__isnull=True,
+            visit__deleted_at__isnull=True,
+        ).live()
 
     def with_expansion(self, expands: str | Iterable[str] | None = None):
         expand_set = parse_expands(expands)

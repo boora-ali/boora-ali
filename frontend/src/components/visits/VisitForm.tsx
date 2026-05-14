@@ -424,19 +424,20 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
           setModalOpen(false);
         }
       }}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="flex max-h-[calc(100svh-0.5rem)] flex-col gap-2 overflow-hidden p-3 sm:max-h-[calc(100vh-2rem)] sm:gap-3 sm:p-6">
+          <DialogHeader className="shrink-0 pr-8">
             <DialogTitle>{editingIndex !== null ? t("visitItemForm.editTitle") : t("visitItemForm.addTitle")}</DialogTitle>
           </DialogHeader>
           <VisitItemForm
             key={draftKey}
             defaultValues={editingIndex !== null ? items[editingIndex] : undefined}
             onSave={handleItemSave}
+            className="flex-1 overflow-y-auto overscroll-contain pr-1"
           />
           {itemSaveError && <p className="text-sm text-destructive">{itemSaveError}</p>}
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setModalOpen(false)} disabled={isSavingItem}>{t("common.cancel")}</Button>
-            <Button type="submit" form={VISIT_ITEM_FORM_ID} disabled={isSavingItem}>{t("common.save")}</Button>
+          <DialogFooter className="shrink-0 pt-0">
+            <Button variant="secondary" className="h-10" onClick={() => setModalOpen(false)} disabled={isSavingItem}>{t("common.cancel")}</Button>
+            <Button type="submit" form={VISIT_ITEM_FORM_ID} className="h-10" disabled={isSavingItem}>{t("common.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
