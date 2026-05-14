@@ -27,3 +27,4 @@ lighthouse-report-*
 
 test-results/
 playwright-report/
+coverage
