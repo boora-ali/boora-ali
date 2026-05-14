@@ -1,6 +1,7 @@
 import { defineConfig } from "vitest/config";
 import { loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { aeoVitePlugin } from "aeo.js/vite";
 import path from "path";
 
 function parseAllowedHosts(value?: string) {
@@ -27,7 +28,15 @@ export default defineConfig(({ mode }) => {
     appEnv === "preprod" ? [".ngrok-free.app", ".ngrok-free.dev"] : [];
 
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      aeoVitePlugin({
+        title: "Bora Ali",
+        description:
+          "Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar",
+        url: "https://booraali.com.br",
+      }),
+    ],
     resolve: {
       alias: [
         { find: "@/components/ui/shadcn", replacement: path.resolve(__dirname, "./src/components/ui/shadcn") },

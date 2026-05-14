@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "generated": "2026-05-14T16:19:47.490Z",
+  "site": {
+    "title": "My Site",
+    "description": "",
+    "url": "https://example.com"
+  },
+  "entries": [],
+  "metadata": {
+    "totalEntries": 0,
+    "generator": "aeo.js",
+    "generatorUrl": "https://aeojs.org",
+    "embedding": {
+      "recommended": "text-embedding-ada-002",
+      "dimensions": 1536
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "site": [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "My Site",
+      "url": "https://example.com"
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "My Site",
+      "url": "https://example.com"
+    }
+  ],
+  "pages": {}
+}
