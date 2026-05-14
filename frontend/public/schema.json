@@ -1,0 +1,18 @@
+{
+  "site": [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Bora Ali",
+      "description": "Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar",
+      "url": "https://booraali.com.br"
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Bora Ali",
+      "url": "https://booraali.com.br"
+    }
+  ],
+  "pages": {}
+}

@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "generated": "2026-05-14T16:24:51.812Z",
+  "site": {
+    "title": "Bora Ali",
+    "description": "Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar",
+    "url": "https://booraali.com.br"
+  },
+  "documents": [],
+  "metadata": {
+    "totalDocuments": 0,
+    "generator": "aeo.js",
+    "generatorUrl": "https://aeojs.org"
+  }
+}
