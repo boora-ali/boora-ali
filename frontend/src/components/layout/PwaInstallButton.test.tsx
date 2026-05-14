@@ -12,6 +12,8 @@ test("triggers the native install prompt when the browser supports it", async ()
 
   (usePwaInstall as ReturnType<typeof vi.fn>).mockReturnValue({
     canInstall: true,
+    hasNativePrompt: true,
+    isAndroid: false,
     isIos: false,
     isStandalone: false,
     install,
@@ -29,6 +31,8 @@ test("opens install instructions on iOS", async () => {
 
   (usePwaInstall as ReturnType<typeof vi.fn>).mockReturnValue({
     canInstall: true,
+    hasNativePrompt: false,
+    isAndroid: false,
     isIos: true,
     isStandalone: false,
     install: vi.fn(),
@@ -42,4 +46,25 @@ test("opens install instructions on iOS", async () => {
   expect(screen.getByText(/choose 'add to home screen' and confirm/i)).toBeInTheDocument();
   expect(screen.getByText(/edit actions/i)).toBeInTheDocument();
   expect(screen.getByText(/open this site in safari first/i)).toBeInTheDocument();
+});
+
+test("opens install instructions on Android when the native prompt is not ready", async () => {
+  const user = userEvent.setup();
+
+  (usePwaInstall as ReturnType<typeof vi.fn>).mockReturnValue({
+    canInstall: true,
+    hasNativePrompt: false,
+    isAndroid: true,
+    isIos: false,
+    isStandalone: false,
+    install: vi.fn(),
+  });
+
+  render(<PwaInstallButton />);
+
+  await user.click(screen.getByRole("button", { name: /install bora ali on this device/i }));
+
+  expect(screen.getByRole("heading", { name: /install on android/i })).toBeInTheDocument();
+  expect(screen.getByText(/three-dot menu/i)).toBeInTheDocument();
+  expect(screen.getByText(/add to home screen/i)).toBeInTheDocument();
 });

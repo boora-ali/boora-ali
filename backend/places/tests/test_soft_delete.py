@@ -43,6 +43,20 @@ class TestSoftDeleteQuerySet:
         assert qs.count() == 1
         assert qs.first().pk == live.pk
 
+    def test_visit_items_for_user_hides_items_from_deleted_visits(self, user):
+        place = baker.make("places.Place", user=user)
+        live_visit = baker.make("places.Visit", place=place)
+        deleted_visit = baker.make(
+            "places.Visit", place=place, deleted_at="2026-01-01T00:00:00Z"
+        )
+        live = baker.make("places.VisitItem", visit=live_visit)
+        baker.make("places.VisitItem", visit=deleted_visit)
+
+        qs = VisitItem.objects.for_user(user)
+
+        assert qs.count() == 1
+        assert qs.first().pk == live.pk
+
 
 @pytest.mark.django_db
 class TestPlaceSoftDelete:

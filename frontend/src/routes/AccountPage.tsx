@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
@@ -24,6 +24,7 @@ import {
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { AuthImage } from "../components/ui/AuthImage";
 import { CharacterCount } from "../components/ui/CharacterCount";
+import { PwaInstallButton } from "../components/layout/PwaInstallButton";
 import {
   updateProfileSchema,
   changePasswordSchema,
@@ -35,8 +36,10 @@ export default function AccountPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
+  const [photoObjectUrl, setPhotoObjectUrl] = useState<string | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState(user?.profile_photo_url ?? "");
+  const [removedPhoto, setRemovedPhoto] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
   const [profilePhotoError, setProfilePhotoError] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
@@ -55,11 +58,31 @@ export default function AccountPage() {
     resolver: zodResolver(changePasswordSchema),
   });
 
+  useEffect(() => {
+    return () => {
+      if (photoObjectUrl) {
+        URL.revokeObjectURL(photoObjectUrl);
+      }
+    };
+  }, [photoObjectUrl]);
+
+  function setPhotoPreviewFromFile(file: File) {
+    const objectUrl = URL.createObjectURL(file);
+    setPhotoObjectUrl(objectUrl);
+    setPhotoPreview(objectUrl);
+  }
+
+  function clearPhotoObjectUrl() {
+    setPhotoObjectUrl(null);
+  }
+
   const onPhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
     if (!file) {
       setPhoto(null);
+      clearPhotoObjectUrl();
       setPhotoPreview(user?.profile_photo_url ?? "");
+      setRemovedPhoto(false);
       return;
     }
     const err = validateImageFile(file);
@@ -77,7 +100,8 @@ export default function AccountPage() {
     }
     setProfilePhotoError("");
     setPhoto(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    setRemovedPhoto(false);
+    setPhotoPreviewFromFile(file);
   };
 
   const onProfileSubmit = async (data: UpdateProfileFormValues) => {
@@ -88,10 +112,12 @@ export default function AccountPage() {
         email: data.email,
         display_name: data.display_name ?? "",
         nickname: data.nickname ?? "",
-        ...(photo !== null && { profile_photo: photo }),
+        ...(photo !== null ? { profile_photo: photo } : removedPhoto ? { profile_photo: null } : {}),
       });
       setUser(updatedUser);
       setPhoto(null);
+      clearPhotoObjectUrl();
+      setRemovedPhoto(false);
       setPhotoPreview(updatedUser.profile_photo_url);
       setProfileMessage(t("account.profile.saved"));
       profileForm.reset({
@@ -134,26 +160,50 @@ export default function AccountPage() {
         <p className="mt-1 text-sm text-muted-foreground">{t("account.subtitle")}</p>
       </div>
 
+      <PwaInstallButton variant="inline" />
+
       <Card>
         <CardContent className="pt-6">
           <Form {...profileForm}>
             <form className="space-y-4" onSubmit={profileForm.handleSubmit(onProfileSubmit)}>
-              <div className="flex items-center gap-4">
-                {photoPreview ? (
-                  <AuthImage
-                    src={photoPreview}
-                    alt={t("account.photoAlt")}
-                    className="h-20 w-20 rounded-2xl object-cover"
-                  />
-                ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-muted text-sm font-semibold text-muted-foreground">
-                    {t("common.photo")}
-                  </div>
-                )}
-                <label className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted">
-                  {t("account.profile.changePhoto")}
+              <div className="space-y-2">
+                <span className="text-sm font-medium">{t("account.profile.photo")}</span>
+                <label className="group relative flex h-44 w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-background text-muted-foreground transition hover:border-primary/40 hover:text-primary sm:h-56">
+                  {photoPreview ? (
+                    <>
+                      <AuthImage
+                        src={photoPreview}
+                        alt={t("account.photoAlt")}
+                        className="h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+                        <span className="rounded-xl border border-white/30 bg-black/50 px-4 py-2 text-sm font-medium text-white">
+                          {t("account.profile.changePhoto")}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+                      <span className="text-2xl leading-none">+</span>
+                      <span className="text-xs">{t("account.profile.changePhoto")}</span>
+                    </div>
+                  )}
                   <input type="file" accept={ALLOWED_IMAGE_ACCEPT} className="sr-only" onChange={onPhotoChange} />
                 </label>
+                {photoPreview && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhoto(null);
+                      clearPhotoObjectUrl();
+                      setRemovedPhoto(true);
+                      setPhotoPreview("");
+                    }}
+                    className="text-xs text-muted-foreground transition hover:text-destructive"
+                  >
+                    {t("account.profile.removePhoto")}
+                  </button>
+                )}
               </div>
               {profilePhotoError && <p className="text-sm text-destructive">{profilePhotoError}</p>}
 
@@ -220,7 +270,7 @@ export default function AccountPage() {
               <Button
                 type="submit"
                 className="w-full sm:w-auto"
-                disabled={(!profileForm.formState.isDirty && !photo) || profileForm.formState.isSubmitting}
+                disabled={(!profileForm.formState.isDirty && !photo && !removedPhoto) || profileForm.formState.isSubmitting}
               >
                 {profileForm.formState.isSubmitting && (
                   <svg className="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">

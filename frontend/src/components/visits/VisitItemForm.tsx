@@ -34,11 +34,12 @@ type VisitItemPayload = Partial<Omit<VisitItem, "photo" | "price">> & { photo?: 
 type Props = {
   defaultValues?: VisitItemPayload;
   onSave: (data: VisitItemPayload) => void;
+  className?: string;
 };
 
 export const VISIT_ITEM_FORM_ID = "visit-item-form";
 
-export function VisitItemForm({ defaultValues, onSave }: Props) {
+export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) {
   const { t } = useTranslation();
   const existingPhoto = typeof defaultValues?.photo === "string" ? defaultValues.photo : null;
   const [preview, setPreview] = useState<string | null>(existingPhoto);
@@ -93,113 +94,14 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
 
   return (
     <Form {...form}>
-      <form id={VISIT_ITEM_FORM_ID} onSubmit={handleSubmit(onFormSubmit)} className="space-y-3">
-        <FormField
-          control={control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("visitItemForm.name")}</FormLabel>
-              <FormControl>
-                <Input maxLength={200} {...field} />
-              </FormControl>
-              <CharacterCount value={field.value} max={200} />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("visitItemForm.type")}</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {VISIT_ITEM_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {t(`itemType.${type.value}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="rating"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("visitItemForm.rating")}</FormLabel>
-              <FormControl>
-                <RatingInput value={field.value} onChange={field.onChange} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="price"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("visitItemForm.price")}</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("visitItemForm.notes")}</FormLabel>
-              <FormControl>
-                <Textarea maxLength={5000} {...field} />
-              </FormControl>
-              <CharacterCount value={field.value} max={5000} />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Controller
-          name="would_order_again"
-          control={control}
-          render={({ field }) => (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Switch
-                checked={!!field.value}
-                onCheckedChange={field.onChange}
-                aria-label={t("visitItemForm.wouldOrderAgain")}
-              />
-              <span className="text-sm font-medium">{t("visitItemForm.wouldOrderAgain")}</span>
-            </label>
-          )}
-        />
-
-        <div className="space-y-1.5">
+      <form id={VISIT_ITEM_FORM_ID} onSubmit={handleSubmit(onFormSubmit)} className={`min-h-0 space-y-2 ${className}`}>
+        <div className="space-y-1">
           <span className="text-sm font-medium">{t("visitItemForm.photo")}</span>
           <input ref={fileRef} type="file" accept={ALLOWED_IMAGE_ACCEPT} className="hidden" onChange={handleFile} />
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="group relative flex h-28 w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+            className="group relative flex h-20 w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border text-muted-foreground transition hover:border-primary/40 hover:text-primary sm:h-24"
           >
             {preview ? (
               <>
@@ -231,6 +133,107 @@ export function VisitItemForm({ defaultValues, onSave }: Props) {
           )}
           {photoError && <p className="text-sm text-destructive">{photoError}</p>}
         </div>
+
+        <FormField
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel>{t("visitItemForm.name")}</FormLabel>
+              <FormControl>
+                <Input maxLength={200} className="h-10 py-2" {...field} />
+              </FormControl>
+              <CharacterCount value={field.value} max={200} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="type"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel>{t("visitItemForm.type")}</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {VISIT_ITEM_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {t(`itemType.${type.value}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="would_order_again"
+          control={control}
+          render={({ field }) => (
+            <label className="flex items-center gap-2 cursor-pointer py-0.5">
+              <Switch
+                checked={!!field.value}
+                onCheckedChange={field.onChange}
+                aria-label={t("visitItemForm.wouldOrderAgain")}
+              />
+              <span className="text-sm font-medium">{t("visitItemForm.wouldOrderAgain")}</span>
+            </label>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="price"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel>{t("visitItemForm.price")}</FormLabel>
+              <FormControl>
+                <Input
+                  className="h-10 py-2"
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="rating"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel>{t("visitItemForm.rating")}</FormLabel>
+              <FormControl>
+                <RatingInput value={field.value} onChange={field.onChange} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel>{t("visitItemForm.notes")}</FormLabel>
+              <FormControl>
+                <Textarea maxLength={5000} className="min-h-[64px] py-2" {...field} />
+              </FormControl>
+              <CharacterCount value={field.value} max={5000} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </form>
     </Form>
   );
