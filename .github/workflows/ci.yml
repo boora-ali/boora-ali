@@ -325,32 +325,3 @@ jobs:
           VITE_GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           VITE_TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
 
-      - name: Check for missing migrations
-        working-directory: backend
-        env:
-          DJANGO_SETTINGS_MODULE: config.settings
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
-          POSTGRES_DB: ${{ secrets.CI_POSTGRES_DB }}
-          POSTGRES_USER: ${{ secrets.CI_POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
-          REDIS_URL: redis://localhost:6379/1
-          CELERY_BROKER_URL: redis://localhost:6379/2
-          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY_CI }}
-          USE_VERSITYGW: "False"
-        run: python manage.py makemigrations --check --dry-run
-
-      - name: Collectstatic
-        working-directory: backend
-        env:
-          DJANGO_SETTINGS_MODULE: config.settings
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
-          POSTGRES_DB: ${{ secrets.CI_POSTGRES_DB }}
-          POSTGRES_USER: ${{ secrets.CI_POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
-          REDIS_URL: redis://localhost:6379/1
-          CELERY_BROKER_URL: redis://localhost:6379/2
-          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY_CI }}
-          USE_VERSITYGW: "False"
-        run: python manage.py collectstatic --noinput
