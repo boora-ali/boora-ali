@@ -57,11 +57,9 @@ export default function LoginPage() {
   const hasTurnstile = !!import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   const onSubmit = async (data: LoginFormValues) => {
-    if (hasTurnstile && !turnstileToken) {
-      toast.error(t(turnstileError ? "auth.login.turnstileUnavailable" : "auth.login.turnstileRequired"));
-      form.setError("root", {
-        message: t(turnstileError ? "auth.login.turnstileUnavailable" : "auth.login.turnstileRequired"),
-      });
+    if (hasTurnstile && !turnstileToken && !turnstileError) {
+      toast.error(t("auth.login.turnstileRequired"));
+      form.setError("root", { message: t("auth.login.turnstileRequired") });
       return;
     }
     try {
