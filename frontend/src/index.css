@@ -115,7 +115,8 @@ body::after {
 [class*="bpWidget"],
 [class*="bp-widget"],
 [id^="botpress"],
-[class*="botpress"] {
+[class*="botpress"],
+.aeo-toggle {
   display: none !important;
   visibility: hidden !important;
 }
