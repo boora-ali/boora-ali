@@ -121,6 +121,34 @@ Toda string visível ao usuário: `t("chave")`. Adicionar em ambos:
 - `src/locales/pt/translation.json`
 - `src/locales/en/translation.json`
 
+## useEffect com estado assíncrono — regra obrigatória
+
+A regra `react-hooks/set-state-in-effect` bloqueia `setState` **síncrono** no corpo do efeito.
+
+```ts
+// ERRADO — dispara lint error:
+useEffect(() => {
+  setLoading(true);  // ← proibido
+  fetch(url).then(res => setData(res));
+}, [url]);
+
+// CORRETO — setState de "loading" após registrar callbacks; estado único:
+const [state, setState] = useState<{ status: "idle" | "loading" | "error"; data: T | null }>
+  ({ status: "idle", data: null });
+const prevKey = useRef<string | null>(null);
+
+useEffect(() => {
+  if (!url || prevKey.current === url) return;
+  prevKey.current = url;
+
+  fetch(url)
+    .then(res => setState({ status: "idle", data: res }))
+    .catch(() => setState({ status: "error", data: null }));
+
+  setState({ status: "loading", data: null });  // após registrar callbacks
+}, [url]);
+```
+
 ## Checklist antes de buildar Docker
 
 ```bash
