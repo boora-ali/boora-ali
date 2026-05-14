@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { Place } from "../../types/place";
 import { Badge } from "../ui/Badge";
@@ -7,39 +7,39 @@ import { AuthImage } from "../ui/AuthImage";
 
 export function PlaceCard({ place, index = 0 }: { place: Place; index?: number }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   return (
     <article
-      className="bg-surface rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden group animate-fade-slide-up"
+      onClick={() => navigate(`/places/${place.public_id}`)}
+      className="bg-surface rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden group animate-fade-slide-up cursor-pointer"
       style={{ animationDelay: `${index * 55}ms` }}
     >
-      <Link to={`/places/${place.public_id}`} className="block">
-        <div className="relative overflow-hidden">
-          {place.cover_photo ? (
-            <>
-              <AuthImage
-                src={place.cover_photo}
-                alt={place.name}
-                className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-              <div className="absolute bottom-2.5 left-3">
-                <Badge status={place.status} />
-              </div>
-            </>
-          ) : (
-            <div className="w-full h-44 bg-gradient-to-br from-background to-border/60 flex items-center justify-center">
-              <span className="text-4xl opacity-20">🍽</span>
-              <div className="absolute bottom-2.5 left-3">
-                <Badge status={place.status} />
-              </div>
+      <div className="relative overflow-hidden">
+        {place.cover_photo ? (
+          <>
+            <AuthImage
+              src={place.cover_photo}
+              alt={place.name}
+              className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            <div className="absolute bottom-2.5 left-3">
+              <Badge status={place.status} />
             </div>
-          )}
-        </div>
-      </Link>
+          </>
+        ) : (
+          <div className="w-full h-44 bg-gradient-to-br from-background to-border/60 flex items-center justify-center">
+            <span className="text-4xl opacity-20">🍽</span>
+            <div className="absolute bottom-2.5 left-3">
+              <Badge status={place.status} />
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-3 p-4">
-        <Link to={`/places/${place.public_id}`} className="block">
+        <div>
           <h3 className="font-fraunces font-semibold text-[1.05rem] leading-snug truncate text-text">
             {place.name}
           </h3>
@@ -50,7 +50,7 @@ export function PlaceCard({ place, index = 0 }: { place: Place; index?: number }
           {place.notes && (
             <p className="mt-2 line-clamp-2 text-sm text-text/90">{place.notes}</p>
           )}
-        </Link>
+        </div>
 
         <div className="flex flex-wrap gap-2">
           {sanitizeUrl(place.instagram_url) && (
@@ -89,16 +89,13 @@ export function PlaceCard({ place, index = 0 }: { place: Place; index?: number }
           )}
         </div>
 
-        <div>
-          <Link
-            to={`/places/${place.public_id}`}
-            className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary/15"
-          >
-            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-            </svg>
-            {t("common.open")}
-          </Link>
+        <div
+          className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary"
+        >
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+          {t("common.open")}
         </div>
       </div>
     </article>
