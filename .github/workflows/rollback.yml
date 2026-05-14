@@ -1,0 +1,61 @@
+name: Rollback Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "SHA do commit para o qual fazer rollback (sem o prefixo sha-)"
+        required: true
+        type: string
+
+jobs:
+  rollback:
+    name: Rollback to sha-${{ inputs.sha }}
+    runs-on: self-hosted
+
+    steps:
+      - name: Rollback via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            TARGET_TAG="sha-${{ inputs.sha }}"
+            cd /root/bora-ali
+
+            echo "Iniciando rollback para $TARGET_TAG..."
+
+            # Verificar se a imagem existe no registry antes de prosseguir
+            echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u "${{ secrets.USER }}" --password-stdin
+            docker manifest inspect ghcr.io/boora-ali/backend:$TARGET_TAG > /dev/null 2>&1 || {
+              echo "Imagem ghcr.io/boora-ali/backend:$TARGET_TAG não encontrada no registry."
+              exit 1
+            }
+
+            # Salvar tag atual antes do rollback
+            CURRENT_TAG=$(cat .image_tag 2>/dev/null || echo "unknown")
+            echo "$CURRENT_TAG" > .image_tag.previous
+
+            # Pull e deploy da tag alvo
+            export IMAGE_TAG="$TARGET_TAG"
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --force-recreate
+            echo "$TARGET_TAG" > .image_tag
+
+            # Health check (60s timeout)
+            echo "Aguardando health check..."
+            for i in $(seq 1 12); do
+              STATUS=$(curl -sf http://127.0.0.1:8000/api/health/ 2>/dev/null || echo "fail")
+              if echo "$STATUS" | grep -q '"status"'; then
+                echo "Rollback concluído com sucesso: $STATUS"
+                exit 0
+              fi
+              echo "Tentativa $i/12 falhou, aguardando 5s..."
+              sleep 5
+            done
+
+            echo "Health check falhou após rollback para $TARGET_TAG."
+            exit 1

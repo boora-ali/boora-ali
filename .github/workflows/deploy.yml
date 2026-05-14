@@ -46,11 +46,45 @@ jobs:
 
             cd /root/bora-ali
 
+            # Salvar tag anterior para possível rollback automático
+            PREVIOUS_TAG=$(cat .image_tag 2>/dev/null || echo "dev-latest")
+            echo "$PREVIOUS_TAG" > .image_tag.previous
+
+            # Atualizar código (preservar arquivos de estado e .env)
             git remote set-url origin https://github.com/boora-ali/boora-ali.git
             git fetch https://${{ secrets.USER }}:${{ secrets.GH_PAT }}@github.com/boora-ali/boora-ali.git main
             git reset --hard FETCH_HEAD
-            git clean -fd
+            git clean -fd -e .image_tag -e .image_tag.previous -e .env
 
-            docker compose -f docker-compose.prod.yml build --no-cache
+            # Registrar tag atual
+            echo "dev-latest" > .image_tag
+            export IMAGE_TAG="dev-latest"
+
+            # Login e pull da imagem pré-construída (build.yml já rodou após merge em dev)
+            echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u "${{ secrets.USER }}" --password-stdin
+            docker compose -f docker-compose.prod.yml pull
+
+            # Subir serviços
             docker compose -f docker-compose.prod.yml up -d --force-recreate
             docker image prune -f
+
+            # Health check (60s timeout, 12 tentativas × 5s)
+            echo "Aguardando health check..."
+            for i in $(seq 1 12); do
+              STATUS=$(curl -sf http://127.0.0.1:8000/api/health/ 2>/dev/null || echo "fail")
+              if echo "$STATUS" | grep -q '"status"'; then
+                echo "Health check OK: $STATUS"
+                exit 0
+              fi
+              echo "Tentativa $i/12 falhou, aguardando 5s..."
+              sleep 5
+            done
+
+            # Rollback automático se health check falhar
+            echo "Health check falhou após 60s. Executando rollback para $PREVIOUS_TAG..."
+            export IMAGE_TAG="$PREVIOUS_TAG"
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --force-recreate
+            echo "$PREVIOUS_TAG" > .image_tag
+            echo "Rollback concluído. Deploy marcado como falho."
+            exit 1
