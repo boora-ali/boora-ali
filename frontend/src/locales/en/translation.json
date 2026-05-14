@@ -83,7 +83,12 @@
     "iosStepSafari": "If you are using another browser, open this site in Safari first.",
     "iosStepShare": "Tap the Share button in Safari's toolbar.",
     "iosStepAdd": "Choose 'Add to Home Screen' and confirm.",
-    "iosStepFallback": "If 'Add to Home Screen' is missing, scroll the list, tap 'Edit Actions', and enable it there."
+    "iosStepFallback": "If 'Add to Home Screen' is missing, scroll the list, tap 'Edit Actions', and enable it there.",
+    "androidTitle": "Install on Android",
+    "androidDescription": "On Android, Chrome may show the native install prompt or ask you to install from the browser menu.",
+    "androidStepMenu": "Tap the browser's three-dot menu.",
+    "androidStepInstall": "Choose 'Install app' or 'Add to Home screen' and confirm.",
+    "androidStepFallback": "If the option is missing, refresh the page and try again after it finishes loading."
   },
   "account": {
     "title": "Account",
@@ -101,7 +106,9 @@
       "nickname": "Nickname",
       "username": "Username",
       "email": "Email",
+      "photo": "Profile photo",
       "changePhoto": "Change photo",
+      "removePhoto": "Remove photo",
       "save": "Save profile",
       "saved": "Profile updated.",
       "error": "Could not update profile."

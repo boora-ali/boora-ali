@@ -220,6 +220,30 @@ def test_detail_includes_consumables_summary(auth_client, user):
     assert r.data["total_consumed_amount"] == "30.50"
 
 
+def test_detail_consumables_summary_ignores_deleted_visits_and_items(auth_client, user):
+    place = baker.make("places.Place", user=user)
+    live_visit = baker.make("places.Visit", place=place)
+    deleted_visit = baker.make(
+        "places.Visit", place=place, deleted_at="2026-01-01T00:00:00Z"
+    )
+    baker.make("places.VisitItem", visit=live_visit, rating=8, price="12.50")
+    baker.make(
+        "places.VisitItem",
+        visit=live_visit,
+        rating=10,
+        price="18.00",
+        deleted_at="2026-01-01T00:00:00Z",
+    )
+    baker.make("places.VisitItem", visit=deleted_visit, rating=2, price="99.00")
+
+    r = auth_client.get(f"/api/places/{place.public_id}/")
+
+    assert r.status_code == 200
+    assert r.data["consumables_count"] == 1
+    assert float(r.data["average_consumable_rating"]) == 8.0
+    assert r.data["total_consumed_amount"] == "12.50"
+
+
 def test_detail_avoids_n_plus_one_queries(auth_client, user):
     place = baker.make("places.Place", user=user)
     visits = baker.make("places.Visit", place=place, _quantity=3)
@@ -243,6 +267,23 @@ def test_detail_can_expand_visit_items(auth_client, user):
 
     assert r.status_code == 200
     assert "items" in r.data["visits"][0]
+    assert len(r.data["visits"][0]["items"]) == 1
+
+
+def test_detail_expand_ignores_deleted_visits(auth_client, user):
+    place = baker.make("places.Place", user=user)
+    live_visit = baker.make("places.Visit", place=place)
+    deleted_visit = baker.make(
+        "places.Visit", place=place, deleted_at="2026-01-01T00:00:00Z"
+    )
+    baker.make("places.VisitItem", visit=live_visit)
+    baker.make("places.VisitItem", visit=deleted_visit)
+
+    r = auth_client.get(f"/api/places/{place.public_id}/?expand=visits.items")
+
+    assert r.status_code == 200
+    assert len(r.data["visits"]) == 1
+    assert r.data["visits"][0]["public_id"] == str(live_visit.public_id)
     assert len(r.data["visits"][0]["items"]) == 1
 
 
