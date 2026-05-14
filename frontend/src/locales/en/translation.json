@@ -278,6 +278,11 @@
     "toggle": "Toggle dark mode",
     "label": "Dark mode"
   },
+  "chat": {
+    "toggleLabel": "Open chat",
+    "aiMode": "Chat with AI",
+    "humanMode": "Chat with human"
+  },
   "footer": {
     "terms": "Terms of Use",
     "privacy": "Privacy Policy",

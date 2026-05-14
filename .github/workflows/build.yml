@@ -50,4 +50,4 @@ jobs:
           build-args: |
             VITE_API_URL=/api
             VITE_GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
-            VITE_TURNSTILE_SITE_KEY=${{ secrets.TURNSTILE_SITE_KEY }}
+            VITE_TURNSTILE_SITE_KEY=${{ secrets.VITE_TURNSTILE_SITE_KEY }}

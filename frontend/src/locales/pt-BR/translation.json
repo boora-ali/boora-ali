@@ -281,6 +281,11 @@
     "toggle": "Alternar modo escuro",
     "label": "Modo escuro"
   },
+  "chat": {
+    "toggleLabel": "Abrir chat",
+    "aiMode": "Chat com IA",
+    "humanMode": "Chat com humano"
+  },
   "footer": {
     "terms": "Termos de Uso",
     "privacy": "Política de Privacidade",
