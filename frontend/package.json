@@ -16,6 +16,7 @@
     "perf:lighthouse:mobile": "lighthouse http://127.0.0.1:4173/login --output html --output-path ./lighthouse-report-mobile.html --chrome-flags='--headless=new --no-sandbox'",
     "perf:lighthouse:desktop": "lighthouse http://127.0.0.1:4173/login --preset=desktop --output html --output-path ./lighthouse-report-desktop.html --chrome-flags='--headless=new --no-sandbox'",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:watch": "vitest",
     "i18n:sync": "node ../scripts/po-to-i18n.cjs"
@@ -73,6 +74,7 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.10",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "@vitest/coverage-v8": "^4.1.5"
   }
 }
