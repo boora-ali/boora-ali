@@ -89,7 +89,7 @@ export default function TrashPage() {
           {data.results.map((place) => (
             <div
               key={place.public_id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3"
+              className="flex flex-col gap-3 rounded-xl border border-border bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-text truncate">{place.name}</p>
@@ -100,10 +100,11 @@ export default function TrashPage() {
                   )}
                 </p>
               </div>
-              <div className="flex gap-2 shrink-0">
+              <div className="flex gap-2">
                 <Button
                   size="sm"
                   variant="secondary"
+                  className="flex-1 sm:flex-none"
                   onClick={() => handleRestore(place.public_id)}
                   disabled={restoring === place.public_id}
                 >
@@ -112,6 +113,7 @@ export default function TrashPage() {
                 <Button
                   size="sm"
                   variant="destructive"
+                  className="flex-1 sm:flex-none"
                   onClick={() => setPermanentDeleteTarget(place)}
                   disabled={restoring === place.public_id}
                 >

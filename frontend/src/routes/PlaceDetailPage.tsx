@@ -37,6 +37,7 @@ export default function PlaceDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [coverLightboxOpen, setCoverLightboxOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,11 +98,17 @@ export default function PlaceDetailPage() {
           <div className="flex flex-col gap-4">
             <div className="overflow-hidden rounded-2xl border border-border bg-background">
               {place.cover_photo ? (
-                <AuthImage
-                  src={place.cover_photo}
-                  alt={place.name}
-                  className="h-56 w-full object-cover sm:h-72"
-                />
+                <button
+                  type="button"
+                  className="w-full cursor-zoom-in"
+                  onClick={() => setCoverLightboxOpen(true)}
+                >
+                  <AuthImage
+                    src={place.cover_photo}
+                    alt={place.name}
+                    className="h-56 w-full object-cover sm:h-72"
+                  />
+                </button>
               ) : (
                 <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-background to-border/60 text-5xl opacity-40 sm:h-56">
                   🍽
@@ -330,6 +337,14 @@ export default function PlaceDetailPage() {
           mapsUrl={place.maps_url}
         />
       )}
+
+      <Dialog open={coverLightboxOpen} onOpenChange={setCoverLightboxOpen}>
+        <DialogContent className="max-w-screen-md p-0 overflow-hidden">
+          {place.cover_photo && (
+            <AuthImage src={place.cover_photo} alt={place.name} className="w-full h-auto max-h-[90vh] object-contain" />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={deleteConfirmOpen} onOpenChange={(o) => { if (!o) setDeleteConfirmOpen(false); }}>
         <DialogContent>
