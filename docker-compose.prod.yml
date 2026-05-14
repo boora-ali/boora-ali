@@ -34,9 +34,7 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/boora-ali/backend:${IMAGE_TAG:-dev-latest}
     restart: unless-stopped
     deploy:
       resources:
@@ -61,9 +59,7 @@ services:
       - staticfiles:/app/staticfiles
 
   celery-worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/boora-ali/backend:${IMAGE_TAG:-dev-latest}
     restart: unless-stopped
     healthcheck:
       disable: true
@@ -87,9 +83,7 @@ services:
         condition: service_healthy
 
   celery-beat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/boora-ali/backend:${IMAGE_TAG:-dev-latest}
     restart: unless-stopped
     deploy:
       resources:
@@ -111,13 +105,7 @@ services:
         condition: service_healthy
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: "/api"
-        VITE_GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
-        VITE_TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+    image: ghcr.io/boora-ali/frontend:${IMAGE_TAG:-dev-latest}
     restart: unless-stopped
     deploy:
       resources:
