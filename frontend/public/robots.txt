@@ -1,43 +1,6 @@
-# -----------------------------------------------
-# Bora Ali — robots.txt
-# -----------------------------------------------
-
-# AI training crawlers — opt out
-User-agent: GPTBot
-Disallow: /
-
-User-agent: Google-Extended
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-
-User-agent: Claude-Web
-Disallow: /
-
-User-agent: Bytespider
-Disallow: /
-
-User-agent: Amazonbot
-Disallow: /
-
-# General crawlers
 User-agent: *
+Allow: /
 Disallow: /api/
 Disallow: /admin/
-Disallow: /places
-Disallow: /places/
-Disallow: /visits
-Disallow: /visits/
-Disallow: /account
-Disallow: /login
-Disallow: /cadastro
-
-Allow: /
-Allow: /termos-de-uso
-Allow: /politica-de-privacidade
 
 Sitemap: https://booraali.com.br/sitemap.xml
