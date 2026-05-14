@@ -19,6 +19,7 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [details, setDetails] = useState<Visit | null>(
     visit.items !== undefined ? visit : null
   );
@@ -116,11 +117,17 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
             renderItem={(it) => (
               <div className="overflow-hidden rounded-xl border border-border bg-surface text-sm">
                 {it.photo ? (
-                  <AuthImage
-                    src={it.photo}
-                    alt={it.name}
-                    className="h-24 w-full object-cover"
-                  />
+                  <button
+                    type="button"
+                    className="w-full cursor-zoom-in"
+                    onClick={() => setLightboxSrc(it.photo!)}
+                  >
+                    <AuthImage
+                      src={it.photo}
+                      alt={it.name}
+                      className="h-24 w-full object-cover"
+                    />
+                  </button>
                 ) : (
                   <div className="flex h-24 w-full items-center justify-center bg-muted/10 text-xs text-muted">
                     {t("visitCard.noPhoto")}
@@ -140,6 +147,14 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
       {open && !loadingDetails && !loadError && visibleItems.length === 0 && (
         <p className="mt-2 text-sm text-muted">{t("visitCard.empty")}</p>
       )}
+      <Dialog open={Boolean(lightboxSrc)} onOpenChange={(o) => { if (!o) setLightboxSrc(null); }}>
+        <DialogContent className="max-w-screen-sm p-0 overflow-hidden">
+          {lightboxSrc && (
+            <AuthImage src={lightboxSrc} alt="" className="w-full h-auto max-h-[90vh] object-contain" />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent>
           <DialogHeader>

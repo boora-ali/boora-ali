@@ -97,3 +97,11 @@ body::after {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Hide Botpress default floating launcher */
+#bp-web-widget-container,
+.bpw-floating-button,
+[id^="bp-web-widget"],
+[class*="bpw-floating"] {
+  display: none !important;
+}
