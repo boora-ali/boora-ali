@@ -67,6 +67,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install ruff
         run: pip install ruff==0.11.9
@@ -118,6 +120,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install security tools
         run: pip install bandit==1.8.3 pip-audit==2.9.0
@@ -162,9 +166,9 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: bora_ali_test
-          POSTGRES_USER: bora
-          POSTGRES_PASSWORD: bora
+          POSTGRES_DB: ${{ secrets.CI_POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.CI_POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
         options: >-
           --health-cmd pg_isready
           --health-interval 5s
@@ -190,6 +194,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
         working-directory: backend
@@ -201,13 +207,13 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.test_settings
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
-          POSTGRES_DB: bora_ali_test
-          POSTGRES_USER: bora
-          POSTGRES_PASSWORD: bora
+          POSTGRES_DB: ${{ secrets.CI_POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.CI_POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
           REDIS_URL: redis://localhost:6379/1
           CELERY_BROKER_URL: redis://localhost:6379/2
-          DJANGO_SECRET_KEY: "!hriv@)lzy!os=edv@tf%z#@t@k#k@gp&t4ym&8&3sgrl-#jq9"
-        run: python -m pytest --tb=short -q --cov=. --cov-report=term-missing --cov-fail-under=60
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY_CI }}
+        run: python -m pytest --tb=short -q --cov=. --cov-report=term-missing --cov-fail-under=70
 
   test-frontend:
     name: Test Frontend
