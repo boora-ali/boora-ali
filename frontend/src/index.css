@@ -98,10 +98,24 @@ body::after {
   to { opacity: 1; }
 }
 
-/* Hide Botpress default floating launcher */
+/* Hide all Botpress widget UI (v1 + v2): launcher, container, and the
+   built-in Human/AI takeover toggle. The app provides its own toggle in the footer. */
 #bp-web-widget-container,
 .bpw-floating-button,
 [id^="bp-web-widget"],
-[class*="bpw-floating"] {
+[class*="bpw-floating"],
+[class^="bpw-"],
+[class*=" bpw-"],
+#webchat,
+#bp-widget,
+.bpFab,
+[class^="bpHeader"],
+[class*="bpHeader"],
+[class*="bpModal"],
+[class*="bpWidget"],
+[class*="bp-widget"],
+[id^="botpress"],
+[class*="botpress"] {
   display: none !important;
+  visibility: hidden !important;
 }
