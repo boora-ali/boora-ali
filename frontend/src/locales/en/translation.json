@@ -1,8 +1,8 @@
 {
   "auth": {
     "login": {
-      "title": "Bora Ali",
-      "subtitle": "Save places, visits, and dishes worth remembering.",
+      "title": "Boora Ali",
+      "subtitle": "Log places, visits, and experiences worth remembering.",
       "username": "Username",
       "password": "Password",
       "submit": "Sign in",
@@ -24,7 +24,9 @@
     "register": {
       "title": "Create account",
       "username": "Username",
+      "usernamePlaceholder": "johndoe",
       "email": "Email",
+      "emailPlaceholder": "you@email.com",
       "password": "Password",
       "confirmPassword": "Confirm password",
       "submit": "Create account",
@@ -41,8 +43,8 @@
     }
   },
   "places": {
-    "title": "Bora Ali",
-    "subtitle": "Your personal food diary",
+    "title": "Boora Ali",
+    "subtitle": "Your personal place journal",
     "new": "+ New place",
     "logout": "Sign out",
     "search": "Search by name, category, or note...",
@@ -75,11 +77,11 @@
   },
   "pwa": {
     "install": "Install app",
-    "installAria": "Install Bora Ali on this device",
+    "installAria": "Install Boora Ali on this device",
     "iosButton": "How to install on iPhone",
-    "iosButtonAria": "See how to install Bora Ali on iPhone or iPad",
+    "iosButtonAria": "See how to install Boora Ali on iPhone or iPad",
     "iosTitle": "Install on iPhone or iPad",
-    "iosDescription": "On iPhone and iPad, Bora Ali is installed from the browser menu. This button opens the instructions.",
+    "iosDescription": "On iPhone and iPad, Boora Ali is installed from the browser menu. This button opens the instructions.",
     "iosStepSafari": "If you are using another browser, open this site in Safari first.",
     "iosStepShare": "Tap the Share button in Safari's toolbar.",
     "iosStepAdd": "Choose 'Add to Home Screen' and confirm.",
@@ -135,11 +137,11 @@
     "coordsPending": "Coordinates are being processed. The map will appear soon.",
     "coordsFailed": "Could not extract coordinates. Edit the place and save again to retry.",
     "consumables": {
-      "title": "Consumables summary",
+      "title": "Items summary",
       "items": "Items logged",
       "avgRating": "Average item rating",
       "totalSpent": "Total spent",
-      "empty": "Add a visit with food or drinks consumed to track prices and average ratings."
+      "empty": "Add a visit with items to track prices and average ratings."
     },
     "visits": {
       "title": "Visits ({{count}})",
@@ -149,9 +151,13 @@
   },
   "placeForm": {
     "name": "Name",
+    "namePlaceholder": "E.g. Morning Café",
     "category": "Category",
+    "categoryPlaceholder": "Restaurant, gym, museum...",
     "address": "Address",
+    "addressPlaceholder": "Street, number, neighborhood...",
     "instagram": "Instagram URL",
+    "instagramPlaceholder": "https://instagram.com/place",
     "maps": "Google Maps link",
     "location": "Location",
     "locationHint": "Click to place the pin. Drag the map to adjust the area.",
@@ -170,6 +176,7 @@
     "coordsNotFound": "Coordinates not found in this URL. Use the full Google Maps URL.",
     "status": "Status",
     "notes": "Notes",
+    "notesPlaceholder": "Tips, hours, notes...",
     "coverPhoto": "Cover photo",
     "changePhoto": "Change photo",
     "uploadPhoto": "Upload photo",
@@ -206,11 +213,12 @@
     "overallRating": "Overall (0-10)",
     "wouldReturn": "I would come back here",
     "generalNotes": "General notes",
+    "notesPlaceholder": "How was it? What stood out?",
     "photo": "Photo",
     "visitPhotoAlt": "Visit photo",
-    "consumedTitle": "Food and drinks consumed",
-    "consumedDescription": "Add each consumable with price, rating, and comments.",
-    "addConsumable": "+ Add food or drink",
+    "consumedTitle": "Visit items",
+    "consumedDescription": "Add each item with price, rating, and comments.",
+    "addConsumable": "+ Add item",
     "save": "Save visit",
     "saveError": "Failed to save visit",
     "removeItemError": "Failed to remove item",
@@ -221,7 +229,7 @@
       "when": "When was it?",
       "experience": "How was the experience?",
       "notes": "Notes",
-      "consumed": "What did you have?",
+      "consumed": "What did you log?",
       "photo": "Visit photo"
     }
   },
@@ -242,16 +250,16 @@
   },
   "visitItemForm": {
     "name": "Item name",
-    "namePlaceholder": "Croissant, espresso, juice...",
+    "namePlaceholder": "Dish, exercise, exhibit...",
     "type": "Type",
     "rating": "Rating (0-10)",
     "price": "Price",
     "notes": "Comments",
-    "notesPlaceholder": "Texture, flavor, portion size...",
-    "wouldOrderAgain": "Would order again?",
+    "notesPlaceholder": "Details, notes...",
+    "wouldOrderAgain": "Would buy/do again",
     "photo": "Photo",
     "itemPhotoAlt": "Item photo",
-    "addTitle": "Add food or drink",
+    "addTitle": "Add item",
     "editTitle": "Edit item"
   },
   "visitCard": {
@@ -262,9 +270,9 @@
     "environment": "Env",
     "service": "Service",
     "noPhoto": "No photo",
-    "details": "View consumables",
-    "hideDetails": "Hide consumables",
-    "empty": "No consumables recorded.",
+    "details": "View items",
+    "hideDetails": "Hide items",
+    "empty": "No items recorded.",
     "loadError": "Failed to load consumables"
   },
   "dateTimePicker": {
@@ -324,7 +332,7 @@
   },
   "termsModal": {
     "title": "Terms of Use",
-    "description": "To continue using Bora Ali, please read and accept our Terms of Use and Privacy Policy. You can open the documents below before accepting.",
+    "description": "To continue using Boora Ali, please read and accept our Terms of Use and Privacy Policy. You can open the documents below before accepting.",
     "accept": "I have read and accept the Terms of Use and Privacy Policy",
     "disclaimer": "By accepting, you confirm that you are at least 13 years old.",
     "error": "Could not record your acceptance. Please try again."

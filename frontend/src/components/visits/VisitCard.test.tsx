@@ -50,7 +50,7 @@ test("loads consumable details on demand", async () => {
     />
   );
 
-  screen.getByRole("button", { name: /consum/i }).click();
+  screen.getByRole("button", { name: /view items/i }).click();
 
   await waitFor(() => expect(visitsService.get).toHaveBeenCalledWith("visit-1"));
   await waitFor(() => expect(screen.getByText("Espresso")).toBeInTheDocument());

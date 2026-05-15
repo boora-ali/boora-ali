@@ -5,6 +5,7 @@ import { CalendarIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -65,7 +66,7 @@ export function DateTimePicker({ label, value, onChange, error }: Props) {
 
   return (
     <div className="space-y-1">
-      {label && <label className="block text-sm font-medium">{label}</label>}
+      {label && <Label className="block">{label}</Label>}
       <Popover>
         <PopoverTrigger asChild>
           <button
@@ -94,9 +95,9 @@ export function DateTimePicker({ label, value, onChange, error }: Props) {
             endMonth={new Date(2100, 11)}
           />
           <div className="border-border border-t p-3">
-            <label className="mb-2 block text-sm font-medium">
+            <Label className="mb-2 block">
               {t("dateTimePicker.timeCaption")}
-            </label>
+            </Label>
             <Input
               type="time"
               step={900}

@@ -35,6 +35,7 @@ import { visitItemsService } from "../../services/visit-items.service";
 import { validateImageFile, ALLOWED_IMAGE_ACCEPT } from "../../utils/url";
 import { visitSchema, type VisitFormValues } from "../../schemas/visit";
 import { RatingInput } from "../ui/RatingInput";
+import { Label } from "@/components/ui/label";
 
 type VisitPayload = Partial<Omit<Visit, "photo">> & { photo?: string | File };
 type ItemPayload = Partial<Omit<VisitItem, "photo" | "price">> & { photo?: string | File; price?: number | string | null };
@@ -283,14 +284,13 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
           name="would_return"
           control={control}
           render={({ field }) => (
-            <label className="flex items-center gap-2 cursor-pointer">
+            <Label className="flex items-center gap-2 cursor-pointer">
               <Switch
                 checked={!!field.value}
                 onCheckedChange={field.onChange}
-                aria-label={t("visitForm.wouldReturn")}
               />
-              <span className="text-sm font-medium">{t("visitForm.wouldReturn")}</span>
-            </label>
+              {t("visitForm.wouldReturn")}
+            </Label>
           )}
         />
         </FormSection>
@@ -301,9 +301,8 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
           name="general_notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("visitForm.generalNotes")}</FormLabel>
               <FormControl>
-                <Textarea maxLength={5000} {...field} />
+                <Textarea maxLength={5000} placeholder={t("visitForm.notesPlaceholder")} {...field} />
               </FormControl>
               <CharacterCount value={field.value} max={5000} />
               <FormMessage />
@@ -314,7 +313,6 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
 
         <FormSection title={t("visitForm.sections.photo")}>
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">{t("visitForm.photo")}</span>
           <input ref={fileRef} type="file" accept={ALLOWED_IMAGE_ACCEPT} className="hidden" onChange={handleFile} />
           <button
             type="button"
@@ -354,7 +352,6 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
 
         <FormSection title={t("visitForm.sections.consumed")} description={t("visitForm.consumedDescription")}>
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-medium">{t("visitForm.consumedTitle")}</span>
           {removeError && <p className="text-sm text-destructive">{removeError}</p>}
           {items.length > 0 && (
             <ResponsiveCardCarousel

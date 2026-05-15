@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { CharacterCount } from "../components/ui/CharacterCount";
+import { Label } from "@/components/ui/label";
 import { TurnstileWidget } from "../components/auth/TurnstileWidget";
 import { getApiErrorState } from "../services/api-errors";
 import { applyApiErrors } from "../utils/form-errors";
@@ -95,7 +96,7 @@ export default function RegisterPage() {
                 <FormItem>
                   <FormLabel>{t("auth.register.username")}</FormLabel>
                   <FormControl>
-                    <Input maxLength={150} {...field} />
+                    <Input maxLength={150} placeholder={t("auth.register.usernamePlaceholder")} {...field} />
                   </FormControl>
                   <CharacterCount value={field.value} max={150} />
                   <FormMessage />
@@ -109,7 +110,7 @@ export default function RegisterPage() {
                 <FormItem>
                   <FormLabel>{t("auth.register.email")}</FormLabel>
                   <FormControl>
-                    <Input type="email" maxLength={254} {...field} />
+                    <Input type="email" maxLength={254} placeholder={t("auth.register.emailPlaceholder")} {...field} />
                   </FormControl>
                   <CharacterCount value={field.value} max={254} />
                   <FormMessage />
@@ -161,7 +162,7 @@ export default function RegisterPage() {
               name="terms_accepted"
               control={form.control}
               render={({ field }) => (
-                <label className="flex items-start gap-2 cursor-pointer">
+                <Label className="flex items-start gap-2 cursor-pointer">
                   <Switch
                     checked={!!field.value}
                     onCheckedChange={(checked) => {
@@ -181,7 +182,7 @@ export default function RegisterPage() {
                       {t("auth.register.privacyLink")}
                     </Link>
                   </span>
-                </label>
+                </Label>
               )}
             />
             {form.formState.errors.root && (

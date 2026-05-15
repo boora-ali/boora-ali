@@ -1,8 +1,8 @@
 {
   "auth": {
     "login": {
-      "title": "Bora Ali",
-      "subtitle": "Registre lugares, visitas e pratos que valem lembrar.",
+      "title": "Boora Ali",
+      "subtitle": "Registre locais, visitas e experiências que valem a pena lembrar.",
       "username": "Usuário",
       "password": "Senha",
       "submit": "Entrar",
@@ -24,7 +24,9 @@
     "register": {
       "title": "Criar conta",
       "username": "Usuário",
+      "usernamePlaceholder": "usuario_massa",
       "email": "E-mail",
+      "emailPlaceholder": "seu@email.com",
       "password": "Senha",
       "confirmPassword": "Confirmar senha",
       "submit": "Criar conta",
@@ -41,8 +43,8 @@
     }
   },
   "places": {
-    "title": "Bora Ali",
-    "subtitle": "Seu diário gastronômico pessoal",
+    "title": "Boora Ali",
+    "subtitle": "Seu diário pessoal de experiencias",
     "new": "+ Novo lugar",
     "logout": "Sair",
     "search": "Buscar por nome, categoria ou observação...",
@@ -75,11 +77,11 @@
   },
   "pwa": {
     "install": "Instalar app",
-    "installAria": "Instalar o Bora Ali no dispositivo",
+    "installAria": "Instalar o Boora Ali no dispositivo",
     "iosButton": "Como instalar no iPhone",
-    "iosButtonAria": "Ver como instalar o Bora Ali no iPhone ou iPad",
+    "iosButtonAria": "Ver como instalar o Boora Ali no iPhone ou iPad",
     "iosTitle": "Instalar no iPhone ou iPad",
-    "iosDescription": "No iPhone e iPad, o Bora Ali é instalado pelo menu do navegador. O botão abaixo abre as instruções.",
+    "iosDescription": "No iPhone e iPad, o Boora Ali é instalado pelo menu do navegador. O botão abaixo abre as instruções.",
     "iosStepSafari": "Se você estiver em outro navegador, abra este site no Safari primeiro.",
     "iosStepShare": "Toque no botão Compartilhar na barra do Safari.",
     "iosStepAdd": "Escolha 'Adicionar à Tela de Início' e confirme.",
@@ -135,11 +137,11 @@
     "coordsPending": "Coordenadas sendo processadas, o mapa aparecerá em breve.",
     "coordsFailed": "Não foi possível extrair coordenadas. Edite o lugar e salve novamente para tentar de novo.",
     "consumables": {
-      "title": "Resumo de consumíveis",
+      "title": "Resumo de itens",
       "items": "Itens registrados",
       "avgRating": "Avaliação média",
       "totalSpent": "Total gasto",
-      "empty": "Adicione uma visita com itens consumidos para acompanhar preços e avaliações."
+      "empty": "Adicione uma visita com itens para lembrar de como foi sua experiencia."
     },
     "visits": {
       "title": "Visitas ({{count}})",
@@ -149,9 +151,13 @@
   },
   "placeForm": {
     "name": "Nome",
+    "namePlaceholder": "Ex: Café Tia Maria",
     "category": "Categoria",
+    "categoryPlaceholder": "Restaurante, academia, museu...",
     "address": "Endereço",
+    "addressPlaceholder": "Rua, número, bairro...",
     "instagram": "URL do Instagram",
+    "instagramPlaceholder": "https://instagram.com/lugar",
     "maps": "Link do Google Maps",
     "location": "Localização",
     "locationHint": "Clique para colocar o pin. Arraste o mapa para ajustar a região.",
@@ -170,6 +176,7 @@
     "coordsNotFound": "Coordenadas não encontradas nesta URL. Use a URL completa do Google Maps.",
     "status": "Status",
     "notes": "Notas",
+    "notesPlaceholder": "Dicas, horários, observações...",
     "coverPhoto": "Foto de capa",
     "changePhoto": "Trocar foto",
     "uploadPhoto": "Enviar foto",
@@ -179,7 +186,7 @@
     "saveError": "Falha ao salvar lugar",
     "coverPreviewAlt": "Prévia da capa",
     "sections": {
-      "basic": "Informações básicas",
+      "basic": "Informações do local",
       "basicDescription": "Nome, categoria e status do lugar.",
       "location": "Localização",
       "locationDescription": "Endereço, link do Google Maps e pin no mapa.",
@@ -206,11 +213,12 @@
     "overallRating": "Geral (0-10)",
     "wouldReturn": "Eu voltaria nesse lugar",
     "generalNotes": "Observações gerais",
+    "notesPlaceholder": "Como foi? O que ficou de memória?",
     "photo": "Foto",
     "visitPhotoAlt": "Foto da visita",
-    "consumedTitle": "Comidas e bebidas consumidas",
-    "consumedDescription": "Adicione cada consumível com preço, avaliação e comentários.",
-    "addConsumable": "+ Adicionar comida ou bebida",
+    "consumedTitle": "Itens da visita",
+    "consumedDescription": "Adicione cada item com preço, avaliação e comentários.",
+    "addConsumable": "+ Adicionar item",
     "save": "Salvar visita",
     "saveError": "Falha ao salvar visita",
     "removeItemError": "Falha ao remover item",
@@ -221,7 +229,7 @@
       "when": "Quando foi?",
       "experience": "Como foi a experiência?",
       "notes": "Observações",
-      "consumed": "O que consumiu?",
+      "consumed": "O que registrou?",
       "photo": "Foto da visita"
     }
   },
@@ -242,17 +250,17 @@
   },
   "visitItemForm": {
     "name": "Nome do item",
-    "namePlaceholder": "Croissant, espresso, suco...",
+    "namePlaceholder": "Prato, exercício, exposição...",
     "type": "Tipo",
     "rating": "Avaliação (0-10)",
     "price": "Preço (R$)",
     "notes": "Comentários",
-    "notesPlaceholder": "Textura, sabor, tamanho...",
-    "wouldOrderAgain": "Pediria de novo?",
+    "notesPlaceholder": "Detalhes, anotações...",
+    "wouldOrderAgain": "Compraria/Faria de novo",
     "photo": "Foto",
     "itemPhotoAlt": "Foto do item",
     "nameRequired": "Nome do item é obrigatório",
-    "addTitle": "Adicionar comida ou bebida",
+    "addTitle": "Adicionar item",
     "editTitle": "Editar item"
   },
   "visitCard": {
@@ -265,9 +273,9 @@
     "environment": "Amb",
     "service": "Atendimento",
     "noPhoto": "Sem foto",
-    "details": "Ver consumíveis",
-    "hideDetails": "Ocultar consumíveis",
-    "empty": "Nenhum consumível registrado.",
+    "details": "Ver itens",
+    "hideDetails": "Ocultar itens",
+    "empty": "Nenhum item registrado.",
     "loadError": "Falha ao carregar os consumíveis"
   },
   "dateTimePicker": {
@@ -327,7 +335,7 @@
   },
   "termsModal": {
     "title": "Termos de Uso",
-    "description": "Para continuar usando o Bora Ali, leia e aceite nossos Termos de Uso e Política de Privacidade. Você pode abrir os documentos abaixo antes de aceitar.",
+    "description": "Para continuar usando o Boora Ali, leia e aceite nossos Termos de Uso e Política de Privacidade. Você pode abrir os documentos abaixo antes de aceitar.",
     "accept": "Li e aceito os Termos de Uso e a Política de Privacidade",
     "disclaimer": "Ao aceitar, você confirma que tem pelo menos 13 anos de idade.",
     "error": "Não foi possível registrar o aceite. Tente novamente."
