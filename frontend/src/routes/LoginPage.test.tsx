@@ -5,16 +5,19 @@ vi.mock("../components/auth/GoogleSignInButton", () => ({
 
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "../contexts/AuthContext";
 import LoginPage from "./LoginPage";
 
 test("renders username and password fields", () => {
   render(
-    <MemoryRouter>
-      <AuthProvider>
-        <LoginPage />
-      </AuthProvider>
-    </MemoryRouter>
+    <HelmetProvider>
+      <MemoryRouter>
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
+      </MemoryRouter>
+    </HelmetProvider>
   );
   expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
