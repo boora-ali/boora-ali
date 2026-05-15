@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import { authService } from "../services/auth.service";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,11 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Bora Ali — Crie sua conta</title>
+        <meta name="description" content="Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali." />
+        <link rel="canonical" href="https://booraali.com.br/register" />
+      </Helmet>
       <div className="flex-1 max-w-sm w-full mx-auto p-6 mt-16 space-y-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

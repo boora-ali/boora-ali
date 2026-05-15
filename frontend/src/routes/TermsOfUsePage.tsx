@@ -1,9 +1,15 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Footer } from "../components/layout/Footer";
 
 export default function TermsOfUsePage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>Termos de Uso — Bora Ali</title>
+        <meta name="description" content="Leia os termos e condições de uso do Bora Ali." />
+        <link rel="canonical" href="https://booraali.com.br/termos-de-uso" />
+      </Helmet>
       <div className="flex-1 mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
           <Link to="/login" className="text-sm text-muted hover:text-text transition-colors">
