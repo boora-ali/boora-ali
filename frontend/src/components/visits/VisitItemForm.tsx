@@ -7,6 +7,13 @@ import type { VisitItem, VisitItemType } from "../../types/visit-item";
 import { VISIT_ITEM_TYPES } from "../../utils/constants";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+  InputGroupText,
+} from "@/components/ui/input-group";
 import {
   Form,
   FormControl,
@@ -96,7 +103,7 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
     <Form {...form}>
       <form id={VISIT_ITEM_FORM_ID} onSubmit={handleSubmit(onFormSubmit)} className={`min-h-0 space-y-2 ${className}`}>
         <div className="space-y-1">
-          <span className="text-sm font-medium">{t("visitItemForm.photo")}</span>
+          <Label>{t("visitItemForm.photo")}</Label>
           <input ref={fileRef} type="file" accept={ALLOWED_IMAGE_ACCEPT} className="hidden" onChange={handleFile} />
           <button
             type="button"
@@ -141,7 +148,7 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
             <FormItem className="space-y-1">
               <FormLabel>{t("visitItemForm.name")}</FormLabel>
               <FormControl>
-                <Input maxLength={200} className="h-10 py-2" {...field} />
+                <Input maxLength={200} className="h-10 py-2" placeholder={t("visitItemForm.namePlaceholder")} {...field} />
               </FormControl>
               <CharacterCount value={field.value} max={200} />
               <FormMessage />
@@ -176,14 +183,13 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
           name="would_order_again"
           control={control}
           render={({ field }) => (
-            <label className="flex items-center gap-2 cursor-pointer py-0.5">
+            <Label className="flex items-center gap-2 cursor-pointer py-0.5">
               <Switch
                 checked={!!field.value}
                 onCheckedChange={field.onChange}
-                aria-label={t("visitItemForm.wouldOrderAgain")}
               />
-              <span className="text-sm font-medium">{t("visitItemForm.wouldOrderAgain")}</span>
-            </label>
+              {t("visitItemForm.wouldOrderAgain")}
+            </Label>
           )}
         />
 
@@ -194,14 +200,18 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
             <FormItem className="space-y-1">
               <FormLabel>{t("visitItemForm.price")}</FormLabel>
               <FormControl>
-                <Input
-                  className="h-10 py-2"
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                />
+                <InputGroup>
+                  <InputGroupAddon>
+                    <InputGroupText>R$</InputGroupText>
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                  />
+                </InputGroup>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -227,7 +237,7 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
             <FormItem className="space-y-1">
               <FormLabel>{t("visitItemForm.notes")}</FormLabel>
               <FormControl>
-                <Textarea maxLength={5000} className="min-h-[64px] py-2" {...field} />
+                <Textarea maxLength={5000} className="min-h-[64px] py-2" placeholder={t("visitItemForm.notesPlaceholder")} {...field} />
               </FormControl>
               <CharacterCount value={field.value} max={5000} />
               <FormMessage />
