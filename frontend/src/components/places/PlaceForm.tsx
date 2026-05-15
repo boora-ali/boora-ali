@@ -8,6 +8,12 @@ import { PLACE_STATUSES } from "../../utils/constants";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+} from "@/components/ui/input-group";
 import {
   Form,
   FormControl,
@@ -30,6 +36,7 @@ import { FormSection } from "../ui/FormSection";
 import { LottieState } from "../ui/LottieState";
 import { getApiErrorState } from "../../services/api-errors";
 import { applyApiErrors } from "../../utils/form-errors";
+import { Link2, MapPin, Map } from "lucide-react";
 import {
   ALLOWED_IMAGE_ACCEPT,
   extractGoogleMapsCoords,
@@ -184,7 +191,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
               <FormItem>
                 <FormLabel>{t("placeForm.name")} <span className="text-primary ml-0.5" aria-hidden="true">*</span></FormLabel>
                 <FormControl>
-                  <Input maxLength={200} {...field} />
+                  <Input maxLength={200} placeholder={t("placeForm.namePlaceholder")} {...field} />
                 </FormControl>
                 <CharacterCount value={field.value} max={200} />
                 <FormMessage />
@@ -198,7 +205,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
               <FormItem>
                 <FormLabel>{t("placeForm.category")}</FormLabel>
                 <FormControl>
-                  <Input maxLength={100} {...field} />
+                  <Input maxLength={100} placeholder={t("placeForm.categoryPlaceholder")} {...field} />
                 </FormControl>
                 <CharacterCount value={field.value} max={100} />
                 <FormMessage />
@@ -236,7 +243,12 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
               <FormItem>
                 <FormLabel>{t("placeForm.instagram")}</FormLabel>
                 <FormControl>
-                  <Input maxLength={200} {...field} />
+                  <InputGroup>
+                    <InputGroupAddon>
+                      <Link2 size={16} className="text-muted-foreground" />
+                    </InputGroupAddon>
+                    <InputGroupInput maxLength={200} placeholder={t("placeForm.instagramPlaceholder")} {...field} />
+                  </InputGroup>
                 </FormControl>
                 <CharacterCount value={field.value} max={200} />
                 <FormMessage />
@@ -256,11 +268,12 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
             <FormItem>
               <FormLabel>{t("placeForm.address")}</FormLabel>
               <FormControl>
-                <Input
-                  maxLength={300}
-                  {...field}
-                  onBlur={handleAddressBlur}
-                />
+                <InputGroup>
+                  <InputGroupAddon>
+                    <MapPin size={16} className="text-muted-foreground" />
+                  </InputGroupAddon>
+                  <InputGroupInput maxLength={300} placeholder={t("placeForm.addressPlaceholder")} {...field} onBlur={handleAddressBlur} />
+                </InputGroup>
               </FormControl>
               <CharacterCount value={field.value} max={300} />
               {geocoding
@@ -272,14 +285,18 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
         />
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">{t("placeForm.maps")}</span>
+          <Label>{t("placeForm.maps")}</Label>
           <div className="flex gap-2">
-            <Input
-              value={mapsUrl}
-              onChange={handleMapsUrlChange}
-              maxLength={2000}
-              className="flex-1"
-            />
+            <InputGroup className="flex-1">
+              <InputGroupAddon>
+                <Map size={16} className="text-muted-foreground" />
+              </InputGroupAddon>
+              <InputGroupInput
+                value={mapsUrl}
+                onChange={handleMapsUrlChange}
+                maxLength={2000}
+              />
+            </InputGroup>
             <button
               type="button"
               title={canResolveMapsUrl ? t("placeForm.saveAndResolveMapsUrl") : t("placeForm.extractCoords")}
@@ -335,7 +352,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
             <FormItem>
               <FormLabel>{t("placeForm.notes")}</FormLabel>
               <FormControl>
-                <Textarea maxLength={5000} {...field} />
+                <Textarea maxLength={5000} placeholder={t("placeForm.notesPlaceholder")} {...field} />
               </FormControl>
               <CharacterCount value={field.value} max={5000} />
               <FormMessage />
@@ -349,7 +366,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
           description={t("placeForm.sections.photoDescription")}
         >
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">{t("placeForm.coverPhoto")}</span>
+          <Label>{t("placeForm.coverPhoto")}</Label>
           <input ref={fileRef} type="file" accept={ALLOWED_IMAGE_ACCEPT} className="hidden" onChange={handleFile} />
           <button
             type="button"

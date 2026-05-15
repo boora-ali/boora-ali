@@ -24,6 +24,7 @@ import {
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { AuthImage } from "../components/ui/AuthImage";
 import { CharacterCount } from "../components/ui/CharacterCount";
+import { Label } from "@/components/ui/label";
 import { PwaInstallButton } from "../components/layout/PwaInstallButton";
 import {
   updateProfileSchema,
@@ -167,8 +168,8 @@ export default function AccountPage() {
           <Form {...profileForm}>
             <form className="space-y-4" onSubmit={profileForm.handleSubmit(onProfileSubmit)}>
               <div className="space-y-2">
-                <span className="text-sm font-medium">{t("account.profile.photo")}</span>
-                <label className="group relative flex h-44 w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-background text-muted-foreground transition hover:border-primary/40 hover:text-primary sm:h-56">
+                <Label>{t("account.profile.photo")}</Label>
+                <Label className="group relative flex h-44 w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-background text-muted-foreground transition hover:border-primary/40 hover:text-primary sm:h-56">
                   {photoPreview ? (
                     <>
                       <AuthImage
@@ -189,7 +190,7 @@ export default function AccountPage() {
                     </div>
                   )}
                   <input type="file" accept={ALLOWED_IMAGE_ACCEPT} className="sr-only" onChange={onPhotoChange} />
-                </label>
+                </Label>
                 {photoPreview && (
                   <button
                     type="button"
