@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/useAuth";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Bora Ali — Entre na sua conta</title>
+        <meta name="description" content="Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou." />
+        <link rel="canonical" href="https://booraali.com.br/" />
+      </Helmet>
       <div className="flex-1 mx-auto w-full mt-12 max-w-sm space-y-5 px-6 py-8 pb-0">
         <div className="flex flex-col items-center gap-4">
           <LottieState

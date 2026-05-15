@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PublicRoute } from "./components/auth/PublicRoute";
@@ -33,11 +34,18 @@ function RootRedirect() {
     );
   }
 
-  return user ? <Navigate to="/places" replace /> : <Navigate to="/login" replace />;
+  if (user) return <Navigate to="/places" replace />;
+
+  return (
+    <PublicRoute>
+      <LoginPage />
+    </PublicRoute>
+  );
 }
 
 export default function App() {
   return (
+    <HelmetProvider>
     <AuthProvider>
       <GlobalLoadingBar />
       <Toaster position="top-center" richColors />
@@ -160,5 +168,6 @@ export default function App() {
         </Suspense>
       </BrowserRouter>
     </AuthProvider>
+    </HelmetProvider>
   );
 }
