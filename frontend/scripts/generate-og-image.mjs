@@ -4,8 +4,8 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const svgPath = join(__dirname, '../frontend/public/bora-ali-mark.svg');
-const outPath = join(__dirname, '../frontend/public/og-image.png');
+const svgPath = join(__dirname, '../public/bora-ali-mark.svg');
+const outPath = join(__dirname, '../public/og-image.png');
 
 const W = 1200;
 const H = 630;
