@@ -28,6 +28,12 @@ class PlacePageCache {
 
 export const placePageCache = new PlacePageCache();
 
+if (typeof window !== "undefined") {
+  window.addEventListener(AUTH_STATE_CHANGED_EVENT, () =>
+    placePageCache.invalidate(),
+  );
+}
+
 export interface Page<T> {
   count: number;
   next: string | null;
