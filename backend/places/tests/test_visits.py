@@ -6,8 +6,6 @@ from django.test import override_settings
 from model_bakery import baker
 from PIL import Image
 
-from core.image_service import ImageService
-
 pytestmark = pytest.mark.django_db
 
 PAYLOAD = {
@@ -78,13 +76,11 @@ def test_create_visit_photo_uses_image_service(auth_client, user, tmp_path, sett
     visit = place.visits.get(public_id=response.data["public_id"])
     assert visit.photo.name.startswith(f"users/{user.id}/visits/photos/")
     with default_storage.open(visit.photo.name, "rb") as stored_file:
-        encrypted = stored_file.read()
-    assert encrypted != raw
-    decrypted = ImageService.decrypt(encrypted, user.id)
-    assert decrypted != raw
-    with Image.open(io.BytesIO(decrypted)) as image:
+        stored = stored_file.read()
+    with Image.open(io.BytesIO(stored)) as image:
         assert image.format == "JPEG"
         assert image.size == (10, 10)
+    assert stored != raw  # compression altered the bytes
 
 
 def test_reject_foreign_place(auth_client, other_user):
