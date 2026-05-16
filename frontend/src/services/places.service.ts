@@ -2,6 +2,7 @@ import { api } from "./api";
 import { toFormData, hasFile, stripStringImages } from "./form-data";
 import type { Place, PlaceStatus } from "../types/place";
 import type { Visit } from "../types/visit";
+import { AUTH_STATE_CHANGED_EVENT } from "../utils/client-state";
 
 type CacheKey = string;
 
