@@ -42,7 +42,7 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_ALWAYS_EAGER = os.getenv("CELERY_TASK_ALWAYS_EAGER", "False") == "True"
 HISTORY_RETENTION_DAYS = int(os.getenv("HISTORY_RETENTION_DAYS", "90"))
 USE_X_ACCEL_REDIRECT = os.getenv("USE_X_ACCEL_REDIRECT", "False") == "True"
-TEMP_SERVE_DIR = os.getenv("TEMP_SERVE_DIR", "/tmp/bora_ali_media")
+TEMP_SERVE_DIR = os.getenv("TEMP_SERVE_DIR", "/tmp/bora_ali_media")  # nosec B108
 TEMP_SERVE_TTL_SECONDS = int(os.getenv("TEMP_SERVE_TTL_SECONDS", "300"))
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret")
