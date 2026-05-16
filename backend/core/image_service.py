@@ -50,7 +50,12 @@ class ImageService:
 
     @staticmethod
     def decrypt(data: bytes, user_id: int) -> bytes:
-        return ImageService._media_key(user_id).decrypt(data)
+        try:
+            return ImageService._media_key(user_id).decrypt(data)
+        except Exception:
+            # Fallback: imagens antigas criptografadas antes de MEDIA_ENCRYPTION_KEY existir
+            legacy = ImageService._derive_key(user_id, settings.SECRET_KEY)
+            return legacy.decrypt(data)
 
     @staticmethod
     def detect_content_type(data: bytes) -> str:
