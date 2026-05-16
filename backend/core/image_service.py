@@ -92,20 +92,27 @@ class ImageService:
     def save(file_obj, user_id: int, category: str) -> str:
         file_obj.seek(0)
         data = ImageService._compress(file_obj.read())
-        encrypted = ImageService.encrypt(data, user_id)
+        content_type = ImageService.detect_content_type(data)
         path = ImageService.make_path(user_id, category, data)
 
         backend = type(default_storage).__name__
         logger.info(
-            "[storage] uploading user=%s category=%s path=%s backend=%s size=%db",
+            "[storage] uploading user=%s category=%s path=%s backend=%s size=%db ct=%s",
             user_id,
             category,
             path,
             backend,
-            len(encrypted),
+            len(data),
+            content_type,
         )
         try:
-            saved_path = default_storage.save(path, ContentFile(encrypted))
+            if hasattr(default_storage, "bucket"):
+                default_storage.bucket.Object(path).put(
+                    Body=data, ContentType=content_type
+                )
+                saved_path = path
+            else:
+                saved_path = default_storage.save(path, ContentFile(data))
             logger.info("[storage] upload OK path=%s", saved_path)
             return saved_path
         except Exception as exc:
