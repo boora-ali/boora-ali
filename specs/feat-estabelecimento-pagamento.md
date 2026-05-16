@@ -46,7 +46,7 @@ Backend:
 | `backend/establishments/urls.py` | Registrar rotas de planos, campanhas e webhook |
 | `backend/establishments/migrations/` | `makemigrations establishments` |
 | `backend/config/settings.py` | Adicionar `ABACATE_PAY_API_KEY`, `ABACATE_PAY_WEBHOOK_SECRET` |
-| `frontend/src/api/promotions.ts` | `getPlans()`, `createCampaign()`, `getCampaign()` |
+| `frontend/src/services/promotions.service.ts` | `getPlans()`, `createCampaign()`, `getCampaign()` |
 | `frontend/src/routes/dashboard/PromotionsPage.tsx` | Tela de campanhas + QR code PIX |
 
 ---
@@ -229,7 +229,7 @@ class PromotionCampaignView(MutationMixin, APIView):
         return Response(PromotionCampaignSerializer(campaign).data, status=201)
 
 
-class AbacatePayWebhookView(APIView):
+class AbacatePayWebhookView(MutationMixin, APIView):
     permission_classes = []
 
     def post(self, request):
@@ -301,19 +301,19 @@ path("establishment/webhooks/abacate-pay/", AbacatePayWebhookView.as_view()),
 ```tsx
 // frontend/src/routes/dashboard/PromotionsPage.tsx
 export function PromotionsPage() {
-  const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: promotionsApi.getPlans });
-  const { data: campaigns } = useQuery({ queryKey: ["campaigns"], queryFn: promotionsApi.getCampaigns });
+  const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: promotionsService.getPlans });
+  const { data: campaigns } = useQuery({ queryKey: ["campaigns"], queryFn: promotionsService.getCampaigns });
   const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(null);
 
   const createCampaign = useMutation({
-    mutationFn: (planId: number) => promotionsApi.createCampaign(planId),
+    mutationFn: (planId: number) => promotionsService.createCampaign(planId),
     onSuccess: (campaign) => setActiveCampaign(campaign),
   });
 
   // Polling a cada 5s enquanto há campanha PENDING_PAYMENT
   useQuery({
     queryKey: ["campaign", activeCampaign?.public_id],
-    queryFn: () => promotionsApi.getCampaign(activeCampaign!.public_id),
+    queryFn: () => promotionsService.getCampaign(activeCampaign!.public_id),
     enabled: activeCampaign?.status === "pending_payment",
     refetchInterval: 5000,
     onSuccess: (data) => {

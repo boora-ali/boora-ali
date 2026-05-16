@@ -1,5 +1,7 @@
 # Perf #3 — Serving de imagens via Django (sem offload para nginx)
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 `GET /api/media/<path>` é tratado inteiramente pelo Django/Gunicorn:

@@ -1,5 +1,7 @@
 # Frontend — InputGroup + Label em todos os formulários
 
+> ✅ **IMPLEMENTADO**
+
 ## Objetivo
 
 Instalar os componentes shadcn `input-group` e `label` e aplicá-los em todos os formulários

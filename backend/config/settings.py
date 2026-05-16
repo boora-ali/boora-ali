@@ -34,11 +34,16 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "")
 TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/2")
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/1")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/2")
 CELERY_TASK_DEFAULT_QUEUE = os.getenv("CELERY_TASK_DEFAULT_QUEUE", "default")
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_ALWAYS_EAGER = os.getenv("CELERY_TASK_ALWAYS_EAGER", "False") == "True"
+HISTORY_RETENTION_DAYS = int(os.getenv("HISTORY_RETENTION_DAYS", "90"))
+USE_X_ACCEL_REDIRECT = os.getenv("USE_X_ACCEL_REDIRECT", "False") == "True"
+TEMP_SERVE_DIR = os.getenv("TEMP_SERVE_DIR", "/tmp/bora_ali_media")
+TEMP_SERVE_TTL_SECONDS = int(os.getenv("TEMP_SERVE_TTL_SECONDS", "300"))
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret")
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
@@ -89,6 +94,18 @@ if _weak_key and (DEBUG or _skip_secret_key_check):
         "DJANGO_SECRET_KEY is weak — set a strong key before going to production."
     )
 
+MEDIA_ENCRYPTION_KEY = os.getenv("MEDIA_ENCRYPTION_KEY", "")
+if not MEDIA_ENCRYPTION_KEY and not DEBUG:
+    raise RuntimeError(
+        "MEDIA_ENCRYPTION_KEY não definida. "
+        'Gere com: python -c "import secrets; print(secrets.token_hex(32))"'
+    )
+if not MEDIA_ENCRYPTION_KEY and DEBUG:
+    _log.warning(
+        "MEDIA_ENCRYPTION_KEY não definida — usando SECRET_KEY como fallback (apenas dev)."
+    )
+    MEDIA_ENCRYPTION_KEY = SECRET_KEY
+
 # Configurações de segurança HTTPS para produção.
 # Em desenvolvimento (DEBUG=True) são desativadas para não bloquear HTTP local.
 if not DEBUG:
@@ -114,6 +131,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
@@ -392,7 +410,7 @@ DATABASES = {
     }
 }
 
-_REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1")
+_REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
 
 CACHES = {
     "default": {
@@ -519,7 +537,7 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),

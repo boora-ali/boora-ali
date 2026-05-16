@@ -11,11 +11,35 @@ Each section is separated by a horizontal rule (---) for easy parsing.
 
 ---
 
-# Bora Ali
+# Bora Ali — Entre na sua conta
 
 URL: https://booraali.com.br
 
-Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar
+> Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou.
+
+---
+
+# Bora Ali — Crie sua conta
+
+URL: https://booraali.com.br/register
+
+> Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali.
+
+---
+
+# Política de Privacidade — Bora Ali
+
+URL: https://booraali.com.br/politica-de-privacidade
+
+> Saiba como o Bora Ali coleta, usa e protege seus dados pessoais.
+
+---
+
+# Termos de Uso — Bora Ali
+
+URL: https://booraali.com.br/termos-de-uso
+
+> Leia os termos e condições de uso do Bora Ali.
 
 ---
 

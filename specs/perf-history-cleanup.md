@@ -1,5 +1,7 @@
 # Perf #9 — `simple_history` crescendo sem poda
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 `HistoricalRecords` está ativo em `Place`, `Visit` e `VisitItem` (`places/models.py` linhas 54, 134, 213).

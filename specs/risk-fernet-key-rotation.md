@@ -1,5 +1,7 @@
 # Risco #1 — Rotação do `SECRET_KEY` destrói todas as imagens
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 A chave Fernet de criptografia de imagens é derivada diretamente do `SECRET_KEY` do Django

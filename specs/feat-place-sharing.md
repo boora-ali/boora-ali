@@ -43,7 +43,7 @@ Frontend:
 | `backend/core/image_service.py` | Adicionar `ImageService.read_decrypted()` |
 | `backend/places/migrations/` | `makemigrations places` após criar `PlaceShare` |
 | `frontend/src/routes/SharePage.tsx` | Página pública (nova) |
-| `frontend/src/api/shares.ts` | `createShare()`, `getShare()`, `importShare()` |
+| `frontend/src/services/share.service.ts` | `createShare()`, `getShare()`, `importShare()` |
 | `frontend/src/routes/PlaceDetailPage.tsx` | Adicionar `ShareButton` |
 | `frontend/src/App.tsx` | Registrar rota `/share/:token` fora do `PrivateRoute` |
 
@@ -58,8 +58,10 @@ Frontend:
 import secrets
 
 class PlaceShare(models.Model):
+    # IMPORTANTE: passar a função sem chamar — secrets.token_urlsafe(32) chamaria uma vez
+    # e todos os registros teriam o mesmo token.
     token = models.CharField(
-        max_length=64, unique=True, db_index=True, default=secrets.token_urlsafe(32)
+        max_length=64, unique=True, db_index=True, default=secrets.token_urlsafe
     )
     place = models.ForeignKey(
         Place, on_delete=models.CASCADE, related_name="shares"
@@ -237,11 +239,11 @@ path("share/<str:token>/media/<path:path>", PlaceShareMediaView.as_view()),
 path("share/<str:token>/import/", PlaceShareImportView.as_view()),
 ```
 
-### 6. Frontend — `api/shares.ts`
+### 6. Frontend — `services/share.service.ts`
 
 ```typescript
-// frontend/src/api/shares.ts
-export const sharesApi = {
+// frontend/src/services/share.service.ts
+export const shareService = {
   createShare: (placePublicId: string) =>
     api.post<{ token: string; url: string }>(`/api/places/${placePublicId}/share/`),
 
@@ -261,7 +263,7 @@ export function SharePage() {
   const { token } = useParams<{ token: string }>();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["share", token],
-    queryFn: () => sharesApi.getShare(token!),
+    queryFn: () => shareService.getShare(token!),
   });
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -270,7 +272,7 @@ export function SharePage() {
   async function handleImport() {
     setImporting(true);
     try {
-      const result = await sharesApi.importShare(token!);
+      const result = await shareService.importShare(token!);
       navigate(`/places/${result.public_id}`);
     } finally {
       setImporting(false);
@@ -318,7 +320,7 @@ function ShareButton({ placePublicId }: { placePublicId: string }) {
 
   async function handleShare() {
     if (!shareUrl) {
-      const result = await sharesApi.createShare(placePublicId);
+      const result = await shareService.createShare(placePublicId);
       setShareUrl(result.url);
       await navigator.clipboard.writeText(result.url);
     } else {

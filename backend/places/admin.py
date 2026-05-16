@@ -12,9 +12,22 @@ from unfold.contrib.filters.admin import (
 
 from config.admin_site import site as admin_site
 
-from .models import Place, Visit, VisitItem
+from .models import CoordsStatus, Place, Visit, VisitItem
+from .tasks import resolve_place_coords
 
 ADMIN_LIST_PER_PAGE = 10
+
+
+@admin.action(description="Retentar resolução de coordenadas (failed)")
+def retry_failed_coords(modeladmin, request, queryset):
+    failed = queryset.filter(coords_status=CoordsStatus.FAILED, maps_url__isnull=False)
+    count = 0
+    for place in failed:
+        place.coords_status = CoordsStatus.PENDING
+        place.save(update_fields=["coords_status"])
+        resolve_place_coords.delay(place.pk)
+        count += 1
+    modeladmin.message_user(request, f"{count} lugar(es) enfileirado(s) para retry.")
 
 
 def image_preview(image_field):
@@ -35,6 +48,7 @@ def persist_photo_path_with_history(request, obj):
 
 @admin.register(Place, site=admin_site)
 class PlaceAdmin(SimpleHistoryAdmin, ModelAdmin):
+    actions = [retry_failed_coords]
     list_display = (
         "name",
         "category",

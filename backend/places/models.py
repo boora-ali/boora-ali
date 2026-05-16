@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -123,6 +124,22 @@ class Place(PublicIdModel, TimeStampedModel):
         indexes = [
             models.Index(fields=["user", "status"], name="place_user_status_idx"),
             models.Index(fields=["user", "category"], name="place_user_category_idx"),
+            models.Index(
+                fields=["user", "deleted_at"], name="place_user_deleted_at_idx"
+            ),
+            GinIndex(
+                fields=["name"], name="place_name_trgm_idx", opclasses=["gin_trgm_ops"]
+            ),
+            GinIndex(
+                fields=["category"],
+                name="place_category_trgm_idx",
+                opclasses=["gin_trgm_ops"],
+            ),
+            GinIndex(
+                fields=["address"],
+                name="place_address_trgm_idx",
+                opclasses=["gin_trgm_ops"],
+            ),
         ]
 
     def __str__(self) -> str:
@@ -202,6 +219,9 @@ class Visit(PublicIdModel, TimeStampedModel):
             models.Index(
                 fields=["place", "overall_rating"], name="visit_place_rating_idx"
             ),
+            models.Index(
+                fields=["place", "deleted_at"], name="visit_place_deleted_at_idx"
+            ),
         ]
 
     def __str__(self) -> str:
@@ -271,6 +291,9 @@ class VisitItem(PublicIdModel, TimeStampedModel):
         indexes = [
             models.Index(fields=["visit", "type"], name="visititem_visit_type_idx"),
             models.Index(fields=["visit", "rating"], name="visititem_visit_rating_idx"),
+            models.Index(
+                fields=["visit", "deleted_at"], name="visititem_visit_deleted_at_idx"
+            ),
         ]
 
     def __str__(self) -> str:

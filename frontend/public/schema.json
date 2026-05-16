@@ -14,5 +14,96 @@
       "url": "https://booraali.com.br"
     }
   ],
-  "pages": {}
+  "pages": {
+    "/": [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Bora Ali — Entre na sua conta",
+        "url": "https://booraali.com.br",
+        "description": "Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou."
+      }
+    ],
+    "/register": [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Bora Ali — Crie sua conta",
+        "url": "https://booraali.com.br/register",
+        "description": "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali."
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://booraali.com.br/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Register",
+            "item": "https://booraali.com.br/register"
+          }
+        ]
+      }
+    ],
+    "/politica-de-privacidade": [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Política de Privacidade — Bora Ali",
+        "url": "https://booraali.com.br/politica-de-privacidade",
+        "description": "Saiba como o Bora Ali coleta, usa e protege seus dados pessoais."
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://booraali.com.br/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Politica de privacidade",
+            "item": "https://booraali.com.br/politica-de-privacidade"
+          }
+        ]
+      }
+    ],
+    "/termos-de-uso": [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Termos de Uso — Bora Ali",
+        "url": "https://booraali.com.br/termos-de-uso",
+        "description": "Leia os termos e condições de uso do Bora Ali."
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://booraali.com.br/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Termos de uso",
+            "item": "https://booraali.com.br/termos-de-uso"
+          }
+        ]
+      }
+    ]
+  }
 }
