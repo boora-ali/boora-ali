@@ -22,3 +22,5 @@ security/
 **/*.tfstate.*
 **/*.tfvars
 **/*.tfvars.json
+.agents/
+skills-lock.json

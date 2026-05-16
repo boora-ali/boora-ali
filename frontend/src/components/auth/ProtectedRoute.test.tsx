@@ -8,6 +8,29 @@ vi.mock("../../contexts/useAuth");
 
 const mockedUseAuth = vi.mocked(useAuth);
 
+test("exibe loading state enquanto autenticação está carregando", () => {
+  mockedUseAuth.mockReturnValue({
+    user: null,
+    loading: true,
+    login: vi.fn(),
+    googleLogin: vi.fn(),
+    logout: vi.fn(),
+    refreshUser: vi.fn(),
+    setUser: vi.fn(),
+  });
+
+  render(
+    <MemoryRouter>
+      <ProtectedRoute>
+        <div>SECRET</div>
+      </ProtectedRoute>
+    </MemoryRouter>
+  );
+
+  expect(screen.queryByText("SECRET")).not.toBeInTheDocument();
+  expect(screen.queryByText("LOGIN PAGE")).not.toBeInTheDocument();
+});
+
 test("redirects unauthenticated user to /login", () => {
   mockedUseAuth.mockReturnValue({
     user: null,

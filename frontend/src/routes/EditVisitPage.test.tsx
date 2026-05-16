@@ -47,8 +47,41 @@ vi.mock("../components/visits/VisitForm", () => ({
   ),
 }));
 
+const navigateSpy = vi.fn();
+
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+  return { ...actual, useNavigate: () => navigateSpy };
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+test("shows loading state while visit is fetching", () => {
+  (visitsService.get as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}));
+  render(
+    <MemoryRouter initialEntries={["/visits/visit-1/edit"]}>
+      <Routes>
+        <Route path="/visits/:id/edit" element={<EditVisitPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+  expect(screen.queryByRole("heading", { name: /edit visit/i })).not.toBeInTheDocument();
+});
+
+test("shows error message when visit fails to load", async () => {
+  (visitsService.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("Server error"));
+  render(
+    <MemoryRouter initialEntries={["/visits/visit-1/edit"]}>
+      <Routes>
+        <Route path="/visits/:id/edit" element={<EditVisitPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+  await waitFor(() =>
+    expect(screen.getByText(/failed to load the visit/i)).toBeInTheDocument()
+  );
 });
 
 test("loads visit detail when edit state is missing", async () => {
