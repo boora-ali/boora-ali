@@ -119,9 +119,7 @@ class Command(BaseCommand):
                     MetadataDirective="REPLACE",
                     ContentType=content_type,
                 )
-                self.stdout.write(
-                    f"[ok ] fixed Content-Type {key} -> {content_type}"
-                )
+                self.stdout.write(f"[ok ] fixed Content-Type {key} -> {content_type}")
                 stats["fixed_content_type"] += 1
                 continue
 
@@ -141,9 +139,7 @@ class Command(BaseCommand):
 
             is_image, content_type = _inspect(plaintext)
             if not is_image:
-                self.stderr.write(
-                    f"[err] decrypted bytes are not a valid image: {key}"
-                )
+                self.stderr.write(f"[err] decrypted bytes are not a valid image: {key}")
                 stats["decrypted_but_not_image"] += 1
                 continue
 
