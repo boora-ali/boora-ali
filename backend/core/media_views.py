@@ -52,10 +52,14 @@ def serve_user_media(request, path):
     content_type = ImageService.detect_content_type(data)
 
     if getattr(settings, "USE_X_ACCEL_REDIRECT", False):
-        temp_dir = Path(settings.TEMP_SERVE_DIR)
-        temp_dir.mkdir(parents=True, exist_ok=True)
-        temp_id = uuid.uuid4().hex
-        (temp_dir / temp_id).write_bytes(data)
+        try:
+            temp_dir = Path(settings.TEMP_SERVE_DIR)
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            temp_id = uuid.uuid4().hex
+            (temp_dir / temp_id).write_bytes(data)
+        except Exception:
+            logger.error("Failed to write temp file for X-Accel-Redirect: %s", path, exc_info=True)
+            raise Http404
 
         response = HttpResponse()
         response["X-Accel-Redirect"] = f"/protected-temp/{temp_id}"
