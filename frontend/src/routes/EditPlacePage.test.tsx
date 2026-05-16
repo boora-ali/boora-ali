@@ -80,6 +80,12 @@ function renderPage() {
   );
 }
 
+test("shows loading state while place is fetching", () => {
+  (placesService.get as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}));
+  renderPage();
+  expect(screen.queryByRole("heading", { name: /edit place/i })).not.toBeInTheDocument();
+});
+
 test("keeps the user on the edit page while coordinates are pending", async () => {
   (placesService.get as ReturnType<typeof vi.fn>)
     .mockResolvedValueOnce({
