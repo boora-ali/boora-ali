@@ -1,4 +1,4 @@
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { authService } from "./auth.service";
 import { api } from "./api";
 import { ACCESS_KEY, REFRESH_KEY } from "../utils/constants";
@@ -10,6 +10,26 @@ vi.mock("./api", () => ({
     patch: vi.fn(),
   },
 }));
+vi.mock("../utils/client-state", () => ({
+  clearClientState: vi.fn().mockResolvedValue(undefined),
+  notifyAuthStateChanged: vi.fn(),
+}));
+
+const mockUser = {
+  id: 1,
+  username: "ana",
+  email: "ana@ex.com",
+  display_name: "Ana",
+  nickname: "",
+  profile_photo_url: "",
+  is_google_account: false,
+  terms_accepted_at: null,
+};
+
+beforeEach(() => {
+  localStorage.clear();
+  vi.clearAllMocks();
+});
 
 afterEach(() => {
   localStorage.clear();
@@ -29,4 +49,79 @@ test("googleLogin stores the returned tokens", async () => {
   expect(api.post).toHaveBeenCalledWith("/auth/google/", { id_token: "google-id-token" });
   expect(localStorage.getItem(ACCESS_KEY)).toBe("access-token");
   expect(localStorage.getItem(REFRESH_KEY)).toBe("refresh-token");
+});
+
+describe("authService.login", () => {
+  test("chama POST /auth/login/ com username e password", async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({
+      data: { access: "acc", refresh: "ref" },
+    } as never);
+
+    await authService.login("ana", "secret");
+
+    expect(api.post).toHaveBeenCalledWith(
+      "/auth/login/",
+      expect.objectContaining({ username: "ana", password: "secret" })
+    );
+  });
+
+  test("persiste access e refresh no localStorage", async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({
+      data: { access: "acc-token", refresh: "ref-token" },
+    } as never);
+
+    await authService.login("ana", "secret");
+
+    expect(localStorage.getItem(ACCESS_KEY)).toBe("acc-token");
+    expect(localStorage.getItem(REFRESH_KEY)).toBe("ref-token");
+  });
+});
+
+describe("authService.me", () => {
+  test("chama GET /auth/me/ e retorna o usuário", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: mockUser } as never);
+
+    const result = await authService.me();
+
+    expect(api.get).toHaveBeenCalledWith("/auth/me/");
+    expect(result).toEqual(mockUser);
+  });
+});
+
+describe("authService.logout", () => {
+  test("chama POST /auth/logout/", async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({} as never);
+
+    await authService.logout();
+
+    expect(api.post).toHaveBeenCalledWith("/auth/logout/", expect.any(Object));
+  });
+
+  test("conclui o logout e chama clearClientState mesmo se o servidor rejeitar", async () => {
+    const { clearClientState } = await import("../utils/client-state");
+    vi.mocked(api.post).mockRejectedValueOnce(new Error("Network error"));
+
+    await authService.logout();
+
+    expect(clearClientState).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("authService.register", () => {
+  test("chama POST /auth/register/ com os dados do usuário", async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({ data: {} } as never);
+
+    await authService.register({
+      username: "ana",
+      email: "ana@ex.com",
+      password: "Abc12345",
+      confirm_password: "Abc12345",
+      terms_accepted: true,
+    });
+
+    expect(api.post).toHaveBeenCalledWith(
+      "/auth/register/",
+      expect.objectContaining({ username: "ana", email: "ana@ex.com" })
+    );
+  });
 });
