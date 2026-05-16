@@ -41,7 +41,7 @@ Frontend:
 | `backend/accounts/serializers.py` | `FeedItemSerializer` |
 | `backend/accounts/urls.py` | Registrar `/u/:username/follow/` e `/feed/` |
 | `backend/accounts/migrations/` | `makemigrations accounts` após criar `Follow` |
-| `frontend/src/api/social.ts` | `follow()`, `unfollow()`, `getFeed()` (novo) |
+| `frontend/src/services/social.service.ts` | `follow()`, `unfollow()`, `getFeed()` (novo) |
 | `frontend/src/routes/FeedPage.tsx` | Feed com infinite scroll (nova) |
 | `frontend/src/routes/PublicProfilePage.tsx` | Botão follow/unfollow |
 | `frontend/src/App.tsx` | Registrar rota `/feed` dentro do `PrivateRoute` |
@@ -81,6 +81,8 @@ class Follow(models.Model):
 
 ```python
 # backend/accounts/views.py
+from core.views import MutationMixin
+
 class FollowView(MutationMixin, APIView):
     permission_classes = [IsAuthenticated]
 
@@ -121,10 +123,9 @@ class FeedView(APIView):
             follower=request.user
         ).values_list("following_id", flat=True)
 
-        places = Place.objects.filter(
+        places = Place.objects.live().filter(
             user__in=following_ids,
             is_public=True,
-            deleted_at__isnull=True,
         ).select_related("user__profile").order_by("-created_at")
 
         paginator = FeedCursorPagination()
@@ -173,10 +174,10 @@ data["is_following"] = is_following
 return Response(data)
 ```
 
-### 7. Frontend — `api/social.ts`
+### 7. Frontend — `services/social.service.ts`
 
 ```typescript
-// frontend/src/api/social.ts
+// frontend/src/services/social.service.ts
 export interface FeedItem {
   public_id: string;
   name: string;
@@ -189,7 +190,7 @@ export interface FeedItem {
   author_username: string;
 }
 
-export const socialApi = {
+export const socialService = {
   follow: (username: string) => api.post(`/api/u/${username}/follow/`),
   unfollow: (username: string) => api.delete(`/api/u/${username}/follow/`),
   getFeed: (cursor?: string) =>
@@ -211,7 +212,7 @@ export function FeedPage() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ["feed"],
-    queryFn: ({ pageParam }) => socialApi.getFeed(pageParam as string | undefined),
+    queryFn: ({ pageParam }) => socialService.getFeed(pageParam as string | undefined),
     getNextPageParam: (last) => last.next ?? undefined,
   });
 
@@ -257,7 +258,7 @@ const queryClient = useQueryClient();
 
 const followMutation = useMutation({
   mutationFn: (isFollowing: boolean) =>
-    isFollowing ? socialApi.unfollow(username!) : socialApi.follow(username!),
+    isFollowing ? socialService.unfollow(username!) : socialService.follow(username!),
   onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profile", username] }),
 });
 

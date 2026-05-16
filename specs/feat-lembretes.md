@@ -86,8 +86,7 @@ def send_place_reminders():
     revisit_cutoff = now - timedelta(days=settings.REMINDER_REVISIT_DAYS)
 
     # Places que o usuário quer visitar mas nunca visitou
-    want_to_visit = Place.objects.filter(
-        deleted_at__isnull=True,
+    want_to_visit = Place.objects.live().filter(
         reminders_enabled=True,
         status=PlaceStatus.WANT_TO_VISIT,
         created_at__lt=want_cutoff,
@@ -108,8 +107,7 @@ def send_place_reminders():
         place=OuterRef("pk")
     ).order_by("-visited_at").values("visited_at")[:1]
 
-    revisit_candidates = Place.objects.filter(
-        deleted_at__isnull=True,
+    revisit_candidates = Place.objects.live().filter(
         reminders_enabled=True,
         status=PlaceStatus.VISITED,
     ).annotate(

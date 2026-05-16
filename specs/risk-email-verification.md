@@ -109,7 +109,9 @@ def _send_verification_email(user, profile):
 
 ```python
 # backend/accounts/views.py
-class VerifyEmailView(APIView):
+from core.views import MutationMixin
+
+class VerifyEmailView(MutationMixin, APIView):
     permission_classes = []  # público — token é o segredo
 
     def post(self, request):

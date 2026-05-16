@@ -1,5 +1,7 @@
 # Perf #7 — Busca textual via `ILIKE '%termo%'` sem índice
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 `search_fields = ("name", "category", "address")` em `PlaceViewSet` (linha 36 de `views.py`)

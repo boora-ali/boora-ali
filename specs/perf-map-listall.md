@@ -1,5 +1,7 @@
 # Perf #1 — listAll sem paginação para o mapa
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 `PlacesPage.tsx` chama `placesService.listAll()` em todo render de filtro/busca para popular os pins do mapa.

@@ -4,6 +4,13 @@ from .models import Place, Visit, VisitItem
 
 
 class PlaceFilter(django_filters.FilterSet):
+    has_coords = django_filters.BooleanFilter(method="filter_has_coords")
+
+    def filter_has_coords(self, queryset, name, value):
+        if value:
+            return queryset.filter(latitude__isnull=False, longitude__isnull=False)
+        return queryset.filter(latitude__isnull=True)
+
     class Meta:
         model = Place
         fields = {"status": ["exact"], "category": ["exact", "icontains"]}

@@ -45,7 +45,7 @@ Frontend:
 | `backend/places/migrations/` | `makemigrations places` após editar `Place` |
 | `frontend/src/routes/PublicProfilePage.tsx` | Página pública `/u/:username` (nova) |
 | `frontend/src/routes/AccountPage.tsx` | Campos `username`, `bio`, toggle `is_public` |
-| `frontend/src/api/profile.ts` | `getPublicProfile()`, `updateAccount()` com novos campos |
+| `frontend/src/services/auth.service.ts` | `getPublicProfile()` adicionado; `updateAccount()` já existe — extender com novos campos |
 | `frontend/src/App.tsx` | Registrar rota `/u/:username` fora do `PrivateRoute` |
 
 ---
@@ -104,30 +104,38 @@ class PublicPlaceSerializer(serializers.ModelSerializer):
 class PublicProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="profile.username")
     bio = serializers.CharField(source="profile.bio")
-    places = serializers.SerializerMethodField()
-
-    def get_places(self, obj):
-        places = Place.objects.filter(
-            user=obj,
-            is_public=True,
-            deleted_at__isnull=True,
-        ).order_by("-created_at")[:50]
-        return PublicPlaceSerializer(places, many=True).data
+    places = PublicPlaceSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
         fields = ["username", "bio", "places"]
 ```
 
+> `places` usa campo direto (não `SerializerMethodField`) — evita N+1. O view faz
+> `prefetch_related` antes de serializar.
+
 ### 4. `accounts/views.py` — `PublicProfileView`
 
 ```python
 # backend/accounts/views.py
+from django.db.models import Prefetch
+from places.models import Place
+
 class PublicProfileView(APIView):
     permission_classes = []  # público
 
     def get(self, request, username):
-        profile = get_object_or_404(UserProfile, username=username, is_public=True)
+        public_places = Place.objects.live().filter(
+            is_public=True
+        ).order_by("-created_at")[:50]
+
+        profile = get_object_or_404(
+            UserProfile.objects.select_related("user").prefetch_related(
+                Prefetch("user__place_set", queryset=public_places, to_attr="places")
+            ),
+            username=username,
+            is_public=True,
+        )
         serializer = PublicProfileSerializer(profile.user)
         return Response(serializer.data)
 ```
@@ -152,24 +160,41 @@ class AccountSerializer(serializers.ModelSerializer):
     is_public = serializers.BooleanField(source="profile.is_public", required=False)
 
     def validate_username(self, value):
-        # Verificar unicidade excluindo o próprio usuário
         qs = UserProfile.objects.filter(username=value)
         if self.instance:
             qs = qs.exclude(user=self.instance)
         if qs.exists():
             raise ValidationError("Este username já está em uso.")
         return value
+
+    def update(self, instance, validated_data):
+        profile_data = {}
+        for field in ("username", "bio", "is_public"):
+            if field in validated_data.get("profile", {}):
+                profile_data[field] = validated_data["profile"].pop(field)
+        # Extrair campos aninhados do profile
+        raw = {k: v for k, v in validated_data.items() if k == "profile"}
+        profile_data = raw.get("profile", {})
+        remaining = {k: v for k, v in validated_data.items() if k != "profile"}
+
+        if profile_data:
+            for attr, value in profile_data.items():
+                setattr(instance.profile, attr, value)
+            instance.profile.save(update_fields=list(profile_data.keys()))
+
+        return super().update(instance, remaining)
 ```
 
 ### 7. Frontend — `PublicProfilePage.tsx`
 
 ```tsx
 // frontend/src/routes/PublicProfilePage.tsx
+// getPublicProfile() adicionado em services/auth.service.ts
 export function PublicProfilePage() {
   const { username } = useParams<{ username: string }>();
   const { data, isError } = useQuery({
     queryKey: ["profile", username],
-    queryFn: () => profileApi.getPublicProfile(username!),
+    queryFn: () => authService.getPublicProfile(username!),
   });
 
   if (isError) return <NotFound />;

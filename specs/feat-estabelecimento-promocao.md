@@ -39,7 +39,7 @@ Frontend:
 | `backend/establishments/serializers.py` | `SponsoredCardSerializer` |
 | `backend/establishments/views.py` | `SponsoredFeedView` |
 | `backend/establishments/urls.py` | Registrar `/feed/sponsored/` |
-| `frontend/src/api/social.ts` | Adicionar `getSponsored()` |
+| `frontend/src/services/social.service.ts` | Adicionar `getSponsored()` |
 | `frontend/src/routes/FeedPage.tsx` | Intercalar cards patrocinados |
 | `frontend/src/components/SponsoredCard.tsx` | Card rico de estabelecimento (novo) |
 
@@ -54,11 +54,8 @@ Frontend:
 class SponsoredCardSerializer(serializers.ModelSerializer):
     """Dados do card patrocinado — sem informações sensíveis."""
     username = serializers.CharField(source="user.profile.username")
-    campaign_ends_at = serializers.SerializerMethodField()
-
-    def get_campaign_ends_at(self, obj):
-        campaign = obj.campaigns.filter(status=CampaignStatus.ACTIVE).first()
-        return campaign.ends_at if campaign else None
+    # campaign_ends_at anotado no view — evita N+1 no serializer
+    campaign_ends_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = EstablishmentProfile
@@ -72,16 +69,27 @@ class SponsoredCardSerializer(serializers.ModelSerializer):
 
 ```python
 # backend/establishments/views.py
+from django.db.models import Subquery, OuterRef
+
 class SponsoredFeedView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Retorna estabelecimentos com campanha ACTIVE, aleatorizados
-        # para distribuir exposição entre patrocinadores
+        now = timezone.now()
+
+        # Subquery para ends_at da campanha ACTIVE — evita N+1
+        active_ends_at = PromotionCampaign.objects.filter(
+            establishment=OuterRef("pk"),
+            status=CampaignStatus.ACTIVE,
+            ends_at__gt=now,
+        ).order_by("-ends_at").values("ends_at")[:1]
+
         profiles = EstablishmentProfile.objects.filter(
             is_public=True,
             campaigns__status=CampaignStatus.ACTIVE,
-            campaigns__ends_at__gt=timezone.now(),
+            campaigns__ends_at__gt=now,
+        ).select_related("user__profile").annotate(
+            campaign_ends_at=Subquery(active_ends_at)
         ).distinct().order_by("?")[:10]
 
         return Response(SponsoredCardSerializer(profiles, many=True).data)
@@ -158,7 +166,7 @@ export function SponsoredCard({ establishment }: Props) {
 // frontend/src/routes/FeedPage.tsx
 const { data: sponsored } = useQuery({
   queryKey: ["feed", "sponsored"],
-  queryFn: socialApi.getSponsored,
+  queryFn: socialService.getSponsored,
   staleTime: 5 * 60 * 1000, // revalidar a cada 5 min
 });
 
@@ -188,15 +196,12 @@ function buildFeedItems(
 )}
 ```
 
-### 6. `api/social.ts` — adicionar `getSponsored`
+### 6. `services/social.service.ts` — adicionar `getSponsored`
 
 ```typescript
-// frontend/src/api/social.ts
-export const socialApi = {
-  // ... existente ...
-  getSponsored: () =>
-    api.get<SponsoredEstablishment[]>("/api/feed/sponsored/"),
-};
+// frontend/src/services/social.service.ts — adicionar ao objeto existente
+getSponsored: () =>
+  api.get<SponsoredEstablishment[]>("/api/feed/sponsored/"),
 ```
 
 ### 7. Traduções i18n (pt-BR)

@@ -7,6 +7,17 @@
 This file provides a structured overview of the documentation and content available on this site,
 optimized for consumption by Large Language Models (LLMs) and AI assistants.
 
+## Pages
+
+- [Bora Ali — Entre na sua conta](https://booraali.com.br)
+  Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou.
+- [Bora Ali — Crie sua conta](https://booraali.com.br/register)
+  Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali.
+- [Política de Privacidade — Bora Ali](https://booraali.com.br/politica-de-privacidade)
+  Saiba como o Bora Ali coleta, usa e protege seus dados pessoais.
+- [Termos de Uso — Bora Ali](https://booraali.com.br/termos-de-uso)
+  Leia os termos e condições de uso do Bora Ali.
+
 ## Quick Links
 
 - Full Documentation: https://booraali.com.br/llms-full.txt

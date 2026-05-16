@@ -40,12 +40,17 @@ class ImageService:
         return f"users/{user_id}/{category}/{sha}_{token}"
 
     @staticmethod
+    def _media_key(user_id: int) -> Fernet:
+        key = getattr(settings, "MEDIA_ENCRYPTION_KEY", None) or settings.SECRET_KEY
+        return ImageService._derive_key(user_id, key)
+
+    @staticmethod
     def encrypt(data: bytes, user_id: int) -> bytes:
-        return ImageService._derive_key(user_id, settings.SECRET_KEY).encrypt(data)
+        return ImageService._media_key(user_id).encrypt(data)
 
     @staticmethod
     def decrypt(data: bytes, user_id: int) -> bytes:
-        return ImageService._derive_key(user_id, settings.SECRET_KEY).decrypt(data)
+        return ImageService._media_key(user_id).decrypt(data)
 
     @staticmethod
     def detect_content_type(data: bytes) -> str:

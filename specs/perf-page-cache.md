@@ -1,5 +1,7 @@
 # Perf #5 — pageCache do frontend perdido na navegação
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 `pageCache` em `PlacesPage.tsx` é um estado React local (`useState<Record<number, Place[]>>({})`).

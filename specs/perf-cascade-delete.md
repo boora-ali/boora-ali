@@ -1,5 +1,7 @@
 # Perf #2 — Soft delete em cascata com histórico O(N)
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 `save_deleted_at_with_history()` em `backend/places/views.py` (linha 26–29) itera cada instância

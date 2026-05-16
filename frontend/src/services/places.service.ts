@@ -3,6 +3,30 @@ import { toFormData, hasFile, stripStringImages } from "./form-data";
 import type { Place, PlaceStatus } from "../types/place";
 import type { Visit } from "../types/visit";
 
+type CacheKey = string;
+
+class PlacePageCache {
+  private store: Map<CacheKey, Page<Place>> = new Map();
+
+  private key(page: number, search?: string, status?: string): CacheKey {
+    return `${page}|${search ?? ""}|${status ?? ""}`;
+  }
+
+  get(page: number, search?: string, status?: string): Page<Place> | undefined {
+    return this.store.get(this.key(page, search, status));
+  }
+
+  set(page: number, data: Page<Place>, search?: string, status?: string): void {
+    this.store.set(this.key(page, search, status), data);
+  }
+
+  invalidate(): void {
+    this.store.clear();
+  }
+}
+
+export const placePageCache = new PlacePageCache();
+
 export interface Page<T> {
   count: number;
   next: string | null;
@@ -41,6 +65,13 @@ export const placesService = {
 
     return places;
   },
+
+  listMapPins: (params: { status?: PlaceStatus; search?: string } = {}) =>
+    api
+      .get<Page<Place>>("/places/", {
+        params: { ...params, has_coords: true, page_size: 500, ordering: "name" },
+      })
+      .then((r) => r.data.results),
 
   get: async (publicId: string) => {
     try {

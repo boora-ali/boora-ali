@@ -13,3 +13,24 @@ select = ["E4", "E7", "E9", "F", "I"]
 [tool.bandit]
 exclude_dirs = ["tests", "migrations"]
 skips = ["B101"]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "**/migrations/**",
+    "**/tests/**",
+    "**/test_*.py",
+    "config/**",
+    "manage.py",
+    ".venv/**",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "def __repr__",
+    "raise NotImplementedError",
+]
+show_missing = true
+skip_covered = false

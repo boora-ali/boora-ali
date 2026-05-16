@@ -320,7 +320,8 @@ export default function PlaceDetailPage() {
               onEdit={() => nav(`/visits/${v.public_id}/edit`, { state: { visit: v } })}
               onDelete={async () => {
                 await visitsService.remove(v.public_id);
-                setPlace({ ...place, visits: place.visits.filter((x) => x.public_id !== v.public_id) });
+                const refreshed = await placesService.get(id!);
+                setPlace(refreshed);
               }}
             />
           )}
