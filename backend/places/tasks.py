@@ -74,24 +74,6 @@ def resolve_place_coords(self, place_pk: int):
 
 
 @shared_task
-def cleanup_temp_media():
-    import time
-    from pathlib import Path
-
-    temp_dir = Path(settings.TEMP_SERVE_DIR)
-    if not temp_dir.exists():
-        return 0
-    cutoff = time.time() - settings.TEMP_SERVE_TTL_SECONDS
-    removed = 0
-    for f in temp_dir.iterdir():
-        if f.is_file() and f.stat().st_mtime < cutoff:
-            f.unlink(missing_ok=True)
-            removed += 1
-    _log.info("Temp media cleanup: %d files removed", removed)
-    return removed
-
-
-@shared_task
 def cleanup_old_history():
     from .models import Visit, VisitItem
 
