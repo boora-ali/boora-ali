@@ -230,9 +230,7 @@ export default function PlacesPage() {
           <CarouselContent>
             {Array.from({ length: totalPages }, (_, i) => {
               const slidePage = i + 1;
-              const slidePlaces = slidePage === page
-                ? data.results
-                : placePageCache.get(slidePage, debouncedSearch, status)?.results;
+              const slidePlaces = placePageCache.get(slidePage, debouncedSearch, status)?.results;
               return (
                 <CarouselItem key={i}>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
