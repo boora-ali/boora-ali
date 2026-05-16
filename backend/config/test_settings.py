@@ -1,3 +1,9 @@
+import os
+
+os.environ.setdefault(
+    "MEDIA_ENCRYPTION_KEY", "test-media-encryption-key-not-for-production"
+)
+
 from .settings import *  # noqa: F403
 
 USE_VERSITYGW = False

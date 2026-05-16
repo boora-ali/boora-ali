@@ -24,9 +24,33 @@ from .tasks import resolve_place_coords
 
 
 def save_deleted_at_with_history(queryset, deleted_at):
-    for instance in queryset.iterator():
-        instance.deleted_at = deleted_at
-        instance.save(update_fields=["deleted_at"])
+    model = queryset.model
+    HistoricalRecord = model.history.model
+
+    instances = list(queryset.select_for_update())
+    if not instances:
+        return
+
+    queryset.update(deleted_at=deleted_at)
+
+    now = timezone.now()
+    history_records = []
+    for instance in instances:
+        fields = {
+            field.attname: getattr(instance, field.attname)
+            for field in model._meta.concrete_fields
+        }
+        fields["deleted_at"] = deleted_at
+        history_records.append(
+            HistoricalRecord(
+                **fields,
+                history_date=now,
+                history_type="~",
+                history_user=None,
+                history_change_reason=None,
+            )
+        )
+    HistoricalRecord.objects.bulk_create(history_records)
 
 
 class PlaceViewSet(ViewSetBase):
@@ -60,7 +84,7 @@ class PlaceViewSet(ViewSetBase):
 
     def get_queryset(self):
         expand_param = self.request.query_params.get("expand")
-        queryset = Place.objects.for_user(self.request.user).select_related("user")
+        queryset = Place.objects.for_user(self.request.user)
 
         if self.action == "list":
             return queryset.with_list_expansion(expand_param)
@@ -88,14 +112,28 @@ class PlaceViewSet(ViewSetBase):
             instance.deleted_at = now
             instance.save(update_fields=["deleted_at"])
 
+    @action(detail=True, methods=["post"], url_path="retry-coords")
+    def retry_coords(self, request, public_id=None):
+        place = self.get_object()
+        if not place.maps_url:
+            return Response(
+                {"detail": "Este lugar não possui maps_url."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if place.coords_status == CoordsStatus.RESOLVED:
+            return Response(
+                {"detail": "Coordenadas já resolvidas."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        place.coords_status = CoordsStatus.PENDING
+        place.save(update_fields=["coords_status"])
+        transaction.on_commit(lambda: resolve_place_coords.delay(place.pk))
+        return Response({"detail": "Resolução de coordenadas enfileirada."})
+
     @action(detail=False, methods=["get"], url_path="trash")
     def trash(self, request):
-        qs = (
-            Place.objects.filter(user=request.user)
-            .deleted()
-            .order_by("-deleted_at")
-            .select_related("user")
-        )
+        qs = Place.objects.filter(user=request.user).deleted().order_by("-deleted_at")
         page = self.paginate_queryset(qs)
         ser = PlaceListSerializer(page if page is not None else qs, many=True)
         return (

@@ -47,7 +47,7 @@ Frontend:
 | `backend/accounts/tasks.py` | Adicionar task `purge_deleted_accounts` |
 | `backend/accounts/token_serializers.py` | Reativar conta no login se dentro da carência |
 | `frontend/src/routes/AccountPage.tsx` | Adicionar seção "Zona de perigo" com modal de confirmação |
-| `frontend/src/api/account.ts` | Chamada `deleteAccount()` |
+| `frontend/src/services/auth.service.ts` | Adicionar `deleteAccount()` |
 
 > **Migrations**: após editar `models.py`, rodar `python manage.py makemigrations accounts` manualmente.
 
@@ -181,12 +181,11 @@ urlpatterns = [
 ]
 ```
 
-### 7. Frontend — `api/account.ts` (adicionar chamada)
+### 7. Frontend — `services/auth.service.ts` (adicionar chamada)
 
 ```typescript
-// frontend/src/api/account.ts (ou no arquivo de API existente)
-export const deleteAccount = () =>
-  api.post("/api/auth/me/delete/");
+// frontend/src/services/auth.service.ts — adicionar ao objeto existente
+deleteAccount: () => api.post("/api/auth/me/delete/"),
 ```
 
 ### 8. Frontend — `AccountPage.tsx` — seção "Zona de perigo"
@@ -206,14 +205,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteAccount } from "../api/account";
+import { authService } from "../services/auth.service";
 
 // Dentro do componente AccountPage:
 const [deleteError, setDeleteError] = useState("");
 
 async function onDeleteAccount() {
   try {
-    await deleteAccount();
+    await authService.deleteAccount();
     // Redirecionar para logout após solicitar exclusão
     // A conta ainda existe — o usuário pode logar e cancelar
   } catch {

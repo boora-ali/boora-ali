@@ -1,5 +1,7 @@
 # Perf #6 — Índice `(user, deleted_at)` ausente nos modelos principais
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 Toda query de registros ativos faz `WHERE user_id = X AND deleted_at IS NULL`.

@@ -12,7 +12,7 @@ const emptyPage = { count: 0, results: [], next: null, previous: null };
 
 test("shows empty state when no places", async () => {
   (placesService.list as ReturnType<typeof vi.fn>).mockResolvedValue(emptyPage);
-  (placesService.listAll as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+  (placesService.listMapPins as ReturnType<typeof vi.fn>).mockResolvedValue([]);
   render(
     <MemoryRouter>
       <AuthProvider>
@@ -44,7 +44,7 @@ test("renders list of places", async () => {
     previous: null,
     results: places,
   });
-  (placesService.listAll as ReturnType<typeof vi.fn>).mockResolvedValue(places);
+  (placesService.listMapPins as ReturnType<typeof vi.fn>).mockResolvedValue(places);
   render(
     <MemoryRouter>
       <AuthProvider>

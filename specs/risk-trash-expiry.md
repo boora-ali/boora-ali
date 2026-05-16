@@ -68,8 +68,7 @@ def purge_expired_trash():
     """Permanent delete de lugares na lixeira há mais de TRASH_RETENTION_DAYS dias."""
     cutoff = timezone.now() - timedelta(days=settings.TRASH_RETENTION_DAYS)
 
-    expired = Place.objects.filter(
-        deleted_at__isnull=False,
+    expired = Place.objects.deleted().filter(
         deleted_at__lt=cutoff,
     )
 
@@ -124,7 +123,7 @@ from notifications.service import notify, NotificationType
 @shared_task
 def purge_expired_trash():
     cutoff = timezone.now() - timedelta(days=settings.TRASH_RETENTION_DAYS)
-    expired = Place.objects.filter(deleted_at__isnull=False, deleted_at__lt=cutoff)
+    expired = Place.objects.deleted().filter(deleted_at__lt=cutoff)
 
     count = expired.count()
     if count == 0:

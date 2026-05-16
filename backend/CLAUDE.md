@@ -92,14 +92,18 @@ pytest --tb=short           # traceback curto
 
 ## Quando usar skills
 
+> Skills de backend obrigatórias para qualquer mudança no código Python:
+> - **django-expert**: `/home/smovisk/.claude/skills/django-expert/` — serializers, viewsets, ORM, N+1, DRF
+> - **django-patterns**: `/home/smovisk/.claude/skills/django-patterns/` — arquitetura, cache, signals, middleware
+
 | Situação | Skill |
 |----------|-------|
-| Criar serializer, viewset, router | `/django-expert` |
-| Otimizar queryset (N+1, select_related) | `/django-expert` |
-| Definir arquitetura de nova feature | `/django-patterns` |
-| Implementar cache, signals, middleware | `/django-patterns` |
-| Revisar código para vulnerabilidades | `/security-review` |
-| Dúvida de segurança (CSRF, injection, perms) | `/security-review` |
+| Criar serializer, viewset, router | `django-expert` |
+| Otimizar queryset (N+1, select_related) | `django-expert` |
+| Definir arquitetura de nova feature | `django-patterns` |
+| Implementar cache, signals, middleware | `django-patterns` |
+| Revisar código para vulnerabilidades | `security-review` |
+| Dúvida de segurança (CSRF, injection, perms) | `security-review` |
 
 ## Gunicorn
 

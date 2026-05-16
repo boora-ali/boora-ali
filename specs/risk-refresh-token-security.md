@@ -1,5 +1,7 @@
 # Risco #6 — Refresh token de 7 dias sem revogação por inatividade
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 `REFRESH_TOKEN_LIFETIME = timedelta(days=7)` (`settings.py:522`).

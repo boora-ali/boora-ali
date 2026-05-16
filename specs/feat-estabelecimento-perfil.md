@@ -46,7 +46,7 @@ Frontend:
 | `backend/establishments/migrations/` | `makemigrations establishments` |
 | `backend/config/settings.py` | Adicionar `establishments` em `INSTALLED_APPS` |
 | `backend/config/urls.py` | Incluir `establishments.urls` |
-| `frontend/src/api/establishment.ts` | CRUD de perfil e cardápio (novo) |
+| `frontend/src/services/establishment.service.ts` | CRUD de perfil e cardápio (novo) |
 | `frontend/src/routes/dashboard/ProfilePage.tsx` | Formulário de edição do perfil |
 | `frontend/src/routes/dashboard/MenuPage.tsx` | Gerenciar itens do cardápio |
 | `frontend/src/routes/EstablishmentPublicPage.tsx` | Página pública `/e/:username` |
@@ -177,6 +177,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from core.views import MutationMixin
+from core.viewsets import ViewSetBase
 from .models import EstablishmentProfile, MenuItem
 from .serializers import (
     EstablishmentProfileSerializer, MenuItemSerializer, PublicEstablishmentSerializer
@@ -205,8 +206,7 @@ class EstablishmentProfileView(MutationMixin, APIView):
         return Response(serializer.data)
 
 
-class MenuItemViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+class MenuItemViewSet(ViewSetBase):
     serializer_class = MenuItemSerializer
     lookup_field = "public_id"
 
@@ -252,11 +252,11 @@ urlpatterns = [
 path("api/", include("establishments.urls")),
 ```
 
-### 6. Frontend — `api/establishment.ts`
+### 6. Frontend — `services/establishment.service.ts`
 
 ```typescript
-// frontend/src/api/establishment.ts
-export const establishmentApi = {
+// frontend/src/services/establishment.service.ts
+export const establishmentService = {
   getProfile: () =>
     api.get<EstablishmentProfile>("/api/establishment/me/"),
   updateProfile: (data: Partial<EstablishmentProfile>) =>
@@ -282,7 +282,7 @@ export function EstablishmentPublicPage() {
   const { username } = useParams<{ username: string }>();
   const { data, isError } = useQuery({
     queryKey: ["establishment", username],
-    queryFn: () => establishmentApi.getPublic(username!),
+    queryFn: () => establishmentService.getPublic(username!),
   });
 
   if (isError) return <NotFound />;

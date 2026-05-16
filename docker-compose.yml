@@ -85,8 +85,9 @@ services:
       AWS_ACCESS_KEY_ID: ${VERSITYGW_ACCESS_KEY:-minioadmin}
       AWS_SECRET_ACCESS_KEY: ${VERSITYGW_SECRET_KEY:-minioadmin}
       OTEL_SERVICE_NAME: bora-ali
-      REDIS_URL: redis://valkey:6379/1
-      CELERY_BROKER_URL: redis://valkey:6379/2
+      REDIS_URL: redis://valkey:6379/0
+      CELERY_BROKER_URL: redis://valkey:6379/1
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
     depends_on:
       postgres:
         condition: service_healthy
@@ -98,6 +99,7 @@ services:
       - "8000:8000" # Django direto, além do proxy em localhost:8080
     volumes:
       - staticfiles:/app/staticfiles
+      - media_temp:/tmp/bora_ali_media
 
   celery-worker:
     build:
@@ -119,8 +121,9 @@ services:
       AWS_ACCESS_KEY_ID: ${VERSITYGW_ACCESS_KEY:-minioadmin}
       AWS_SECRET_ACCESS_KEY: ${VERSITYGW_SECRET_KEY:-minioadmin}
       OTEL_SERVICE_NAME: bora-ali
-      REDIS_URL: redis://valkey:6379/1
-      CELERY_BROKER_URL: redis://valkey:6379/2
+      REDIS_URL: redis://valkey:6379/0
+      CELERY_BROKER_URL: redis://valkey:6379/1
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
     command: celery -A config worker -l info -c 1 -Q default,celery
     depends_on:
       postgres:
@@ -144,8 +147,9 @@ services:
       AWS_ACCESS_KEY_ID: ${VERSITYGW_ACCESS_KEY:-minioadmin}
       AWS_SECRET_ACCESS_KEY: ${VERSITYGW_SECRET_KEY:-minioadmin}
       OTEL_SERVICE_NAME: bora-ali
-      REDIS_URL: redis://valkey:6379/1
-      CELERY_BROKER_URL: redis://valkey:6379/2
+      REDIS_URL: redis://valkey:6379/0
+      CELERY_BROKER_URL: redis://valkey:6379/1
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
     command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     depends_on:
       postgres:
@@ -171,6 +175,7 @@ services:
     volumes:
       - ./frontend/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
       - staticfiles:/staticfiles:ro
+      - media_temp:/media_temp:ro
     depends_on:
       - backend
       - storage
@@ -251,6 +256,8 @@ services:
 
 volumes:
   staticfiles:
+
+  media_temp:
 
   bora_ali_pgdata:
     external: true

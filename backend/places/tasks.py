@@ -1,13 +1,19 @@
 from __future__ import annotations
 
+import logging
 import urllib.request
+from datetime import timedelta
 from decimal import Decimal
 from urllib.parse import urlparse
 
 from celery import shared_task
+from django.conf import settings
+from django.utils import timezone
 
 from .maps import extract_coords
 from .models import CoordsStatus, Place
+
+_log = logging.getLogger("places.tasks")
 
 _ALLOWED_MAPS_HOSTS = {
     "maps.google.com",
@@ -45,6 +51,13 @@ def _resolve_place_coords(self, place_pk: int):
         if self.request.retries >= self.max_retries:
             place.coords_status = CoordsStatus.FAILED
             place.save(update_fields=["coords_status"])
+            _log.error(
+                "resolve_place_coords falhou após %d tentativas: place_pk=%s maps_url=%r exc=%s",
+                self.max_retries + 1,
+                place_pk,
+                place.maps_url,
+                exc,
+            )
             return
         countdown = 60 * (2**self.request.retries)
         raise self.retry(exc=exc, countdown=countdown)
@@ -58,3 +71,37 @@ def _resolve_place_coords(self, place_pk: int):
 @shared_task(bind=True, max_retries=3)
 def resolve_place_coords(self, place_pk: int):
     return _resolve_place_coords(self, place_pk)
+
+
+@shared_task
+def cleanup_temp_media():
+    import time
+    from pathlib import Path
+
+    temp_dir = Path(settings.TEMP_SERVE_DIR)
+    if not temp_dir.exists():
+        return 0
+    cutoff = time.time() - settings.TEMP_SERVE_TTL_SECONDS
+    removed = 0
+    for f in temp_dir.iterdir():
+        if f.is_file() and f.stat().st_mtime < cutoff:
+            f.unlink(missing_ok=True)
+            removed += 1
+    _log.info("Temp media cleanup: %d files removed", removed)
+    return removed
+
+
+@shared_task
+def cleanup_old_history():
+    from .models import Visit, VisitItem
+
+    cutoff = timezone.now() - timedelta(days=settings.HISTORY_RETENTION_DAYS)
+
+    deleted = {
+        "place": Place.history.filter(history_date__lt=cutoff).delete()[0],
+        "visit": Visit.history.filter(history_date__lt=cutoff).delete()[0],
+        "visit_item": VisitItem.history.filter(history_date__lt=cutoff).delete()[0],
+    }
+
+    _log.info("History cleanup complete: %s", deleted)
+    return deleted

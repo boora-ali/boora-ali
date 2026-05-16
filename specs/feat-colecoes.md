@@ -40,7 +40,7 @@ Frontend:
 | `backend/places/serializers.py` | `CollectionSerializer`, `CollectionDetailSerializer` |
 | `backend/places/urls.py` | Registrar rotas de coleções |
 | `backend/places/migrations/` | `makemigrations places` após criar modelos |
-| `frontend/src/api/collections.ts` | CRUD de coleções + add/remove place (novo) |
+| `frontend/src/services/collections.service.ts` | CRUD de coleções + add/remove place (novo) |
 | `frontend/src/routes/CollectionListPage.tsx` | Lista de coleções do usuário (nova) |
 | `frontend/src/routes/CollectionDetailPage.tsx` | Places de uma coleção (nova) |
 | `frontend/src/routes/PlaceDetailPage.tsx` | Botão "Adicionar a coleção" |
@@ -113,13 +113,14 @@ class CollectionDetailSerializer(CollectionSerializer):
 ```python
 # backend/places/views.py
 from django.db.models import Count
+from core.viewsets import ViewSetBase
+from core.views import MutationMixin
 
-class CollectionViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+class CollectionViewSet(ViewSetBase):
     lookup_field = "public_id"
 
     def get_queryset(self):
-        qs = Collection.objects.filter(user=self.request.user)
+        qs = Collection.objects.filter(user=self.request.user).select_related("user")
         if self.action == "list":
             return qs.annotate(place_count=Count("places"))
         return qs.prefetch_related("places")
@@ -158,6 +159,8 @@ class CollectionPlaceView(MutationMixin, APIView):
         return Response(status=204)
 ```
 
+> `ViewSetBase` (de `core.viewsets`) já inclui `IsAuthenticated`, `MutationMixin` e `DjangoFilterBackend` — não declarar novamente.
+
 ### 4. `urls.py` — registrar rotas
 
 ```python
@@ -175,10 +178,10 @@ path(
 ),
 ```
 
-### 5. Frontend — `api/collections.ts`
+### 5. Frontend — `services/collections.service.ts`
 
 ```typescript
-// frontend/src/api/collections.ts
+// frontend/src/services/collections.service.ts
 export interface Collection {
   public_id: string;
   name: string;
@@ -188,7 +191,7 @@ export interface Collection {
   updated_at: string;
 }
 
-export const collectionsApi = {
+export const collectionsService = {
   list: () => api.get<Collection[]>("/api/collections/"),
   create: (data: Pick<Collection, "name" | "emoji" | "description">) =>
     api.post<Collection>("/api/collections/", data),
@@ -210,7 +213,7 @@ export const collectionsApi = {
 export function CollectionListPage() {
   const { data: collections } = useQuery({
     queryKey: ["collections"],
-    queryFn: collectionsApi.list,
+    queryFn: collectionsService.list,
   });
 
   return (
@@ -244,7 +247,7 @@ export function CollectionListPage() {
 ```tsx
 // Dropdown ou Sheet listando as coleções do usuário com checkbox
 function AddToCollectionSheet({ placePublicId }: { placePublicId: string }) {
-  const { data: collections } = useQuery({ queryKey: ["collections"], queryFn: collectionsApi.list });
+  const { data: collections } = useQuery({ queryKey: ["collections"], queryFn: collectionsService.list });
   const { data: place } = useQuery({ queryKey: ["place", placePublicId], queryFn: ... });
 
   const placeCollectionIds = new Set(place?.collections?.map((c) => c.public_id));
@@ -252,9 +255,9 @@ function AddToCollectionSheet({ placePublicId }: { placePublicId: string }) {
   function handleToggle(collectionId: string) {
     const isIn = placeCollectionIds.has(collectionId);
     if (isIn) {
-      collectionsApi.removePlace(collectionId, placePublicId);
+      collectionsService.removePlace(collectionId, placePublicId);
     } else {
-      collectionsApi.addPlace(collectionId, placePublicId);
+      collectionsService.addPlace(collectionId, placePublicId);
     }
   }
   // ...

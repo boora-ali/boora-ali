@@ -1,14 +1,35 @@
 {
   "version": "1.0",
-  "generated": "2026-05-15T15:24:00.392Z",
+  "generated": "2026-05-16T00:23:22.564Z",
   "site": {
     "title": "Bora Ali",
     "description": "Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar",
     "url": "https://booraali.com.br"
   },
-  "documents": [],
+  "documents": [
+    {
+      "url": "https://booraali.com.br",
+      "title": "Bora Ali — Entre na sua conta",
+      "description": "Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou."
+    },
+    {
+      "url": "https://booraali.com.br/politica-de-privacidade",
+      "title": "Política de Privacidade — Bora Ali",
+      "description": "Saiba como o Bora Ali coleta, usa e protege seus dados pessoais."
+    },
+    {
+      "url": "https://booraali.com.br/register",
+      "title": "Bora Ali — Crie sua conta",
+      "description": "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali."
+    },
+    {
+      "url": "https://booraali.com.br/termos-de-uso",
+      "title": "Termos de Uso — Bora Ali",
+      "description": "Leia os termos e condições de uso do Bora Ali."
+    }
+  ],
   "metadata": {
-    "totalDocuments": 0,
+    "totalDocuments": 4,
     "generator": "aeo.js",
     "generatorUrl": "https://aeojs.org"
   }

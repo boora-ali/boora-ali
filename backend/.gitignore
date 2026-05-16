@@ -5,3 +5,4 @@ __pycache__/
 db.sqlite3
 locale/pt_BR/LC_MESSAGES/django.mo
 media/
+.coverage

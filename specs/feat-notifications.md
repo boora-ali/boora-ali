@@ -34,7 +34,7 @@ Frontend:
 | `backend/config/settings.py` | Adicionar `"notifications"` em `INSTALLED_APPS` |
 | `backend/config/urls.py` | Incluir `notifications/urls.py` |
 | `frontend/src/components/layout/` | `NotificationBell.tsx` + painel |
-| `frontend/src/api/notifications.ts` | Chamadas à API |
+| `frontend/src/services/notifications.service.ts` | Chamadas à API |
 | `frontend/src/hooks/useNotifications.ts` | Hook de polling/query |
 
 > **Migrations**: após criar `models.py`, rodar `python manage.py makemigrations notifications` manualmente.
@@ -164,7 +164,9 @@ class NotificationListView(generics.ListAPIView):
         )
 
 
-class NotificationMarkReadView(APIView):
+from core.views import MutationMixin
+
+class NotificationMarkReadView(MutationMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, public_id):
@@ -178,7 +180,7 @@ class NotificationMarkReadView(APIView):
         return Response({"detail": "Marcada como lida."})
 
 
-class NotificationMarkAllReadView(APIView):
+class NotificationMarkAllReadView(MutationMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
@@ -212,11 +214,11 @@ urlpatterns = [
 path("api/notifications/", include("notifications.urls")),
 ```
 
-### 7. Frontend — `api/notifications.ts`
+### 7. Frontend — `services/notifications.service.ts`
 
 ```typescript
-// frontend/src/api/notifications.ts
-import { api } from "./client";
+// frontend/src/services/notifications.service.ts
+import { api } from "./api";
 
 export interface Notification {
   id: string;
@@ -228,7 +230,7 @@ export interface Notification {
   created_at: string;
 }
 
-export const notificationsApi = {
+export const notificationsService = {
   list: () => api.get<Notification[]>("/api/notifications/"),
   markRead: (id: string) => api.post(`/api/notifications/${id}/read/`),
   markAllRead: () => api.post("/api/notifications/read-all/"),
@@ -240,24 +242,24 @@ export const notificationsApi = {
 ```typescript
 // frontend/src/hooks/useNotifications.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notificationsApi } from "../api/notifications";
+import { notificationsService } from "../api/notifications";
 
 export function useNotifications() {
   const qc = useQueryClient();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications"],
-    queryFn: () => notificationsApi.list().then((r) => r.data),
+    queryFn: () => notificationsService.list().then((r) => r.data),
     refetchInterval: 60_000, // polling a cada 60s
   });
 
   const markRead = useMutation({
-    mutationFn: notificationsApi.markRead,
+    mutationFn: notificationsService.markRead,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
   const markAllRead = useMutation({
-    mutationFn: notificationsApi.markAllRead,
+    mutationFn: notificationsService.markAllRead,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
   });
 

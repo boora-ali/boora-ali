@@ -1,7 +1,7 @@
 import { startTransition, useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { placesService, type Page } from "../services/places.service";
+import { placesService, placePageCache, type Page } from "../services/places.service";
 import type { Place, PlaceStatus } from "../types/place";
 import { PLACE_STATUSES } from "../utils/constants";
 import { PLACES_CHANGED_EVENT } from "../utils/places-state";
@@ -40,10 +40,8 @@ const STATUS_ACTIVE_CLASSES: Record<string, string> = {
 
 export default function PlacesPage() {
   const { t } = useTranslation();
-  const location = useLocation();
   const navigate = useNavigate();
   const [data, setData] = useState<Page<Place> | null>(null);
-  const [pageCache, setPageCache] = useState<Record<number, Place[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -70,11 +68,17 @@ export default function PlacesPage() {
     prevFilters.refreshTick !== refreshTick
   ) {
     setPrevFilters({ debouncedSearch, status, refreshTick });
-    setPageCache({});
+    placePageCache.invalidate();
     setPage(1);
   }
 
   useEffect(() => {
+    const cached = placePageCache.get(page, debouncedSearch, status);
+    if (cached) {
+      startTransition(() => setData(cached));
+      return;
+    }
+
     let cancelled = false;
     startTransition(() => {
       setLoading(true);
@@ -83,8 +87,8 @@ export default function PlacesPage() {
       .list({ page, search: debouncedSearch || undefined, status: (status as PlaceStatus) || undefined })
       .then((nextData) => {
         if (cancelled) return;
+        placePageCache.set(page, nextData, debouncedSearch, status);
         setData(nextData);
-        setPageCache((prev) => ({ ...prev, [page]: nextData.results }));
         setError("");
       })
       .catch((err) => {
@@ -101,12 +105,13 @@ export default function PlacesPage() {
     return () => {
       cancelled = true;
     };
-  }, [navigate, debouncedSearch, status, page, t, location.key, refreshTick]);
+  }, [navigate, debouncedSearch, status, page, t, refreshTick]);
 
   useEffect(() => {
+    if (!showMap) return;
     let cancelled = false;
     placesService
-      .listAll({ search: debouncedSearch || undefined, status: (status as PlaceStatus) || undefined })
+      .listMapPins({ search: debouncedSearch || undefined, status: (status as PlaceStatus) || undefined })
       .then((places) => {
         if (!cancelled) setMapPlaces(places);
       })
@@ -116,7 +121,7 @@ export default function PlacesPage() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, status, location.key, refreshTick]);
+  }, [showMap, debouncedSearch, status, refreshTick]);
 
   const totalPages = data ? Math.max(1, Math.ceil(data.count / PAGE_SIZE)) : 1;
 
@@ -224,7 +229,10 @@ export default function PlacesPage() {
         >
           <CarouselContent>
             {Array.from({ length: totalPages }, (_, i) => {
-              const slidePlaces = pageCache[i + 1];
+              const slidePage = i + 1;
+              const slidePlaces = slidePage === page
+                ? data.results
+                : placePageCache.get(slidePage, debouncedSearch, status)?.results;
               return (
                 <CarouselItem key={i}>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

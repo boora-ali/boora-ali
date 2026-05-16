@@ -1,5 +1,7 @@
 # Perf #8 — `select_related("user")` desnecessário na listagem de lugares
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 `PlaceViewSet.get_queryset()` (linha 63 de `views.py`) faz `JOIN` com a tabela `auth_user`

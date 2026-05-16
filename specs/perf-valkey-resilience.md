@@ -1,5 +1,7 @@
 # Perf #4 — Valkey como ponto único de falha
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 O mesmo Valkey é usado para **três responsabilidades diferentes**:

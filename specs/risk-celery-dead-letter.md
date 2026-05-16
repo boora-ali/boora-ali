@@ -1,5 +1,7 @@
 # Risco #2 — Celery sem dead letter para `resolve_place_coords`
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 `resolve_place_coords` (`backend/places/tasks.py:58`) esgota 3 tentativas com backoff

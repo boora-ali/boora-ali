@@ -48,8 +48,10 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      REDIS_URL: redis://valkey:6379/1
-      CELERY_BROKER_URL: redis://valkey:6379/2
+      REDIS_URL: redis://valkey:6379/0
+      CELERY_BROKER_URL: redis://valkey:6379/1
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      USE_X_ACCEL_REDIRECT: "True"
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,6 +59,7 @@ services:
         condition: service_healthy
     volumes:
       - staticfiles:/app/staticfiles
+      - media_temp:/tmp/bora_ali_media
 
   celery-worker:
     image: ghcr.io/boora-ali/backend:${IMAGE_TAG:-dev-latest}
@@ -73,8 +76,9 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      REDIS_URL: redis://valkey:6379/1
-      CELERY_BROKER_URL: redis://valkey:6379/2
+      REDIS_URL: redis://valkey:6379/0
+      CELERY_BROKER_URL: redis://valkey:6379/1
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
     command: celery -A config worker -l info -c 2 -Q default,celery
     depends_on:
       postgres:
@@ -95,8 +99,9 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      REDIS_URL: redis://valkey:6379/1
-      CELERY_BROKER_URL: redis://valkey:6379/2
+      REDIS_URL: redis://valkey:6379/0
+      CELERY_BROKER_URL: redis://valkey:6379/1
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
     command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     depends_on:
       postgres:
@@ -118,10 +123,13 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - staticfiles:/staticfiles:ro
+      - media_temp:/media_temp:ro
     depends_on:
       - backend
 
 volumes:
   staticfiles:
+
+  media_temp:
 
   bora_ali_pgdata:
