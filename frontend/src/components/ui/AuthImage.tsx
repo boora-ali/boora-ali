@@ -22,6 +22,15 @@ export function AuthImage({ src, className, ...props }: Props) {
   const apiPath = src ? toApiPath(src) : null;
   const [state, setState] = useState<FetchState>({ status: "idle", objectUrl: null });
   const prevApiPath = useRef<string | null>(null);
+  // Tracks the active blob URL so it can be revoked safely after the <img> paints
+  const currentBlobUrl = useRef<string | null>(null);
+
+  // Revoke on unmount only — separate from the fetch effect
+  useEffect(() => {
+    return () => {
+      if (currentBlobUrl.current) URL.revokeObjectURL(currentBlobUrl.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!apiPath) return;
@@ -29,14 +38,16 @@ export function AuthImage({ src, className, ...props }: Props) {
     prevApiPath.current = apiPath;
 
     let active = true;
-    let created: string | null = null;
 
     api
       .get<Blob>(apiPath, { responseType: "blob" })
       .then((res) => {
         if (!active) return;
-        created = URL.createObjectURL(res.data);
-        setState({ status: "idle", objectUrl: created });
+        // Revoke the *previous* blob URL now that the new one is ready and the old <img> is replaced
+        if (currentBlobUrl.current) URL.revokeObjectURL(currentBlobUrl.current);
+        const objectUrl = URL.createObjectURL(res.data);
+        currentBlobUrl.current = objectUrl;
+        setState({ status: "idle", objectUrl });
       })
       .catch(() => {
         if (active) setState({ status: "error", objectUrl: null });
@@ -46,7 +57,8 @@ export function AuthImage({ src, className, ...props }: Props) {
 
     return () => {
       active = false;
-      if (created) URL.revokeObjectURL(created);
+      // Do NOT revoke here — mobile browsers decode blobs asynchronously and the
+      // <img> may not have painted yet when this cleanup runs, causing broken images
     };
   }, [apiPath]);
 
