@@ -46,7 +46,8 @@ api.interceptors.response.use(
 
     const isAuthEndpoint =
       original.url?.endsWith("/auth/login/") === true ||
-      original.url?.endsWith("/auth/register/") === true;
+      original.url?.endsWith("/auth/register/") === true ||
+      original.url?.endsWith("/auth/refresh/") === true;
 
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       original._retry = true;

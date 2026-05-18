@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { authService } from "../services/auth.service";
 import { ACCESS_KEY } from "../utils/constants";
+import { AUTH_STATE_CHANGED_EVENT } from "../utils/client-state";
 import type { User } from "../types/user";
 import { AuthCtx } from "./auth";
 
@@ -18,6 +19,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(setUser)
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const onAuthChanged = () => {
+      if (!localStorage.getItem(ACCESS_KEY)) {
+        setUser(null);
+        setLoading(false);
+      }
+    };
+    window.addEventListener(AUTH_STATE_CHANGED_EVENT, onAuthChanged);
+    return () => window.removeEventListener(AUTH_STATE_CHANGED_EVENT, onAuthChanged);
   }, []);
 
   const login = useCallback(
