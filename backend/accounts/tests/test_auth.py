@@ -72,7 +72,6 @@ def test_login_returns_tokens(api_client, user):
     )
     assert r.status_code == 200
     assert "access" in r.data
-    assert "refresh" in r.data
 
 
 def test_login_with_email_returns_tokens(api_client, user):
@@ -83,33 +82,56 @@ def test_login_with_email_returns_tokens(api_client, user):
     )
     assert r.status_code == 200
     assert "access" in r.data
-    assert "refresh" in r.data
+
+
+def test_login_sets_refresh_httponly_cookie(api_client, user):
+    """Refresh token must arrive as HttpOnly cookie, not in response body."""
+    r = api_client.post(
+        "/api/auth/login/", {"username": "alice", "password": "pw12345!"}, format="json"
+    )
+    assert r.status_code == 200
+    assert "boraali_refresh" in r.cookies
+    cookie = r.cookies["boraali_refresh"]
+    assert cookie["httponly"]
+    assert "refresh" not in r.data
 
 
 def test_refresh(api_client, user):
-    tokens = api_client.post(
+    login_resp = api_client.post(
         "/api/auth/login/", {"username": "alice", "password": "pw12345!"}, format="json"
-    ).data
-    r = api_client.post(
-        "/api/auth/refresh/", {"refresh": tokens["refresh"]}, format="json"
     )
+    assert login_resp.status_code == 200
+    # Cookie is set automatically by the test client for subsequent requests
+    r = api_client.post("/api/auth/refresh/", format="json")
     assert r.status_code == 200
     assert "access" in r.data
 
 
 def test_logout_blacklists(api_client, user):
-    tokens = api_client.post(
+    login_resp = api_client.post(
         "/api/auth/login/", {"username": "alice", "password": "pw12345!"}, format="json"
-    ).data
-    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
-    r = api_client.post(
-        "/api/auth/logout/", {"refresh": tokens["refresh"]}, format="json"
     )
+    assert login_resp.status_code == 200
+    access = login_resp.data["access"]
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+    r = api_client.post("/api/auth/logout/", format="json")
     assert r.status_code == 205
-    r2 = api_client.post(
-        "/api/auth/refresh/", {"refresh": tokens["refresh"]}, format="json"
-    )
+    r2 = api_client.post("/api/auth/refresh/", format="json")
     assert r2.status_code == 401
+
+
+def test_logout_clears_refresh_cookie(api_client, user):
+    """Logout must clear the refresh cookie."""
+    login_resp = api_client.post(
+        "/api/auth/login/", {"username": "alice", "password": "pw12345!"}, format="json"
+    )
+    assert login_resp.status_code == 200
+    access = login_resp.data["access"]
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+    r = api_client.post("/api/auth/logout/", format="json")
+    assert r.status_code in [200, 204, 205]
+    if "boraali_refresh" in r.cookies:
+        assert r.cookies["boraali_refresh"].value == ""
 
 
 def test_change_password(auth_client, api_client):

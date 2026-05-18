@@ -25,9 +25,10 @@ def test_google_login_creates_user_and_returns_tokens(api_client, monkeypatch):
 
     assert response.status_code == 200
     assert "access" in response.data
-    assert "refresh" in response.data
+    assert "refresh" not in response.data
+    assert "boraali_refresh" in response.cookies
 
-    refresh = RefreshToken(response.data["refresh"])
+    refresh = RefreshToken(response.cookies["boraali_refresh"].value)
     assert refresh["session_key"] is not None
 
     identity = GoogleIdentity.objects.get(google_sub="sub-1")
@@ -63,7 +64,7 @@ def test_google_login_links_existing_user_by_verified_email(
     identity = GoogleIdentity.objects.get(google_sub="sub-2")
     assert identity.user_id == user.id
 
-    refresh = RefreshToken(response.data["refresh"])
+    refresh = RefreshToken(response.cookies["boraali_refresh"].value)
     assert refresh["session_key"] is not None
 
 
