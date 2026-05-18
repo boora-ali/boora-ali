@@ -16,5 +16,4 @@ export const VISIT_ITEM_TYPES = [
 ] as const;
 
 export const ACCESS_KEY = "boraali_access";
-export const REFRESH_KEY = "boraali_refresh";
 export const SESSION_INVALIDATED_KEY = "boraali_session_invalidated";

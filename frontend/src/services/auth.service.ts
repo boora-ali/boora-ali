@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { ACCESS_KEY, REFRESH_KEY } from "../utils/constants";
+import { ACCESS_KEY } from "../utils/constants";
 import type { User } from "../types/user";
 import { hasFile, toFormData } from "./form-data";
 import { clearClientState, notifyAuthStateChanged } from "../utils/client-state";
@@ -31,21 +31,18 @@ export const authService = {
       ...(cfTurnstileResponse && { cf_turnstile_response: cfTurnstileResponse }),
     });
     localStorage.setItem(ACCESS_KEY, data.access);
-    localStorage.setItem(REFRESH_KEY, data.refresh);
     notifyAuthStateChanged();
     return data;
   },
   async googleLogin(idToken: string) {
     const { data } = await api.post("/auth/google/", { id_token: idToken });
     localStorage.setItem(ACCESS_KEY, data.access);
-    localStorage.setItem(REFRESH_KEY, data.refresh);
     notifyAuthStateChanged();
     return data;
   },
   async logout() {
-    const refresh = localStorage.getItem(REFRESH_KEY);
     try {
-      await api.post("/auth/logout/", { refresh });
+      await api.post("/auth/logout/");
     } catch {
       // Local logout should still complete if the server rejects the refresh token.
     }

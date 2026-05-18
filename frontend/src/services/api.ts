@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ACCESS_KEY, REFRESH_KEY, SESSION_INVALIDATED_KEY } from "../utils/constants";
+import { ACCESS_KEY, SESSION_INVALIDATED_KEY } from "../utils/constants";
 import { clearClientState } from "../utils/client-state";
 import { notifyLoading } from "../components/ui/loading-events";
 
@@ -26,6 +26,7 @@ export function resolveApiBaseUrl(env: ApiEnv = import.meta.env) {
 
 export const api = axios.create({
   baseURL: resolveApiBaseUrl(),
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
@@ -49,20 +50,12 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       original._retry = true;
-      const refresh = localStorage.getItem(REFRESH_KEY);
-
-      if (!refresh) {
-        await clearClientState();
-        window.location.href = "/login";
-        return Promise.reject(error);
-      }
 
       try {
         refreshing =
           refreshing ??
-          api.post("/auth/refresh/", { refresh }).then((r) => {
+          api.post("/auth/refresh/").then((r) => {
             localStorage.setItem(ACCESS_KEY, r.data.access);
-            if (r.data.refresh) localStorage.setItem(REFRESH_KEY, r.data.refresh);
             refreshing = null;
             return r.data.access as string;
           });
