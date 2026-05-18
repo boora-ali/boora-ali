@@ -17,12 +17,6 @@ function normalizeBaseUrl(value: string) {
 export function resolveApiBaseUrl(env: ApiEnv = import.meta.env) {
   if (env.VITE_API_URL) return normalizeBaseUrl(env.VITE_API_URL);
 
-  const appEnv = env.VITE_APP_ENV ?? env.MODE ?? "dev";
-
-  if (appEnv === "dev" || appEnv === "development") {
-    return "http://localhost:8000/api";
-  }
-
   if (env.VITE_PUBLIC_BASE_URL) {
     return `${normalizeBaseUrl(env.VITE_PUBLIC_BASE_URL)}/api`;
   }
