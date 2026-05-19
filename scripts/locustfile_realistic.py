@@ -36,11 +36,15 @@ _user_counter = itertools.count()
 
 
 def _make_jpeg() -> bytes:
-    img = Image.new("RGB", (1280, 960), color=(
-        random.randint(80, 200),
-        random.randint(80, 200),
-        random.randint(80, 200),
-    ))
+    img = Image.new(
+        "RGB",
+        (1280, 960),
+        color=(
+            random.randint(80, 200),
+            random.randint(80, 200),
+            random.randint(80, 200),
+        ),
+    )
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=80)
     return buf.getvalue()
@@ -153,12 +157,14 @@ class RealisticUser(HttpUser):
                 "service_rating": round(random.uniform(5, 10), 1),
                 "overall_rating": round(random.uniform(5, 10), 1),
                 "would_return": random.choice([True, False]),
-                "general_notes": random.choice([
-                    "Ótimo ambiente, voltaria.",
-                    "Serviço um pouco lento.",
-                    "Vale cada centavo.",
-                    "",
-                ]),
+                "general_notes": random.choice(
+                    [
+                        "Ótimo ambiente, voltaria.",
+                        "Serviço um pouco lento.",
+                        "Vale cada centavo.",
+                        "",
+                    ]
+                ),
             },
         )
         if resp and resp.status_code == 201:
@@ -169,7 +175,15 @@ class RealisticUser(HttpUser):
                 self._post(
                     f"/api/visits/{visit_id}/items/",
                     json={
-                        "name": random.choice(["Cappuccino", "Croissant", "Suco de laranja", "Prato do dia", "Brownie"]),
+                        "name": random.choice(
+                            [
+                                "Cappuccino",
+                                "Croissant",
+                                "Suco de laranja",
+                                "Prato do dia",
+                                "Brownie",
+                            ]
+                        ),
                         "type": random.choice(ITEM_TYPES),
                         "rating": round(random.uniform(6, 10), 1),
                         "price": round(random.uniform(8, 60), 2),
@@ -266,15 +280,27 @@ class RealisticUser(HttpUser):
         resp = self._post(
             "/api/places/",
             json={
-                "name": random.choice([
-                    "Café Central", "Bistrô do Parque", "Padaria Nova", "Bar do João",
-                    "Sorveteria Gelada", "Restaurante Caseiro", "Cafeteria Moderna",
-                ]) + f" {random.randint(1, 999)}",
+                "name": random.choice(
+                    [
+                        "Café Central",
+                        "Bistrô do Parque",
+                        "Padaria Nova",
+                        "Bar do João",
+                        "Sorveteria Gelada",
+                        "Restaurante Caseiro",
+                        "Cafeteria Moderna",
+                    ]
+                )
+                + f" {random.randint(1, 999)}",
                 "category": random.choice(CATEGORIES),
-                "address": random.choice([
-                    "Av. Paulista, 1000", "Rua Oscar Freire, 500",
-                    "Al. Santos, 200", "Rua Augusta, 300",
-                ]),
+                "address": random.choice(
+                    [
+                        "Av. Paulista, 1000",
+                        "Rua Oscar Freire, 500",
+                        "Al. Santos, 200",
+                        "Rua Augusta, 300",
+                    ]
+                ),
                 "status": random.choice(STATUSES),
                 "notes": "",
             },

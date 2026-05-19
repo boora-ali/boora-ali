@@ -24,13 +24,14 @@ function hostFromUrl(value?: string) {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const appEnv = env.VITE_APP_ENV ?? mode;
+  const isProd = appEnv === "production" || appEnv === "prod";
   const externalDebugHosts =
     appEnv === "preprod" ? [".ngrok-free.app", ".ngrok-free.dev"] : [];
 
   return {
     plugins: [
       react(),
-      aeoVitePlugin({
+      ...(!isProd ? [aeoVitePlugin({
         title: "Bora Ali",
         description:
           "Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar",
@@ -57,7 +58,7 @@ export default defineConfig(({ mode }) => {
             description: "Leia os termos e condições de uso do Bora Ali.",
           },
         ],
-      }),
+      })] : []),
     ],
     resolve: {
       alias: [

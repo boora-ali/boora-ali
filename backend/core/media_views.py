@@ -11,6 +11,7 @@ from rest_framework.decorators import (
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.authentication import SingleSessionJWTAuthentication
+from core.storage_urls import _build_signed_url, _use_s3_signing
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,14 @@ def serve_user_media(request, path):
         raise Http404
 
     try:
-        signed_url = default_storage.url(path)
+        if _use_s3_signing():
+            signed_url = _build_signed_url(path)
+        else:
+            signed_url = default_storage.url(path)
+        if not signed_url:
+            raise Http404
+    except Http404:
+        raise
     except Exception:
         logger.warning("Failed to sign URL for %s", path, exc_info=True)
         raise Http404

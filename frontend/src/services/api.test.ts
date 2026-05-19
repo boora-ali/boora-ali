@@ -19,8 +19,21 @@ test("adds Authorization header when token exists in localStorage", async () => 
   localStorage.removeItem(ACCESS_KEY);
 });
 
-test("resolves local API url for dev mode", () => {
-  expect(resolveApiBaseUrl({ VITE_APP_ENV: "dev" })).toBe("http://localhost:8000/api");
+test("falls back to /api when no env vars are set in production", () => {
+  const url = resolveApiBaseUrl({ VITE_APP_ENV: "production" });
+  expect(url).toBe("/api");
+  expect(url).not.toContain("localhost");
+});
+
+test("falls back to /api when no env vars are set in dev mode", () => {
+  const url = resolveApiBaseUrl({ VITE_APP_ENV: "dev" });
+  expect(url).toBe("/api");
+  expect(url).not.toContain("localhost");
+});
+
+test("uses VITE_API_URL when provided", () => {
+  const url = resolveApiBaseUrl({ VITE_API_URL: "https://booraali.com.br/api" });
+  expect(url).toBe("https://booraali.com.br/api");
 });
 
 test("resolves public API url for preprod mode", () => {
