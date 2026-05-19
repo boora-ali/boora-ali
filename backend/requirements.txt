@@ -1,7 +1,7 @@
 Django==5.2.14
 django-unfold==0.93.0
 django-simple-history==3.11.0
-whitenoise==6.9.0
+whitenoise==6.12.0
 Pillow==12.2.0
 cryptography==46.0.7
 djangorestframework==3.15.2
@@ -15,8 +15,8 @@ python-dotenv==1.2.2
 django-storages[s3]==1.14.2
 google-auth==2.29.0
 requests>=2.32.4
-sentry-sdk[django]==2.20.0
-argon2-cffi==23.1.0
+sentry-sdk[django]==2.60.0
+argon2-cffi==25.1.0
 redis==5.0.8
 httpx==0.27.2
 celery==5.4.0
@@ -24,7 +24,7 @@ django-celery-beat==2.9.0
 pytest==9.0.3
 pytest-django==4.9.0
 pytest-cov==6.1.0
-model-bakery==1.20.0
+model-bakery==1.23.4
 ruff==0.11.9
 bandit==1.8.3
 urllib3>=2.6.3 # not directly required, pinned by Snyk to avoid a vulnerability
