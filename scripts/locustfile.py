@@ -26,11 +26,15 @@ _user_counter = itertools.count()  # each VU gets a unique slot, no session conf
 
 
 def _make_jpeg(width: int = 800, height: int = 600) -> bytes:
-    img = Image.new("RGB", (width, height), color=(
-        random.randint(0, 255),
-        random.randint(0, 255),
-        random.randint(0, 255),
-    ))
+    img = Image.new(
+        "RGB",
+        (width, height),
+        color=(
+            random.randint(0, 255),
+            random.randint(0, 255),
+            random.randint(0, 255),
+        ),
+    )
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=85)
     return buf.getvalue()

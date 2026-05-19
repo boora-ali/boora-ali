@@ -103,21 +103,21 @@ class TestSingleSessionIntegration:
             {"username": "bob", "password": "Strong-Pass1!"},
             format="json",
         )
-        device_a_refresh = device_a_response.data["refresh"]
+        # Capture device A's refresh token from cookie before it is overwritten
+        device_a_refresh = device_a_response.cookies["boraali_refresh"].value
 
-        # Device B: login
+        # Device B: login (overwrites the cookie in the test client)
         api_client.post(
             "/api/auth/login/",
             {"username": "bob", "password": "Strong-Pass1!"},
             format="json",
         )
 
-        # Device A: try to refresh, should fail
-        r = api_client.post(
-            "/api/auth/refresh/",
-            {"refresh": device_a_refresh},
-            format="json",
-        )
+        # Manually set device A's stale cookie to simulate sending the old token
+        api_client.cookies["boraali_refresh"] = device_a_refresh
+
+        # Device A: try to refresh with stale token, should fail
+        r = api_client.post("/api/auth/refresh/", format="json")
         assert r.status_code == 401
         assert r.data.get("code") == "session_invalidated"
 
@@ -182,7 +182,7 @@ class TestSingleSessionIntegration:
         assert str(user.active_session.session_key) == token["session_key"]
 
     def test_refresh_carries_session_key_forward(self, api_client):
-        """After a successful refresh, the new refresh token still contains the same session_key."""
+        """After a successful refresh, the new refresh token still contains a (rotated) session_key."""
         api_client.post(
             "/api/auth/register/",
             {
@@ -199,19 +199,16 @@ class TestSingleSessionIntegration:
             {"username": "eve", "password": "Strong-Pass1!"},
             format="json",
         )
-        original_refresh = login_response.data["refresh"]
+        original_refresh = login_response.cookies["boraali_refresh"].value
         original_token = RefreshToken(original_refresh)
         original_session_key = original_token.get("session_key")
 
-        # Refresh the token
-        r = api_client.post(
-            "/api/auth/refresh/",
-            {"refresh": original_refresh},
-            format="json",
-        )
+        # Refresh the token (cookie is sent automatically by the test client)
+        r = api_client.post("/api/auth/refresh/", format="json")
         assert r.status_code == 200
 
-        new_refresh = r.data["refresh"]
+        # New refresh token arrives as cookie
+        new_refresh = r.cookies["boraali_refresh"].value
         new_token = RefreshToken(new_refresh)
         new_session_key = new_token.get("session_key")
 
@@ -235,7 +232,7 @@ class TestSingleSessionIntegration:
             format="json",
         )
 
-        # Login
+        # Login (refresh comes as cookie)
         login_r = api_client.post(
             "/api/auth/login/",
             {"username": "frank", "password": "Strong-Pass1!"},
@@ -243,7 +240,7 @@ class TestSingleSessionIntegration:
         )
         assert login_r.status_code == 200
         access1 = login_r.data["access"]
-        refresh1 = login_r.data["refresh"]
+        assert "boraali_refresh" in login_r.cookies
 
         # Use API with first access token
         api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access1}")
@@ -251,13 +248,9 @@ class TestSingleSessionIntegration:
         assert me_r1.status_code == 200
         assert me_r1.data["username"] == "frank"
 
-        # Refresh token
+        # Refresh token (cookie sent automatically)
         api_client.credentials()  # Clear auth
-        refresh_r = api_client.post(
-            "/api/auth/refresh/",
-            {"refresh": refresh1},
-            format="json",
-        )
+        refresh_r = api_client.post("/api/auth/refresh/", format="json")
         assert refresh_r.status_code == 200
         access2 = refresh_r.data["access"]
 
@@ -286,24 +279,16 @@ class TestSingleSessionIntegration:
             format="json",
         )
         access = login_r.data["access"]
-        refresh = login_r.data["refresh"]
+        assert "boraali_refresh" in login_r.cookies
 
-        # Logout
+        # Logout (refresh token read from cookie on server side)
         api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
-        logout_r = api_client.post(
-            "/api/auth/logout/",
-            {"refresh": refresh},
-            format="json",
-        )
+        logout_r = api_client.post("/api/auth/logout/", format="json")
         assert logout_r.status_code == 205
 
-        # Try to refresh with blacklisted token
+        # Try to refresh — cookie was cleared, so no token to send
         api_client.credentials()
-        refresh_r = api_client.post(
-            "/api/auth/refresh/",
-            {"refresh": refresh},
-            format="json",
-        )
+        refresh_r = api_client.post("/api/auth/refresh/", format="json")
         assert refresh_r.status_code == 401
 
     def test_old_tokens_without_session_key_rejected(self, api_client, user):

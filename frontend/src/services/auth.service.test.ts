@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, test, vi } from "vitest";
 import { authService } from "./auth.service";
 import { api } from "./api";
-import { ACCESS_KEY, REFRESH_KEY } from "../utils/constants";
+import { ACCESS_KEY } from "../utils/constants";
 
 vi.mock("./api", () => ({
   api: {
@@ -36,11 +36,10 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-test("googleLogin stores the returned tokens", async () => {
+test("googleLogin stores only the access token (no refresh in localStorage)", async () => {
   vi.mocked(api.post).mockResolvedValue({
     data: {
       access: "access-token",
-      refresh: "refresh-token",
     },
   } as never);
 
@@ -48,7 +47,7 @@ test("googleLogin stores the returned tokens", async () => {
 
   expect(api.post).toHaveBeenCalledWith("/auth/google/", { id_token: "google-id-token" });
   expect(localStorage.getItem(ACCESS_KEY)).toBe("access-token");
-  expect(localStorage.getItem(REFRESH_KEY)).toBe("refresh-token");
+  expect(localStorage.getItem("boraali_refresh")).toBeNull();
 });
 
 describe("authService.login", () => {
@@ -65,15 +64,22 @@ describe("authService.login", () => {
     );
   });
 
-  test("persiste access e refresh no localStorage", async () => {
+  test("persiste apenas o access token no localStorage (sem refresh)", async () => {
     vi.mocked(api.post).mockResolvedValueOnce({
-      data: { access: "acc-token", refresh: "ref-token" },
+      data: { access: "acc-token" },
     } as never);
 
     await authService.login("ana", "secret");
 
     expect(localStorage.getItem(ACCESS_KEY)).toBe("acc-token");
-    expect(localStorage.getItem(REFRESH_KEY)).toBe("ref-token");
+    expect(localStorage.getItem("boraali_refresh")).toBeNull();
+  });
+
+  it("login does not store refresh token in localStorage", async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({ data: { access: "test_access_token" } } as never);
+    await authService.login("user", "pass");
+    expect(localStorage.getItem("boraali_refresh")).toBeNull();
+    expect(localStorage.getItem(ACCESS_KEY)).toBe("test_access_token");
   });
 });
 
@@ -89,12 +95,18 @@ describe("authService.me", () => {
 });
 
 describe("authService.logout", () => {
-  test("chama POST /auth/logout/", async () => {
+  test("chama POST /auth/logout/ sem body (refresh via cookie)", async () => {
     vi.mocked(api.post).mockResolvedValueOnce({} as never);
 
     await authService.logout();
 
-    expect(api.post).toHaveBeenCalledWith("/auth/logout/", expect.any(Object));
+    expect(api.post).toHaveBeenCalledWith("/auth/logout/");
+  });
+
+  it("logout does not need to send refresh token in body", async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({ data: {} } as never);
+    await authService.logout();
+    expect(api.post).toHaveBeenCalledWith("/auth/logout/");
   });
 
   test("conclui o logout e chama clearClientState mesmo se o servidor rejeitar", async () => {

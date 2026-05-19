@@ -83,30 +83,26 @@ class RefreshTokenReuseAfterLogoutTests(APITestCase):
         self.user.save()
 
     def test_refresh_token_rejected_after_logout(self):
-        # 1. Login to obtain tokens
+        # 1. Login to obtain tokens (refresh arrives as HttpOnly cookie)
         resp = self.client.post(
             "/api/auth/login/",
             {"username": "logoutuser", "password": "pass123"},
             format="json",
         )
         self.assertEqual(resp.status_code, 200, f"Login failed: {resp.data}")
-        refresh_token = resp.data["refresh"]
         access_token = resp.data["access"]
+        self.assertIn("boraali_refresh", resp.cookies)
 
-        # 2. Logout (blacklists the refresh token)
+        # 2. Logout (blacklists the refresh token from cookie)
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
-        logout_resp = self.client.post(
-            "/api/auth/logout/", {"refresh": refresh_token}, format="json"
-        )
+        logout_resp = self.client.post("/api/auth/logout/", format="json")
         self.assertIn(
             logout_resp.status_code, [200, 205], f"Logout failed: {logout_resp.data}"
         )
 
-        # 3. Attempt to refresh using the now-blacklisted token
+        # 3. Attempt to refresh using the now-blacklisted token (cookie was cleared)
         self.client.credentials()
-        refresh_resp = self.client.post(
-            "/api/auth/refresh/", {"refresh": refresh_token}, format="json"
-        )
+        refresh_resp = self.client.post("/api/auth/refresh/", format="json")
         self.assertEqual(
             refresh_resp.status_code,
             401,
