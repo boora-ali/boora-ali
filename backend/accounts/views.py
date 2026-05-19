@@ -77,9 +77,13 @@ class CookieTokenRefreshView(MutationMixin, RateLimitHeadersMixin, TokenRefreshV
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get(REFRESH_COOKIE_NAME)
         if not refresh_token:
-            return Response({"detail": "No refresh token."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"detail": "No refresh token."}, status=status.HTTP_401_UNAUTHORIZED
+            )
         # Inject cookie value into request data so the serializer can validate it
-        data = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
+        data = (
+            request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
+        )
         data["refresh"] = refresh_token
         request._full_data = data
         response = super().post(request, *args, **kwargs)
