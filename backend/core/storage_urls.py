@@ -33,10 +33,26 @@ def build_public_media_url(file_field, request=None) -> str:
 
 
 def _use_s3_signing() -> bool:
+    # VersityGW (dev local) força signing por compatibilidade.
     use_versity = str(getattr(settings, "USE_VERSITYGW", "False")).lower() == "true"
+
+    # Produção (Cloudflare R2 / S3): habilita signing sempre que o storage
+    # estiver totalmente configurado, independentemente de USE_VERSITYGW.
     endpoint = getattr(settings, "AWS_S3_ENDPOINT_URL", "")
-    logger.debug("[storage] USE_VERSITYGW=%s endpoint=%s", use_versity, endpoint)
-    return use_versity
+    bucket = getattr(settings, "AWS_STORAGE_BUCKET_NAME", "")
+    access_key = getattr(settings, "AWS_ACCESS_KEY_ID", "")
+    secret_key = getattr(settings, "AWS_SECRET_ACCESS_KEY", "")
+    s3_configured = bool(endpoint and bucket and access_key and secret_key)
+
+    enabled = use_versity or s3_configured
+    logger.debug(
+        "[storage] USE_VERSITYGW=%s s3_configured=%s endpoint=%s -> signing=%s",
+        use_versity,
+        s3_configured,
+        endpoint,
+        enabled,
+    )
+    return enabled
 
 
 def _build_signed_url(key: str) -> str:
