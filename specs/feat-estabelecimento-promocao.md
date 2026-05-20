@@ -45,6 +45,7 @@ Frontend:
 
 ---
 
+
 ## Implementação passo a passo
 
 ### 1. `serializers.py` — card rico patrocinado
