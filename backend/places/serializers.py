@@ -377,7 +377,7 @@ class PlaceWriteSerializer(FlexFieldsModelSerializer):
 
 
 class CollectionSerializer(serializers.ModelSerializer):
-    place_count = serializers.IntegerField(read_only=True)
+    place_count = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Collection

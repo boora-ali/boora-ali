@@ -13,5 +13,6 @@ urlpatterns = router.urls + [
     path(
         "collections/<collection_public_id>/places/<place_public_id>/",
         CollectionPlaceView.as_view(),
+        name="collection-place",
     ),
 ]

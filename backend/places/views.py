@@ -4,7 +4,6 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -251,7 +250,7 @@ class VisitViewSet(WriteViewSetBase):
 
 class CollectionViewSet(ViewSetBase):
     lookup_field = "public_id"
-    queryset = Collection.objects.none()
+    queryset = Collection.objects.all()
 
     def get_queryset(self):
         qs = Collection.objects.filter(user=self.request.user)
@@ -276,7 +275,6 @@ class CollectionViewSet(ViewSetBase):
 class CollectionPlaceView(MutationMixin, APIView):
     """POST /collections/{public_id}/places/{place_public_id}/ — add
        DELETE /collections/{public_id}/places/{place_public_id}/ — remove"""
-    permission_classes = [IsAuthenticated]
 
     def _get_collection_and_place(self, request, collection_public_id, place_public_id):
         collection = get_object_or_404(Collection, public_id=collection_public_id, user=request.user)
