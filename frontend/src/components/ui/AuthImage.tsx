@@ -22,10 +22,10 @@ export function AuthImage({ src, className, ...props }: Props) {
   const apiPath = src ? toApiPath(src) : null;
   const [state, setState] = useState<FetchState>({ status: "idle", objectUrl: null });
   const prevApiPath = useRef<string | null>(null);
-  // Tracks the active blob URL so it can be revoked safely after the <img> paints
+  // Tracks active blob URL — revoked only on unmount to avoid broken images
+  // on mobile where browsers decode blobs asynchronously after the img paints.
   const currentBlobUrl = useRef<string | null>(null);
 
-  // Revoke on unmount only — separate from the fetch effect
   useEffect(() => {
     return () => {
       if (currentBlobUrl.current) URL.revokeObjectURL(currentBlobUrl.current);
@@ -39,11 +39,14 @@ export function AuthImage({ src, className, ...props }: Props) {
 
     let active = true;
 
+    // nginx serve os bytes diretamente via X-Accel-Redirect → R2/VersityGW.
+    // O browser recebe a imagem em 1 RTT autenticado, sem nunca tocar no storage.
+    // Cache-Control: private, max-age=3600 no response → browser cacheia:
+    // mesma imagem renderizada novamente na sessão não gera request de rede.
     api
       .get<Blob>(apiPath, { responseType: "blob" })
       .then((res) => {
         if (!active) return;
-        // Revoke the *previous* blob URL now that the new one is ready and the old <img> is replaced
         if (currentBlobUrl.current) URL.revokeObjectURL(currentBlobUrl.current);
         const objectUrl = URL.createObjectURL(res.data);
         currentBlobUrl.current = objectUrl;
@@ -57,8 +60,8 @@ export function AuthImage({ src, className, ...props }: Props) {
 
     return () => {
       active = false;
-      // Do NOT revoke here — mobile browsers decode blobs asynchronously and the
-      // <img> may not have painted yet when this cleanup runs, causing broken images
+      // Do NOT revoke here — mobile browsers decode blobs asynchronously
+      // and the <img> may not have painted when cleanup runs.
     };
   }, [apiPath]);
 

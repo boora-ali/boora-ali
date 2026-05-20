@@ -57,52 +57,47 @@ TRASH_RETENTION_DAYS = int(os.getenv("TRASH_RETENTION_DAYS", "30"))
 ```python
 # backend/places/tasks.py
 import logging
-from django.conf import settings
-from django.utils import timezone
 from datetime import timedelta
 
+from celery import shared_task
+from django.conf import settings
+from django.utils import timezone
+
+from places.models import Place
+
 _log = logging.getLogger("places.tasks")
+
 
 @shared_task
 def purge_expired_trash():
     """Permanent delete de lugares na lixeira há mais de TRASH_RETENTION_DAYS dias."""
     cutoff = timezone.now() - timedelta(days=settings.TRASH_RETENTION_DAYS)
 
-    expired = Place.objects.deleted().filter(
-        deleted_at__lt=cutoff,
-    )
+    expired = Place.objects.deleted().filter(deleted_at__lt=cutoff)
 
     count = expired.count()
     if count == 0:
         return {"deleted": 0}
 
-    # Deletar imagens via storage antes do DELETE SQL
-    # (signals de cleanup já disparam em .delete() individual, mas não em queryset.delete())
-    for place in expired.iterator():
-        if place.cover_photo:
-            try:
-                place.cover_photo.delete(save=False)
-            except Exception as exc:
-                _log.warning("Falha ao deletar imagem do place %s: %s", place.pk, exc)
+    deleted_count = 0
+    # place.delete() individual — obrigatório para disparar post_delete signals.
+    # signals.py registra cleanup_place_cover_photo, cleanup_visit_photo e
+    # cleanup_visit_item_photo via post_delete. queryset.delete() não os dispara,
+    # causando vazamento de storage em Place, Visit e VisitItem.
+    for place in expired.select_related().iterator():
+        place.delete()
+        deleted_count += 1
 
-        # Imagens de visits e visit_items via signals existentes
-        # place.delete() dispara CASCADE e os signals de cleanup
-
-    # Hard delete — CASCADE via DB para Visit e VisitItem
-    deleted_count, _ = expired.delete()
-
-    _log.info("purge_expired_trash: %d lugares permanentemente deletados (cutoff=%s)", deleted_count, cutoff.date())
+    _log.info(
+        "purge_expired_trash: %d lugares permanentemente deletados (cutoff=%s)",
+        deleted_count, cutoff.date(),
+    )
     return {"deleted": deleted_count}
 ```
 
-> **Atenção**: `queryset.delete()` não dispara signals individuais. Se os signals de cleanup
-> de foto (em `places/signals.py`) usam `post_delete`, trocar o loop acima por iteração
-> individual com `.delete()` para garantir que as imagens sejam removidas do storage.
->
-> Verificar:
-> ```bash
-> grep -n "post_delete\|cleanup_photo\|cover_photo\|photo" backend/places/signals.py
-> ```
+> **Por que não usar `queryset.delete()`**: `signals.py` limpa storage via
+> `post_delete` em Place, Visit e VisitItem. `queryset.delete()` pula esses
+> signals, vazando imagens no S3/VersityGW. O loop individual é necessário.
 
 ### 3. Agendar via admin
 
@@ -114,14 +109,27 @@ def purge_expired_trash():
 
 ### 4. Notificar o usuário antes do purge
 
-Antes de deletar, notificar via sistema de notificações (ver `feat-notifications.md`):
+Versão completa com notificação agrupada por usuário integrada ao loop de deleção:
 
 ```python
 # backend/places/tasks.py
-from notifications.service import notify, NotificationType
+import logging
+from datetime import timedelta
+
+from celery import shared_task
+from django.conf import settings
+from django.db.models import Count
+from django.utils import timezone
+
+from places.models import Place
+
+_log = logging.getLogger("places.tasks")
+
 
 @shared_task
 def purge_expired_trash():
+    from notifications.service import notify, NotificationType
+
     cutoff = timezone.now() - timedelta(days=settings.TRASH_RETENTION_DAYS)
     expired = Place.objects.deleted().filter(deleted_at__lt=cutoff)
 
@@ -129,8 +137,7 @@ def purge_expired_trash():
     if count == 0:
         return {"deleted": 0}
 
-    # Agrupar por usuário para notificar sem acumular
-    from django.db.models import Count
+    # Notificar por usuário antes de deletar
     by_user = expired.values("user").annotate(total=Count("id"))
     for row in by_user:
         from django.contrib.auth import get_user_model
@@ -143,12 +150,21 @@ def purge_expired_trash():
                 body=f"{row['total']} lugar(es) da lixeira foram removidos permanentemente.",
             )
 
-    # ... loop de deleção de imagens e expired.delete() ...
+    # Deleção individual — dispara post_delete signals para limpeza de storage
+    deleted_count = 0
+    for place in expired.select_related().iterator():
+        place.delete()
+        deleted_count += 1
+
+    _log.info(
+        "purge_expired_trash: %d lugares permanentemente deletados (cutoff=%s)",
+        deleted_count, cutoff.date(),
+    )
+    return {"deleted": deleted_count}
 ```
 
 > `notify()` não cria duplicatas — se já existe notificação não lida do tipo `TRASH_EXPIRY`,
-> a nova não é criada. Ao expirar sem leitura (7 dias), na próxima execução da task uma nova
-> notificação pode ser disparada.
+> a nova não é criada.
 
 ### 5. `expires_at` no serializer da lixeira (opcional)
 
