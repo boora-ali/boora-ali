@@ -87,7 +87,11 @@ def test_place_count_in_list(auth_client, user):
 
     r = auth_client.get("/api/collections/")
     assert r.status_code == 200
-    result = next(item for item in r.data["results"] if str(item["public_id"]) == str(col.public_id))
+    result = next(
+        item
+        for item in r.data["results"]
+        if str(item["public_id"]) == str(col.public_id)
+    )
     assert result["place_count"] == 3
 
 
@@ -106,9 +110,7 @@ def test_place_count_zero_when_empty(auth_client, user):
 def test_add_place_to_collection_returns_201(auth_client, user):
     col = baker.make("places.Collection", user=user)
     place = baker.make("places.Place", user=user)
-    r = auth_client.post(
-        f"/api/collections/{col.public_id}/places/{place.public_id}/"
-    )
+    r = auth_client.post(f"/api/collections/{col.public_id}/places/{place.public_id}/")
     assert r.status_code == 201
 
 
@@ -125,18 +127,14 @@ def test_add_place_idempotent_returns_200_on_repeat(auth_client, user):
 def test_cannot_add_other_user_place_to_collection(auth_client, user, other_user):
     col = baker.make("places.Collection", user=user)
     place = baker.make("places.Place", user=other_user)
-    r = auth_client.post(
-        f"/api/collections/{col.public_id}/places/{place.public_id}/"
-    )
+    r = auth_client.post(f"/api/collections/{col.public_id}/places/{place.public_id}/")
     assert r.status_code == 404
 
 
 def test_cannot_add_place_to_other_user_collection(auth_client, user, other_user):
     col = baker.make("places.Collection", user=other_user)
     place = baker.make("places.Place", user=user)
-    r = auth_client.post(
-        f"/api/collections/{col.public_id}/places/{place.public_id}/"
-    )
+    r = auth_client.post(f"/api/collections/{col.public_id}/places/{place.public_id}/")
     assert r.status_code == 404
 
 

@@ -7,8 +7,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.viewsets import ViewSetBase, WriteViewSetBase
 from core.views import MutationMixin
+from core.viewsets import ViewSetBase, WriteViewSetBase
 
 from .filters import PlaceFilter, VisitFilter, VisitItemFilter
 from .models import Collection, CollectionPlace, CoordsStatus, Place, Visit, VisitItem
@@ -256,9 +256,15 @@ class CollectionViewSet(ViewSetBase):
         qs = Collection.objects.filter(user=self.request.user)
         place_prefetch = Prefetch(
             "collection_places",
-            queryset=CollectionPlace.objects.select_related("place").order_by("-added_at"),
+            queryset=CollectionPlace.objects.select_related("place").order_by(
+                "-added_at"
+            ),
         )
-        return qs.annotate(place_count=Count("collection_places")).prefetch_related(place_prefetch).order_by("-updated_at")
+        return (
+            qs.annotate(place_count=Count("collection_places"))
+            .prefetch_related(place_prefetch)
+            .order_by("-updated_at")
+        )
 
     def get_serializer_class(self):
         if self.action == "retrieve":
@@ -271,20 +277,28 @@ class CollectionViewSet(ViewSetBase):
 
 class CollectionPlaceView(MutationMixin, APIView):
     """POST /collections/{public_id}/places/{place_public_id}/ — add
-       DELETE /collections/{public_id}/places/{place_public_id}/ — remove"""
+    DELETE /collections/{public_id}/places/{place_public_id}/ — remove"""
 
     def _get_collection_and_place(self, request, collection_public_id, place_public_id):
-        collection = get_object_or_404(Collection, public_id=collection_public_id, user=request.user)
+        collection = get_object_or_404(
+            Collection, public_id=collection_public_id, user=request.user
+        )
         place = get_object_or_404(Place, public_id=place_public_id, user=request.user)
         return collection, place
 
     def post(self, request, collection_public_id, place_public_id):
-        collection, place = self._get_collection_and_place(request, collection_public_id, place_public_id)
-        _, created = CollectionPlace.objects.get_or_create(collection=collection, place=place)
+        collection, place = self._get_collection_and_place(
+            request, collection_public_id, place_public_id
+        )
+        _, created = CollectionPlace.objects.get_or_create(
+            collection=collection, place=place
+        )
         return Response(status=201 if created else 200)
 
     def delete(self, request, collection_public_id, place_public_id):
-        collection, place = self._get_collection_and_place(request, collection_public_id, place_public_id)
+        collection, place = self._get_collection_and_place(
+            request, collection_public_id, place_public_id
+        )
         CollectionPlace.objects.filter(collection=collection, place=place).delete()
         return Response(status=204)
 

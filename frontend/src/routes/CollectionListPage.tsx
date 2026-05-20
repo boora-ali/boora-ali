@@ -22,7 +22,7 @@ export default function CollectionListPage() {
   const [state, setState] = useState<{
     status: "idle" | "loading" | "error";
     data: Collection[] | null;
-  }>({ status: "idle", data: null });
+  }>({ status: "loading", data: null });
 
   const [deleteTarget, setDeleteTarget] = useState<Collection | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -33,8 +33,6 @@ export default function CollectionListPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    setState({ status: "loading", data: null });
-
     collectionsService
       .list()
       .then((data) => setState({ status: "idle", data }))

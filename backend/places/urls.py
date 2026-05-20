@@ -1,7 +1,13 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import CollectionPlaceView, CollectionViewSet, PlaceViewSet, VisitItemViewSet, VisitViewSet
+from .views import (
+    CollectionPlaceView,
+    CollectionViewSet,
+    PlaceViewSet,
+    VisitItemViewSet,
+    VisitViewSet,
+)
 
 router = DefaultRouter()
 router.register(r"places", PlaceViewSet, basename="place")

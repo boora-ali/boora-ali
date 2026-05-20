@@ -382,7 +382,15 @@ class CollectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Collection
-        fields = ["public_id", "name", "emoji", "description", "place_count", "place_public_ids", "updated_at"]
+        fields = [
+            "public_id",
+            "name",
+            "emoji",
+            "description",
+            "place_count",
+            "place_public_ids",
+            "updated_at",
+        ]
         read_only_fields = ["public_id", "updated_at"]
 
     def get_place_public_ids(self, obj):
