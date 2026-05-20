@@ -339,7 +339,8 @@
     "places_count": "lugar(es)",
     "add_to": "Adicionar a coleção",
     "empty": "Nenhuma coleção ainda",
-    "empty_places": "Nenhum lugar nesta coleção"
+    "empty_places": "Nenhum lugar nesta coleção",
+    "name_placeholder": "Nome da coleção"
   },
   "termsModal": {
     "title": "Termos de Uso",

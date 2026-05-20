@@ -44,6 +44,10 @@ export default function PlaceDetailPage() {
   const [collections, setCollections] = useState<Collection[] | null>(null);
   const [placeCollectionIds, setPlaceCollectionIds] = useState<Set<string>>(new Set());
   const collectionsLoaded = useRef(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newEmoji, setNewEmoji] = useState("📍");
+  const [newName, setNewName] = useState("");
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,6 +107,27 @@ export default function PlaceDetailPage() {
     } else {
       await collectionsService.addPlace(collectionId, place.public_id);
       setPlaceCollectionIds((prev) => new Set([...prev, collectionId]));
+    }
+  }
+
+  async function handleCreateCollection(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newName.trim() || !place) return;
+    setCreating(true);
+    try {
+      const created = await collectionsService.create({
+        name: newName.trim(),
+        emoji: newEmoji.trim() || "📍",
+        description: "",
+      });
+      await collectionsService.addPlace(created.public_id, place.public_id);
+      setCollections((prev) => (prev ? [...prev, created] : [created]));
+      setPlaceCollectionIds((prev) => new Set([...prev, created.public_id]));
+      setNewName("");
+      setNewEmoji("📍");
+      setShowCreateForm(false);
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -394,28 +419,71 @@ export default function PlaceDetailPage() {
           <div className="mt-4 space-y-2">
             {collections === null ? (
               <p className="text-sm text-muted">{t("common.loading")}</p>
-            ) : collections.length === 0 ? (
-              <p className="text-sm text-muted">{t("collections.empty")}</p>
             ) : (
-              collections.map((c) => {
-                const inCollection = placeCollectionIds.has(c.public_id);
-                return (
-                  <button
-                    key={c.public_id}
-                    type="button"
-                    onClick={() => handleToggleCollection(c.public_id)}
-                    className={`w-full flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${
-                      inCollection
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-background text-text hover:bg-surface"
-                    }`}
-                  >
-                    <span className="text-xl">{c.emoji}</span>
-                    <span className="flex-1 font-medium">{c.name}</span>
-                    {inCollection && <span className="text-xs">✓</span>}
-                  </button>
-                );
-              })
+              <>
+                {collections.map((c) => {
+                  const inCollection = placeCollectionIds.has(c.public_id);
+                  return (
+                    <button
+                      key={c.public_id}
+                      type="button"
+                      onClick={() => handleToggleCollection(c.public_id)}
+                      className={`w-full flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${
+                        inCollection
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-background text-text hover:bg-surface"
+                      }`}
+                    >
+                      <span className="text-xl">{c.emoji}</span>
+                      <span className="flex-1 font-medium">{c.name}</span>
+                      {inCollection && <span className="text-xs">✓</span>}
+                    </button>
+                  );
+                })}
+                <div className="pt-2 border-t border-border">
+                  {showCreateForm ? (
+                    <form onSubmit={handleCreateCollection} className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newEmoji}
+                          onChange={(e) => setNewEmoji(e.target.value)}
+                          className="w-12 rounded-lg border border-border bg-background px-2 py-2 text-center text-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                          maxLength={4}
+                          aria-label="emoji"
+                        />
+                        <input
+                          type="text"
+                          value={newName}
+                          onChange={(e) => setNewName(e.target.value)}
+                          placeholder={t("collections.name_placeholder")}
+                          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                          required
+                          autoFocus
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button type="submit" size="sm" disabled={creating}>
+                          {t("common.save")}
+                        </Button>
+                        <Button type="button" variant="secondary" size="sm" onClick={() => setShowCreateForm(false)}>
+                          {t("common.cancel")}
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setShowCreateForm(true)}
+                    >
+                      + {t("collections.new")}
+                    </Button>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </SheetContent>
