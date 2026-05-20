@@ -333,6 +333,14 @@
       "description": "Nenhum lugar excluído."
     }
   },
+  "collections": {
+    "title": "Coleções",
+    "new": "Nova coleção",
+    "places_count": "lugar(es)",
+    "add_to": "Adicionar a coleção",
+    "empty": "Nenhuma coleção ainda",
+    "empty_places": "Nenhum lugar nesta coleção"
+  },
   "termsModal": {
     "title": "Termos de Uso",
     "description": "Para continuar usando o Boora Ali, leia e aceite nossos Termos de Uso e Política de Privacidade. Você pode abrir os documentos abaixo antes de aceitar.",

@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { placesService, type PlaceWithVisits } from "../services/places.service";
 import { visitsService } from "../services/visits.service";
+import { collectionsService, type Collection } from "../services/collections.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +40,10 @@ export default function PlaceDetailPage() {
   const [mapOpen, setMapOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [coverLightboxOpen, setCoverLightboxOpen] = useState(false);
+  const [collectionSheetOpen, setCollectionSheetOpen] = useState(false);
+  const [collections, setCollections] = useState<Collection[] | null>(null);
+  const [placeCollectionIds, setPlaceCollectionIds] = useState<Set<string>>(new Set());
+  const collectionsLoaded = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,6 +81,30 @@ export default function PlaceDetailPage() {
 
     return () => window.clearInterval(interval);
   }, [id, place?.coords_status]);
+
+  async function openCollectionSheet() {
+    setCollectionSheetOpen(true);
+    if (collectionsLoaded.current) return;
+    collectionsLoaded.current = true;
+    const data = await collectionsService.list();
+    setCollections(data);
+  }
+
+  async function handleToggleCollection(collectionId: string) {
+    if (!place) return;
+    const inCollection = placeCollectionIds.has(collectionId);
+    if (inCollection) {
+      await collectionsService.removePlace(collectionId, place.public_id);
+      setPlaceCollectionIds((prev) => {
+        const next = new Set(prev);
+        next.delete(collectionId);
+        return next;
+      });
+    } else {
+      await collectionsService.addPlace(collectionId, place.public_id);
+      setPlaceCollectionIds((prev) => new Set([...prev, collectionId]));
+    }
+  }
 
   if (notFound) {
     return <NotFoundPage />;
@@ -129,6 +159,15 @@ export default function PlaceDetailPage() {
                 <Link to={`/places/${place.public_id}/visits/new`} className="w-full">
                   <Button size="sm" className="w-full">{t("placeDetail.visits.add")}</Button>
                 </Link>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={openCollectionSheet}
+                  aria-label={t("collections.add_to")}
+                  className="col-span-2 w-full"
+                >
+                  {t("collections.add_to")}
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="secondary" size="sm" aria-label={t("placeDetail.actions")}>
@@ -346,6 +385,41 @@ export default function PlaceDetailPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Sheet open={collectionSheetOpen} onOpenChange={setCollectionSheetOpen}>
+        <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{t("collections.add_to")}</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-2">
+            {collections === null ? (
+              <p className="text-sm text-muted">{t("common.loading")}</p>
+            ) : collections.length === 0 ? (
+              <p className="text-sm text-muted">{t("collections.empty")}</p>
+            ) : (
+              collections.map((c) => {
+                const inCollection = placeCollectionIds.has(c.public_id);
+                return (
+                  <button
+                    key={c.public_id}
+                    type="button"
+                    onClick={() => handleToggleCollection(c.public_id)}
+                    className={`w-full flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${
+                      inCollection
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background text-text hover:bg-surface"
+                    }`}
+                  >
+                    <span className="text-xl">{c.emoji}</span>
+                    <span className="flex-1 font-medium">{c.name}</span>
+                    {inCollection && <span className="text-xs">✓</span>}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <Dialog open={deleteConfirmOpen} onOpenChange={(o) => { if (!o) setDeleteConfirmOpen(false); }}>
         <DialogContent>

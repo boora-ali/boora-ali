@@ -330,6 +330,14 @@
       "description": "No deleted places."
     }
   },
+  "collections": {
+    "title": "Collections",
+    "new": "New collection",
+    "places_count": "place(s)",
+    "add_to": "Add to collection",
+    "empty": "No collections yet",
+    "empty_places": "No places in this collection"
+  },
   "termsModal": {
     "title": "Terms of Use",
     "description": "To continue using Boora Ali, please read and accept our Terms of Use and Privacy Policy. You can open the documents below before accepting.",
