@@ -132,7 +132,8 @@ jobs:
 
       - name: pip-audit (CVE check)
         working-directory: backend
-        run: pip-audit -r requirements.txt --skip-editable
+        # PYSEC-2025-183: disputado pelos mantenedores do pyjwt — sem fix version disponível.
+        run: pip-audit -r requirements.txt --skip-editable --ignore-vuln PYSEC-2025-183
 
   security-frontend:
     name: Security Frontend

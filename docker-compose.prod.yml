@@ -1,4 +1,23 @@
+# docker-compose.prod.yml — Coolify + Traefik
+#
+# Traefik é provisionado e gerenciado pelo Coolify no servidor.
+# Este arquivo declara apenas os serviços da aplicação.
+#
+# Roteamento:
+#   Traefik (porta 80/443 do host)
+#     → frontend:80  (nginx serve SPA + proxy /api/ → backend:8000)
+#
+# SSL: Traefik + ACME (Let's Encrypt) automático via labels abaixo.
+#      Não é necessário montar /etc/letsencrypt nem rodar Certbot.
+#
+# Variáveis obrigatórias (configurar no painel Coolify → Environment):
+#   POSTGRES_PASSWORD, SECRET_KEY, ALLOWED_HOSTS, CORS_ALLOWED_ORIGINS,
+#   IMAGE_TAG, AWS_*, CLOUDFLARE_TURNSTILE_*, SENTRY_DSN, etc.
+
 services:
+
+  # ─── Dados ────────────────────────────────────────────────────────────────
+
   postgres:
     image: postgres:16
     restart: unless-stopped
@@ -8,12 +27,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - bora_ali_pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-bora} -d ${POSTGRES_DB:-bora_ali}",
-        ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bora} -d ${POSTGRES_DB:-bora_ali}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -21,36 +38,39 @@ services:
   valkey:
     image: valkey/valkey:9.0.3-alpine
     restart: unless-stopped
+    command: valkey-server --maxmemory 200mb --maxmemory-policy allkeys-lru
+    networks:
+      - internal
     deploy:
       resources:
         limits:
           cpus: "0.2"
           memory: 256M
-    command: valkey-server --maxmemory 200mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
 
+  # ─── Aplicação ────────────────────────────────────────────────────────────
+
   backend:
     image: ghcr.io/boora-ali/backend:${IMAGE_TAG:-dev-latest}
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: "3.0"
-          memory: 4096M
-    ports:
-      - "127.0.0.1:8000:8000"
+    # Porta exposta apenas na rede interna — nginx do frontend roteia /api/.
+    # Não há bind no host; o Traefik não precisa enxergar o backend diretamente.
+    expose:
+      - "8000"
     env_file:
       - .env
     environment:
       POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: "5432"
       REDIS_URL: redis://valkey:6379/0
       CELERY_BROKER_URL: redis://valkey:6379/1
       CELERY_RESULT_BACKEND: redis://valkey:6379/2
+    networks:
+      - internal
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,10 +78,31 @@ services:
         condition: service_healthy
     volumes:
       - staticfiles:/app/staticfiles
+    deploy:
+      resources:
+        limits:
+          cpus: "3.0"
+          memory: 4096M
 
   celery-worker:
     image: ghcr.io/boora-ali/backend:${IMAGE_TAG:-dev-latest}
     restart: unless-stopped
+    command: celery -A config worker -l info -c 2 -Q default,celery
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      REDIS_URL: redis://valkey:6379/0
+      CELERY_BROKER_URL: redis://valkey:6379/1
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+    networks:
+      - internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
     healthcheck:
       disable: true
     deploy:
@@ -69,62 +110,90 @@ services:
         limits:
           cpus: "1.5"
           memory: 2048M
+
+  celery-beat:
+    image: ghcr.io/boora-ali/backend:${IMAGE_TAG:-dev-latest}
+    restart: unless-stopped
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     env_file:
       - .env
     environment:
       POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: "5432"
       REDIS_URL: redis://valkey:6379/0
       CELERY_BROKER_URL: redis://valkey:6379/1
       CELERY_RESULT_BACKEND: redis://valkey:6379/2
-    command: celery -A config worker -l info -c 2 -Q default,celery
+    networks:
+      - internal
     depends_on:
       postgres:
         condition: service_healthy
       valkey:
         condition: service_healthy
-
-  celery-beat:
-    image: ghcr.io/boora-ali/backend:${IMAGE_TAG:-dev-latest}
-    restart: unless-stopped
     deploy:
       resources:
         limits:
           cpus: "0.3"
           memory: 512M
-    env_file:
-      - .env
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      REDIS_URL: redis://valkey:6379/0
-      CELERY_BROKER_URL: redis://valkey:6379/1
-      CELERY_RESULT_BACKEND: redis://valkey:6379/2
-    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    depends_on:
-      postgres:
-        condition: service_healthy
-      valkey:
-        condition: service_healthy
 
   frontend:
     image: ghcr.io/boora-ali/frontend:${IMAGE_TAG:-dev-latest}
     restart: unless-stopped
+    # Traefik roteia tráfego externo para esta porta interna.
+    # Não expor 80/443 no host — o Traefik do Coolify já está ligado nessas portas.
+    expose:
+      - "80"
+    volumes:
+      - staticfiles:/staticfiles:ro
+    networks:
+      - internal
+      - coolify  # necessário para o Traefik do Coolify enxergar este serviço
+    depends_on:
+      - backend
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: 256M
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - staticfiles:/staticfiles:ro
-    depends_on:
-      - backend
+    labels:
+      # Habilita o roteamento Traefik para este serviço
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+
+      # Router HTTPS — domínio principal
+      - traefik.http.routers.boora-frontend.rule=Host(`${DOMAIN:-booraali.com.br}`) || Host(`www.${DOMAIN:-booraali.com.br}`)
+      - traefik.http.routers.boora-frontend.entrypoints=https
+      - traefik.http.routers.boora-frontend.tls=true
+      - traefik.http.routers.boora-frontend.tls.certresolver=letsencrypt
+
+      # Porta interna que o Traefik deve usar como destino
+      - traefik.http.services.boora-frontend.loadbalancer.server.port=80
+
+      # Redirect HTTP → HTTPS automático (entrypoint http definido no Traefik do Coolify)
+      - traefik.http.routers.boora-frontend-http.rule=Host(`${DOMAIN:-booraali.com.br}`)
+      - traefik.http.routers.boora-frontend-http.entrypoints=http
+      - traefik.http.routers.boora-frontend-http.middlewares=redirect-to-https@docker
+
+# ─── Redes ────────────────────────────────────────────────────────────────────
+
+networks:
+  internal:
+    # Rede privada entre os serviços — não exposta no host, mas com saída à internet
+    # (necessário para backend acessar R2, Google OAuth, Sentry, Turnstile, etc.)
+    driver: bridge
+
+  coolify:
+    # Rede criada e gerenciada pelo Coolify — compartilhada com o Traefik
+    # Não alterar o nome; o Coolify a cria automaticamente na primeira instalação
+    external: true
+
+# ─── Volumes ──────────────────────────────────────────────────────────────────
 
 volumes:
   staticfiles:
 
   bora_ali_pgdata:
+    # Dica: para maior resiliência, considere mover o Postgres para um serviço
+    # gerenciado pelo Coolify (Resources → Databases) com backup automático.
+    # Nesse caso, remova o serviço `postgres` acima e aponte POSTGRES_HOST para
+    # o host interno gerado pelo Coolify.
