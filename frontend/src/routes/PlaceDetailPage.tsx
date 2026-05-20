@@ -234,9 +234,8 @@ export default function PlaceDetailPage() {
                 </div>
               </div>
             </div>
-          </div>
 
-        {(place.address || place.instagram_url || place.maps_url || (place.latitude && place.longitude)) && (
+          {(place.address || place.instagram_url || place.maps_url || (place.latitude && place.longitude)) && (
           <div className="space-y-3 rounded-xl border border-border bg-background/60 p-3">
             {place.address && (
               <div className="flex items-start gap-2 text-sm text-muted">
@@ -332,6 +331,7 @@ export default function PlaceDetailPage() {
             <p className="text-sm leading-relaxed text-text">{place.notes}</p>
           </div>
         )}
+          </div>
         </CardContent>
       </Card>
 

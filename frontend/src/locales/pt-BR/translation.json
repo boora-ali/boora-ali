@@ -302,6 +302,7 @@
   },
   "common": {
     "loading": "Carregando...",
+    "error": "Algo deu errado. Tente novamente.",
     "save": "Salvar",
     "cancel": "Cancelar",
     "close": "Fechar",
@@ -344,7 +345,9 @@
     "delete_confirm": "Excluir esta coleção? Os lugares não serão apagados.",
     "empty": "Nenhuma coleção ainda",
     "empty_places": "Nenhum lugar nesta coleção",
-    "name_placeholder": "Nome da coleção"
+    "name_placeholder": "Nome da coleção",
+    "description_placeholder": "Descrição (opcional)",
+    "place_removed": "Lugar removido da coleção"
   },
   "termsModal": {
     "title": "Termos de Uso",

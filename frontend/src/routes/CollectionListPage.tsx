@@ -15,6 +15,7 @@ import {
 import { LoadingState } from "../components/ui/LoadingState";
 import { BackButton } from "../components/ui/BackButton";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
+import { Trash2, ChevronRight, FolderOpen } from "lucide-react";
 
 export default function CollectionListPage() {
   const { t } = useTranslation();
@@ -67,7 +68,7 @@ export default function CollectionListPage() {
   if (state.status === "error")
     return (
       <div className="max-w-2xl mx-auto p-4">
-        <ErrorMessage message={t("common.loading")} />
+        <ErrorMessage message={t("common.error")} />
       </div>
     );
 
@@ -108,7 +109,7 @@ export default function CollectionListPage() {
               <textarea
                 value={newDescription}
                 onChange={(e) => setNewDescription(e.target.value)}
-                placeholder={t("collections.title")}
+                placeholder={t("collections.description_placeholder")}
                 rows={2}
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
@@ -131,36 +132,50 @@ export default function CollectionListPage() {
       )}
 
       {collections.length === 0 ? (
-        <p className="text-sm text-muted text-center py-8">{t("collections.empty")}</p>
+        <div className="flex flex-col items-center gap-3 py-16 text-center animate-fade-in">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface border border-border">
+            <FolderOpen className="h-7 w-7 text-muted" />
+          </div>
+          <div>
+            <p className="font-fraunces text-lg font-semibold text-text">{t("collections.empty")}</p>
+          </div>
+          <Button size="sm" onClick={() => setShowForm(true)}>{t("collections.new")}</Button>
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="divide-y divide-border rounded-2xl border border-border bg-surface overflow-hidden">
           {collections.map((c) => (
-            <div key={c.public_id} className="flex items-center gap-2">
-              <Link to={`/collections/${c.public_id}`} className="flex-1 min-w-0">
-                <Card className="hover:bg-surface/60 transition-colors cursor-pointer">
-                  <CardContent className="pt-4 pb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{c.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-text truncate">{c.name}</p>
-                        {c.description && (
-                          <p className="text-sm text-muted truncate">{c.description}</p>
-                        )}
-                      </div>
-                      <span className="text-sm text-muted shrink-0">
-                        {c.place_count} {t("collections.places_count")}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
+            <div key={c.public_id} className="flex items-center group">
+              <Link
+                to={`/collections/${c.public_id}`}
+                className="flex flex-1 min-w-0 items-center gap-3 px-4 py-3.5 transition-colors hover:bg-background"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background border border-border text-xl">
+                  {c.emoji}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-text truncate leading-snug">{c.name}</p>
+                  {c.description ? (
+                    <p className="text-xs text-muted truncate mt-0.5">{c.description}</p>
+                  ) : (
+                    <p className="text-xs text-muted mt-0.5">
+                      {c.place_count} {t("collections.places_count")}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {c.description && (
+                    <span className="text-xs text-muted">{c.place_count} {t("collections.places_count")}</span>
+                  )}
+                  <ChevronRight className="h-4 w-4 text-muted/50" />
+                </div>
               </Link>
               <button
                 type="button"
                 title={t("collections.delete")}
                 onClick={() => setDeleteTarget(c)}
-                className="shrink-0 p-2 rounded-lg text-muted hover:text-destructive hover:bg-surface transition-colors"
+                className="shrink-0 p-3 text-muted hover:text-destructive transition-colors sm:opacity-0 sm:group-hover:opacity-100"
               >
-                🗑
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
           ))}

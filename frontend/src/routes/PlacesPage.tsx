@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState, type ComponentType } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { placesService, placePageCache, type Page } from "../services/places.service";
@@ -9,6 +9,7 @@ import { useDebounce } from "../hooks/useDebounce";
 import { PlaceCard } from "../components/places/PlaceCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Eye, Check, Star, X, BookOpen } from "lucide-react";
 import { EmptyState } from "../components/ui/EmptyState";
 import { LoadingState } from "../components/ui/LoadingState";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
@@ -24,11 +25,11 @@ import {
 
 const PAGE_SIZE = 4;
 
-const STATUS_ICONS: Record<string, string> = {
-  want_to_visit: "👁",
-  visited: "✓",
-  favorite: "★",
-  would_not_return: "✗",
+const STATUS_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  want_to_visit: Eye,
+  visited: Check,
+  favorite: Star,
+  would_not_return: X,
 };
 
 const STATUS_ACTIVE_CLASSES: Record<string, string> = {
@@ -164,8 +165,9 @@ export default function PlacesPage() {
         </div>
         <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
           <Link to="/collections" className="flex-1 sm:flex-none">
-            <Button size="sm" variant="secondary" className="w-full sm:w-auto">
-              📚 {t("collections.title")}
+            <Button size="sm" variant="secondary" className="inline-flex items-center gap-1.5 w-full sm:w-auto">
+              <BookOpen className="h-3.5 w-3.5" />
+              {t("collections.title")}
             </Button>
           </Link>
           <Link to="/places/new" className="flex-1 sm:flex-none" data-testid="places-new-place-link">
@@ -198,19 +200,23 @@ export default function PlacesPage() {
         >
           {t("places.all")}
         </button>
-        {PLACE_STATUSES.map((s) => (
-          <button
-            key={s.value}
-            onClick={() => { setPage(1); setStatus(s.value); }}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-150 ${
-              status === s.value
-                ? STATUS_ACTIVE_CLASSES[s.value]
-                : "bg-surface text-text border-border hover:bg-muted/20 hover:border-muted"
-            }`}
-          >
-            {STATUS_ICONS[s.value]} {t(`status.${s.value}`)}
-          </button>
-        ))}
+        {PLACE_STATUSES.map((s) => {
+          const StatusIcon = STATUS_ICONS[s.value];
+          return (
+            <button
+              key={s.value}
+              onClick={() => { setPage(1); setStatus(s.value); }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-150 ${
+                status === s.value
+                  ? STATUS_ACTIVE_CLASSES[s.value]
+                  : "bg-surface text-text border-border hover:bg-muted/20 hover:border-muted"
+              }`}
+            >
+              {StatusIcon && <StatusIcon className="h-3.5 w-3.5" />}
+              {t(`status.${s.value}`)}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content */}

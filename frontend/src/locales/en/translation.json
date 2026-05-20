@@ -299,6 +299,7 @@
   },
   "common": {
     "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close",
@@ -341,7 +342,9 @@
     "delete_confirm": "Delete this collection? Places will not be deleted.",
     "empty": "No collections yet",
     "empty_places": "No places in this collection",
-    "name_placeholder": "Collection name"
+    "name_placeholder": "Collection name",
+    "description_placeholder": "Description (optional)",
+    "place_removed": "Place removed from collection"
   },
   "termsModal": {
     "title": "Terms of Use",

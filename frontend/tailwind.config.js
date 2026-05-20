@@ -5,13 +5,12 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        fraunces: ["Georgia", "Times New Roman", "serif"],
+        fraunces: ["Fraunces", "Georgia", "serif"],
         sans: [
+          "DM Sans",
           "system-ui",
           "-apple-system",
           "Segoe UI",
-          "Roboto",
-          "Arial",
           "sans-serif",
         ],
       },
@@ -29,6 +28,7 @@ export default {
         warning: "#F59E0B",
         danger: "#DC2626",
         /* shadcn/ui tokens */
+        "primary-foreground": "hsl(var(--primary-foreground))",
         foreground: "hsl(var(--foreground))",
         card: {
           DEFAULT: "hsl(var(--card))",
@@ -57,6 +57,10 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
         fadeSlideUp: {
           "0%": { opacity: "0", transform: "translateY(18px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
@@ -75,6 +79,7 @@ export default {
         "fade-slide-up": "fadeSlideUp 0.45s ease-out both",
         "fade-in": "fadeIn 0.3s ease-out both",
         "loading-bar": "loadingBar 1.4s ease-in-out infinite",
+        shimmer: "shimmer 1.8s linear infinite",
       },
     },
   },
