@@ -59,6 +59,8 @@ Frontend:
 import re
 
 def _validate_username(value):
+    if not value:  # null/blank permitido — o validator não deve rejeitar ausência
+        return
     if not re.match(r'^[a-z0-9_]{3,30}$', value):
         raise ValidationError(
             "Username deve ter 3-30 caracteres: letras minúsculas, números e _"
@@ -104,7 +106,8 @@ class PublicPlaceSerializer(serializers.ModelSerializer):
 class PublicProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="profile.username")
     bio = serializers.CharField(source="profile.bio")
-    places = PublicPlaceSerializer(many=True, read_only=True)
+    # source="public_places" — nome do to_attr no Prefetch do PublicProfileView
+    places = PublicPlaceSerializer(many=True, read_only=True, source="public_places")
 
     class Meta:
         model = User
@@ -125,13 +128,16 @@ class PublicProfileView(APIView):
     permission_classes = []  # público
 
     def get(self, request, username):
-        public_places = Place.objects.live().filter(
+        # Sem slice aqui — Prefetch não aceita queryset fatiado ([:N] levanta TypeError)
+        public_places_qs = Place.objects.live().filter(
             is_public=True
-        ).order_by("-created_at")[:50]
+        ).order_by("-created_at")
 
         profile = get_object_or_404(
             UserProfile.objects.select_related("user").prefetch_related(
-                Prefetch("user__place_set", queryset=public_places, to_attr="places")
+                # "user__places" — related_name correto definido em Place.user FK
+                # "user__place_set" seria o padrão sem related_name, mas aqui é "places"
+                Prefetch("user__places", queryset=public_places_qs, to_attr="public_places")
             ),
             username=username,
             is_public=True,
@@ -160,6 +166,8 @@ class AccountSerializer(serializers.ModelSerializer):
     is_public = serializers.BooleanField(source="profile.is_public", required=False)
 
     def validate_username(self, value):
+        if not value:  # null/blank — sem validação de unicidade para ausência
+            return value
         qs = UserProfile.objects.filter(username=value)
         if self.instance:
             qs = qs.exclude(user=self.instance)
@@ -168,21 +176,13 @@ class AccountSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        profile_data = {}
-        for field in ("username", "bio", "is_public"):
-            if field in validated_data.get("profile", {}):
-                profile_data[field] = validated_data["profile"].pop(field)
-        # Extrair campos aninhados do profile
-        raw = {k: v for k, v in validated_data.items() if k == "profile"}
-        profile_data = raw.get("profile", {})
-        remaining = {k: v for k, v in validated_data.items() if k != "profile"}
-
+        # DRF coloca fields com source="profile.X" sob validated_data["profile"]
+        profile_data = validated_data.pop("profile", {})
         if profile_data:
             for attr, value in profile_data.items():
                 setattr(instance.profile, attr, value)
             instance.profile.save(update_fields=list(profile_data.keys()))
-
-        return super().update(instance, remaining)
+        return super().update(instance, validated_data)
 ```
 
 ### 7. Frontend — `PublicProfilePage.tsx`

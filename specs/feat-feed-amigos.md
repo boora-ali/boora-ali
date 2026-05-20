@@ -65,14 +65,23 @@ class Follow(models.Model):
 
     class Meta:
         db_table = "accounts_follow"
-        unique_together = [("follower", "following")]
+        # unique_together está deprecated no Django 4.2+ — usar UniqueConstraint
+        constraints = [
+            models.UniqueConstraint(
+                fields=["follower", "following"],
+                name="follow_unique_follower_following",
+            ),
+            # clean() NÃO é chamado por get_or_create()/save() — garantia fica no DB
+            models.CheckConstraint(
+                check=~models.Q(follower=models.F("following")),
+                name="follow_no_self_follow",
+            ),
+        ]
         indexes = [
             models.Index(fields=["follower", "created_at"]),
+            # índice inverso: lookups "quem segue X" e contagem de seguidores
+            models.Index(fields=["following", "created_at"]),
         ]
-
-    def clean(self):
-        if self.follower_id == self.following_id:
-            raise ValidationError("Usuário não pode seguir a si mesmo.")
 ```
 
 > Rodar `python manage.py makemigrations accounts` após criar o model.
@@ -87,7 +96,12 @@ class FollowView(MutationMixin, APIView):
     permission_classes = [IsAuthenticated]
 
     def _get_target(self, username):
-        profile = get_object_or_404(UserProfile, username=username, is_public=True)
+        # select_related("user") evita query extra em profile.user logo abaixo
+        profile = get_object_or_404(
+            UserProfile.objects.select_related("user"),
+            username=username,
+            is_public=True,
+        )
         if profile.user == self.request.user:
             raise ValidationError({"detail": "Você não pode seguir a si mesmo."})
         return profile.user
@@ -194,9 +208,10 @@ export const socialService = {
   follow: (username: string) => api.post(`/api/u/${username}/follow/`),
   unfollow: (username: string) => api.delete(`/api/u/${username}/follow/`),
   getFeed: (cursor?: string) =>
-    api.get<{ results: FeedItem[]; next: string | null }>("/api/feed/", {
-      params: cursor ? { cursor } : {},
-    }),
+    api.get<{ results: FeedItem[]; next: string | null; previous: string | null }>(
+      "/api/feed/",
+      { params: cursor ? { cursor } : {} },
+    ),
 };
 ```
 
@@ -213,6 +228,7 @@ export function FeedPage() {
   } = useInfiniteQuery({
     queryKey: ["feed"],
     queryFn: ({ pageParam }) => socialService.getFeed(pageParam as string | undefined),
+    initialPageParam: undefined,  // obrigatório no React Query v5
     getNextPageParam: (last) => last.next ?? undefined,
   });
 

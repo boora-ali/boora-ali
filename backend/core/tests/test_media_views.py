@@ -74,8 +74,9 @@ def test_serve_own_file_returns_200(auth_client, tmp_path, settings):
     )
 
     resp = auth_client.get(f"/api/media/{path}")
-    assert resp.status_code == 302
-    assert path in resp["Location"]
+    assert resp.status_code == 200
+    assert resp["X-Accel-Redirect"] == "/_r2_proxy/"
+    assert path in resp["X-Accel-Target"]
 
 
 @pytest.mark.django_db
@@ -122,11 +123,11 @@ def test_serve_unauthenticated_returns_401(client, tmp_path, settings):
 def test_serve_nonexistent_file_returns_404(auth_client, tmp_path, settings):
     settings.MEDIA_ROOT = str(tmp_path)
     user = auth_client._user
-    # The view now blindly signs a URL and redirects; the actual 404 comes from
-    # the storage backend if the object doesn't exist. We skip the extra HEAD
-    # round-trip on purpose for performance.
+    # A view emite X-Accel-Redirect sem verificar existência — nginx/storage decide.
+    # Para arquivos locais, default_storage.url() retorna URL sem checar existência.
     resp = auth_client.get(f"/api/media/users/{user.id}/places/covers/nonexistent_000")
-    assert resp.status_code == 302
+    assert resp.status_code == 200
+    assert resp["X-Accel-Redirect"] == "/_r2_proxy/"
 
 
 class CrossUserMediaAccessTests(APITestCase):
@@ -150,8 +151,9 @@ class CrossUserMediaAccessTests(APITestCase):
         resp = self.client.get(f"/api/media/{path}")
         self.assertEqual(resp.status_code, 401)
 
-    def test_own_missing_media_redirects(self):
+    def test_own_missing_media_returns_accel_redirect(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self._token(self.user_a)}")
         path = f"users/{self.user_a.id}/places/covers/nonexistent_file"
         resp = self.client.get(f"/api/media/{path}")
-        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp["X-Accel-Redirect"], "/_r2_proxy/")

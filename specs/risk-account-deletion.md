@@ -144,16 +144,16 @@ def purge_deleted_accounts():
         profile__deletion_requested_at__lt=cutoff,
     )
 
-    count = expired.count()
-    if count == 0:
+    if not expired.exists():
         return {"deleted": 0}
 
+    deleted_count = 0
     for user in expired.iterator():
-        _log.info("purge_deleted_accounts: deletando user_id=%s", user.pk)
         user.delete()  # CASCADE via DB: Places, Visits, VisitItems, histórico, tokens
+        deleted_count += 1
 
-    _log.info("purge_deleted_accounts: %d conta(s) deletada(s)", count)
-    return {"deleted": count}
+    _log.info("purge_deleted_accounts: %d conta(s) deletada(s)", deleted_count)
+    return {"deleted": deleted_count}
 ```
 
 > **Atenção**: `user.delete()` dispara CASCADE. Verificar que `Place`, `Visit`, `VisitItem`,

@@ -130,7 +130,11 @@ class PlaceShareDetailView(APIView):
     permission_classes = []
 
     def get(self, request, token):
-        share = get_object_or_404(PlaceShare, token=token, is_active=True)
+        share = get_object_or_404(
+            PlaceShare.objects.select_related("place"),
+            token=token,
+            is_active=True,
+        )
         place = share.place
         image_url = None
         if place.cover_photo:
@@ -153,7 +157,10 @@ class PlaceShareMediaView(APIView):
 
     def get(self, request, token, path):
         sig = request.query_params.get("sig", "")
-        exp = int(request.query_params.get("exp", 0))
+        try:
+            exp = int(request.query_params.get("exp", 0))
+        except (ValueError, TypeError):
+            return Response(status=404)
         if time.time() > exp:
             return Response(status=404)
         expected = hmac.new(
@@ -163,17 +170,31 @@ class PlaceShareMediaView(APIView):
         ).hexdigest()
         if not hmac.compare_digest(sig, expected):
             return Response(status=404)
-        share = get_object_or_404(PlaceShare, token=token, is_active=True)
-        # Descriptografa com chave do dono e faz stream
-        # (usar padrão do media_views.py existente, passando owner=share.owner)
-        ...
+        share = get_object_or_404(
+            PlaceShare.objects.select_related("place", "owner"),
+            token=token,
+            is_active=True,
+        )
+        try:
+            decrypted = ImageService.read_decrypted(
+                share.place.cover_photo, owner_pk=share.owner.pk
+            )
+        except Exception:
+            return Response(status=404)
+        from django.http import HttpResponse
+        # Seguir padrão de media_views.py: stream sem Content-Disposition forçado
+        return HttpResponse(decrypted, content_type="image/jpeg")
 
 
 class PlaceShareImportView(MutationMixin, APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, token):
-        share = get_object_or_404(PlaceShare, token=token, is_active=True)
+        share = get_object_or_404(
+            PlaceShare.objects.select_related("place", "owner"),
+            token=token,
+            is_active=True,
+        )
         if share.owner == request.user:
             return Response({"detail": "Você já é dono deste lugar."}, status=400)
 
@@ -209,14 +230,23 @@ class PlaceShareImportView(MutationMixin, APIView):
 # backend/places/tasks.py
 @shared_task(bind=True, max_retries=3)
 def copy_shared_place_photo(self, source_place_pk, source_owner_pk, target_place_pk, target_owner_pk):
+    from django.core.files.base import ContentFile
+    from places.models import Place as PlaceModel
+
     try:
-        source_place = Place.objects.get(pk=source_place_pk)
-        target_place = Place.objects.get(pk=target_place_pk)
+        source_place = PlaceModel.objects.get(pk=source_place_pk)
+    except PlaceModel.DoesNotExist:
+        return  # Place original removido antes da task executar — sem retry
 
+    try:
+        target_place = PlaceModel.objects.get(pk=target_place_pk)
+    except PlaceModel.DoesNotExist:
+        return  # Place importado foi deletado antes da task — sem retry
+
+    try:
         raw_bytes = ImageService.read_decrypted(source_place.cover_photo, owner_pk=source_owner_pk)
-
-        from django.core.files.base import ContentFile
-        ImageService.save(target_place, ContentFile(raw_bytes), category="places/covers", owner_pk=target_owner_pk)
+        # ImageService.save() deriva o owner da FK place.user — não precisa de owner_pk
+        ImageService.save(target_place, ContentFile(raw_bytes), category="places/covers")
     except Exception as exc:
         raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
 ```

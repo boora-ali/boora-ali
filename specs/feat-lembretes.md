@@ -68,31 +68,36 @@ class Place(PublicIdModel):
 ```python
 # backend/places/tasks.py
 import logging
-from django.conf import settings
-from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Max, Subquery, OuterRef
+
+from celery import shared_task
+from django.conf import settings
+from django.db.models import Exists, OuterRef, Subquery
+from django.utils import timezone
+
+from places.models import Place, PlaceStatus, Visit
 
 _log = logging.getLogger("places.tasks")
 
 
 @shared_task
 def send_place_reminders():
-    """Envia lembretes para places não visitados ou revisitados há muito tempo."""
     from notifications.service import notify, NotificationType
 
     now = timezone.now()
     want_cutoff = now - timedelta(days=settings.REMINDER_WANT_TO_VISIT_DAYS)
     revisit_cutoff = now - timedelta(days=settings.REMINDER_REVISIT_DAYS)
 
-    # Places que o usuário quer visitar mas nunca visitou
+    # Usar ~Exists evita LEFT JOIN implícito e elimina a necessidade de distinct()
+    has_visit = Visit.objects.live().filter(place=OuterRef("pk"))
+
     want_to_visit = Place.objects.live().filter(
         reminders_enabled=True,
         status=PlaceStatus.WANT_TO_VISIT,
         created_at__lt=want_cutoff,
-        visits__isnull=True,
-    ).select_related("user").distinct()
+    ).filter(~Exists(has_visit)).select_related("user")
 
+    want_count = 0
     for place in want_to_visit.iterator():
         notify(
             user=place.user,
@@ -101,9 +106,9 @@ def send_place_reminders():
             body=f"Faz {settings.REMINDER_WANT_TO_VISIT_DAYS}+ dias que você adicionou {place.name}. Que tal visitar?",
             metadata={"place_public_id": str(place.public_id)},
         )
+        want_count += 1
 
-    # Places visitados mas sem visita recente
-    last_visit_subq = Visit.objects.filter(
+    last_visit_subq = Visit.objects.live().filter(
         place=OuterRef("pk")
     ).order_by("-visited_at").values("visited_at")[:1]
 
@@ -116,6 +121,7 @@ def send_place_reminders():
         last_visit__lt=revisit_cutoff,
     ).select_related("user")
 
+    revisit_count = 0
     for place in revisit_candidates.iterator():
         notify(
             user=place.user,
@@ -124,10 +130,11 @@ def send_place_reminders():
             body=f"Faz um tempo que você não vai ao {place.name}. Vale uma nova visita!",
             metadata={"place_public_id": str(place.public_id)},
         )
+        revisit_count += 1
 
     _log.info(
         "send_place_reminders: %d want-to-visit, %d revisit",
-        want_to_visit.count(), revisit_candidates.count()
+        want_count, revisit_count,
     )
 ```
 

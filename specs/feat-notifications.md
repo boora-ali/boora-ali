@@ -16,7 +16,7 @@ Backend:
 - `/bora-ali-backend` — convenções do projeto (public_id, exceptions, estrutura de apps)
 
 Frontend:
-- `/bora-ali-frontend` — convenções do frontend (React Query, serviços de API, testes)
+- `/bora-ali-frontend` — convenções do frontend (serviços de API, hooks, testes)
 - `/frontend-design` — componentes shadcn/ui (`Popover`, `ScrollArea`, `Button`)
 
 ---
@@ -27,7 +27,7 @@ Frontend:
 |---------|-----------|
 | `backend/notifications/` | **Novo app Django** |
 | `backend/notifications/models.py` | Model `Notification` |
-| `backend/notifications/views.py` | `NotificationViewSet` (list + mark-read) |
+| `backend/notifications/views.py` | `NotificationListView` + mark-read views |
 | `backend/notifications/urls.py` | Rotas do app |
 | `backend/notifications/serializers.py` | `NotificationSerializer` |
 | `backend/notifications/service.py` | `notify()` — função de criação sem duplicatas |
@@ -35,7 +35,7 @@ Frontend:
 | `backend/config/urls.py` | Incluir `notifications/urls.py` |
 | `frontend/src/components/layout/` | `NotificationBell.tsx` + painel |
 | `frontend/src/services/notifications.service.ts` | Chamadas à API |
-| `frontend/src/hooks/useNotifications.ts` | Hook de polling/query |
+| `frontend/src/hooks/useNotifications.ts` | Hook com polling via setInterval |
 
 > **Migrations**: após criar `models.py`, rodar `python manage.py makemigrations notifications` manualmente.
 
@@ -45,13 +45,15 @@ Frontend:
 
 ### 1. `models.py` — model `Notification`
 
+Sem `@property` — `is_read` e `is_expired` são deriváveis em Python com `obj.read_at is not None`
+e `obj.expires_at < timezone.now()`. Properties em models não são filtráveis no ORM e não trazem
+benefício de índice; toda filtragem é feita diretamente no queryset.
+
 ```python
 # backend/notifications/models.py
 import uuid
 from django.db import models
 from django.conf import settings
-from django.utils import timezone
-from datetime import timedelta
 
 
 class NotificationType(models.TextChoices):
@@ -78,17 +80,11 @@ class Notification(models.Model):
         indexes = [
             models.Index(fields=["user", "read_at", "expires_at"], name="notif_user_unread_idx"),
         ]
-
-    @property
-    def is_read(self):
-        return self.read_at is not None
-
-    @property
-    def is_expired(self):
-        return timezone.now() > self.expires_at
 ```
 
 ### 2. `service.py` — `notify()` sem duplicatas
+
+`notification_type` em vez de `type` para não sombrear o builtin Python.
 
 ```python
 # backend/notifications/service.py
@@ -99,14 +95,14 @@ from .models import Notification, NotificationType
 NOTIFICATION_TTL_DAYS = 7
 
 
-def notify(user, type: NotificationType, title: str, body: str) -> Notification | None:
+def notify(user, notification_type: NotificationType, title: str, body: str) -> Notification | None:
     """
     Cria notificação apenas se não houver outra não lida do mesmo tipo para o usuário.
     Retorna a notificação criada ou None se já existia uma pendente.
     """
     already_pending = Notification.objects.filter(
         user=user,
-        type=type,
+        type=notification_type,
         read_at__isnull=True,
         expires_at__gt=timezone.now(),
     ).exists()
@@ -116,7 +112,7 @@ def notify(user, type: NotificationType, title: str, body: str) -> Notification 
 
     return Notification.objects.create(
         user=user,
-        type=type,
+        type=notification_type,
         title=title,
         body=body,
         expires_at=timezone.now() + timedelta(days=NOTIFICATION_TTL_DAYS),
@@ -124,6 +120,8 @@ def notify(user, type: NotificationType, title: str, body: str) -> Notification 
 ```
 
 ### 3. `serializers.py`
+
+`is_read` como `SerializerMethodField` — lógica de apresentação fica no serializer, não no model.
 
 ```python
 # backend/notifications/serializers.py
@@ -133,21 +131,29 @@ from .models import Notification
 
 class NotificationSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source="public_id", read_only=True)
+    is_read = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
-        fields = ["id", "type", "title", "body", "read_at", "expires_at", "created_at"]
+        fields = ["id", "type", "title", "body", "is_read", "read_at", "expires_at", "created_at"]
+
+    def get_is_read(self, obj):
+        return obj.read_at is not None
 ```
 
 ### 4. `views.py` — list + mark-read
+
+Todos os imports no topo do arquivo.
 
 ```python
 # backend/notifications/views.py
 from django.utils import timezone
 from rest_framework import generics, permissions
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from core.views import MutationMixin
+
 from .models import Notification
 from .serializers import NotificationSerializer
 
@@ -163,8 +169,6 @@ class NotificationListView(generics.ListAPIView):
             expires_at__gt=timezone.now(),
         )
 
-
-from core.views import MutationMixin
 
 class NotificationMarkReadView(MutationMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -216,6 +220,8 @@ path("api/notifications/", include("notifications.urls")),
 
 ### 7. Frontend — `services/notifications.service.ts`
 
+`baseURL` do axios já inclui `/api` — usar caminhos sem prefixo `/api/`.
+
 ```typescript
 // frontend/src/services/notifications.service.ts
 import { api } from "./api";
@@ -225,43 +231,56 @@ export interface Notification {
   type: string;
   title: string;
   body: string;
+  is_read: boolean;
   read_at: string | null;
   expires_at: string;
   created_at: string;
 }
 
 export const notificationsService = {
-  list: () => api.get<Notification[]>("/api/notifications/"),
-  markRead: (id: string) => api.post(`/api/notifications/${id}/read/`),
-  markAllRead: () => api.post("/api/notifications/read-all/"),
+  list: () => api.get<Notification[]>("/notifications/"),
+  markRead: (id: string) => api.post(`/notifications/${id}/read/`),
+  markAllRead: () => api.post("/notifications/read-all/"),
 };
 ```
 
 ### 8. Frontend — `useNotifications.ts`
 
+O projeto não usa `@tanstack/react-query`. Hook com `useState` + `useEffect` + polling via
+`setInterval`, seguindo o padrão dos outros hooks do projeto.
+
 ```typescript
 // frontend/src/hooks/useNotifications.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notificationsService } from "../api/notifications";
+import { useState, useEffect, useCallback } from "react";
+import { notificationsService, type Notification } from "../services/notifications.service";
 
 export function useNotifications() {
-  const qc = useQueryClient();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const { data: notifications = [] } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => notificationsService.list().then((r) => r.data),
-    refetchInterval: 60_000, // polling a cada 60s
-  });
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const { data } = await notificationsService.list();
+      setNotifications(data);
+    } catch {
+      // falha silenciosa — bell mostra 0
+    }
+  }, []);
 
-  const markRead = useMutation({
-    mutationFn: notificationsService.markRead,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
-  });
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
-  const markAllRead = useMutation({
-    mutationFn: notificationsService.markAllRead,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
-  });
+  const markRead = useCallback(async (id: string) => {
+    await notificationsService.markRead(id);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  const markAllRead = useCallback(async () => {
+    await notificationsService.markAllRead();
+    setNotifications([]);
+  }, []);
 
   return { notifications, unreadCount: notifications.length, markRead, markAllRead };
 }
@@ -269,7 +288,7 @@ export function useNotifications() {
 
 ### 9. Frontend — `NotificationBell.tsx`
 
-Componente no header (junto ao menu de conta):
+Requer shadcn `Popover` e `ScrollArea` instalados (`npx shadcn@latest add popover scroll-area`).
 
 ```tsx
 // frontend/src/components/layout/NotificationBell.tsx
@@ -300,7 +319,7 @@ export function NotificationBell() {
           {unreadCount > 0 && (
             <button
               className="text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => markAllRead.mutate()}
+              onClick={markAllRead}
             >
               Marcar todas como lidas
             </button>
@@ -316,7 +335,7 @@ export function NotificationBell() {
               <div
                 key={n.id}
                 className="cursor-pointer border-b px-4 py-3 hover:bg-muted/50"
-                onClick={() => markRead.mutate(n.id)}
+                onClick={() => markRead(n.id)}
               >
                 <p className="text-sm font-medium">{n.title}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">{n.body}</p>
@@ -344,7 +363,7 @@ from notifications.service import notify, NotificationType
 
 notify(
     user=place.user,
-    type=NotificationType.TRASH_EXPIRY,
+    notification_type=NotificationType.TRASH_EXPIRY,
     title="Lugares serão excluídos permanentemente",
     body=f"{count} lugar(es) na lixeira será(ão) excluído(s) em breve.",
 )
