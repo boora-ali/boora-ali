@@ -75,7 +75,10 @@ export default function PlacesPage() {
   useEffect(() => {
     const cached = placePageCache.get(page, debouncedSearch, status);
     if (cached) {
-      startTransition(() => setData(cached));
+      startTransition(() => {
+        setData(cached);
+        setLoading(false);
+      });
       return;
     }
 
@@ -160,6 +163,11 @@ export default function PlacesPage() {
           <p className="text-muted text-sm mt-1">{t("places.subtitle")}</p>
         </div>
         <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
+          <Link to="/collections" className="flex-1 sm:flex-none">
+            <Button size="sm" variant="secondary" className="w-full sm:w-auto">
+              📚 {t("collections.title")}
+            </Button>
+          </Link>
           <Link to="/places/new" className="flex-1 sm:flex-none" data-testid="places-new-place-link">
             <Button size="sm" className="w-full sm:w-auto" data-testid="places-new-place-button">
               {t("places.new")}
@@ -185,7 +193,7 @@ export default function PlacesPage() {
           className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-150 ${
             status === ""
               ? "bg-primary text-white border-primary shadow-sm"
-              : "bg-surface text-text border-border hover:border-muted/50"
+              : "bg-surface text-text border-border hover:bg-muted/20 hover:border-muted"
           }`}
         >
           {t("places.all")}
@@ -197,7 +205,7 @@ export default function PlacesPage() {
             className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-150 ${
               status === s.value
                 ? STATUS_ACTIVE_CLASSES[s.value]
-                : "bg-surface text-text border-border hover:border-muted/50"
+                : "bg-surface text-text border-border hover:bg-muted/20 hover:border-muted"
             }`}
           >
             {STATUS_ICONS[s.value]} {t(`status.${s.value}`)}

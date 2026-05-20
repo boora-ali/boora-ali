@@ -254,14 +254,11 @@ class CollectionViewSet(ViewSetBase):
 
     def get_queryset(self):
         qs = Collection.objects.filter(user=self.request.user)
-        if self.action == "list":
-            return qs.annotate(place_count=Count("collection_places")).order_by("-updated_at")
-        return qs.prefetch_related(
-            Prefetch(
-                "collection_places",
-                queryset=CollectionPlace.objects.select_related("place").order_by("-added_at"),
-            )
+        place_prefetch = Prefetch(
+            "collection_places",
+            queryset=CollectionPlace.objects.select_related("place").order_by("-added_at"),
         )
+        return qs.annotate(place_count=Count("collection_places")).prefetch_related(place_prefetch).order_by("-updated_at")
 
     def get_serializer_class(self):
         if self.action == "retrieve":

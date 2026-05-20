@@ -90,7 +90,7 @@ export function PlaceCard({ place, index = 0 }: { place: Place; index?: number }
         </div>
 
         <div
-          className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-primary/50 bg-primary/[0.07] px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/15 transition-colors"
         >
           <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />

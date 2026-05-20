@@ -7,6 +7,7 @@ export interface Collection {
   emoji: string;
   description: string;
   place_count: number;
+  place_public_ids: string[];
   updated_at: string;
 }
 

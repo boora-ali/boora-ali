@@ -1,9 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { collectionsService, type Collection } from "../services/collections.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { LoadingState } from "../components/ui/LoadingState";
 import { BackButton } from "../components/ui/BackButton";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
@@ -14,8 +22,9 @@ export default function CollectionListPage() {
     status: "idle" | "loading" | "error";
     data: Collection[] | null;
   }>({ status: "idle", data: null });
-  const loaded = useRef(false);
 
+  const [deleteTarget, setDeleteTarget] = useState<Collection | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmoji, setNewEmoji] = useState("📍");
@@ -23,9 +32,6 @@ export default function CollectionListPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    if (loaded.current) return;
-    loaded.current = true;
-
     setState({ status: "loading", data: null });
 
     collectionsService
@@ -129,27 +135,72 @@ export default function CollectionListPage() {
       ) : (
         <div className="space-y-2">
           {collections.map((c) => (
-            <Link key={c.public_id} to={`/collections/${c.public_id}`}>
-              <Card className="hover:bg-surface/60 transition-colors cursor-pointer">
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{c.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-text truncate">{c.name}</p>
-                      {c.description && (
-                        <p className="text-sm text-muted truncate">{c.description}</p>
-                      )}
+            <div key={c.public_id} className="flex items-center gap-2">
+              <Link to={`/collections/${c.public_id}`} className="flex-1 min-w-0">
+                <Card className="hover:bg-surface/60 transition-colors cursor-pointer">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{c.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-text truncate">{c.name}</p>
+                        {c.description && (
+                          <p className="text-sm text-muted truncate">{c.description}</p>
+                        )}
+                      </div>
+                      <span className="text-sm text-muted shrink-0">
+                        {c.place_count} {t("collections.places_count")}
+                      </span>
                     </div>
-                    <span className="text-sm text-muted shrink-0">
-                      {c.place_count} {t("collections.places_count")}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+                  </CardContent>
+                </Card>
+              </Link>
+              <button
+                type="button"
+                title={t("collections.delete")}
+                onClick={() => setDeleteTarget(c)}
+                className="shrink-0 p-2 rounded-lg text-muted hover:text-destructive hover:bg-surface transition-colors"
+              >
+                🗑
+              </button>
+            </div>
           ))}
         </div>
       )}
+      <Dialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("collections.delete")}</DialogTitle>
+            <DialogDescription>{t("collections.delete_confirm")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={async () => {
+                if (!deleteTarget) return;
+                setDeleting(true);
+                try {
+                  await collectionsService.delete(deleteTarget.public_id);
+                  setState((prev) => ({
+                    ...prev,
+                    data: prev.data
+                      ? prev.data.filter((x) => x.public_id !== deleteTarget.public_id)
+                      : null,
+                  }));
+                  setDeleteTarget(null);
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+            >
+              {t("collections.delete")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

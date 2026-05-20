@@ -378,11 +378,15 @@ class PlaceWriteSerializer(FlexFieldsModelSerializer):
 
 class CollectionSerializer(serializers.ModelSerializer):
     place_count = serializers.IntegerField(read_only=True, default=0)
+    place_public_ids = serializers.SerializerMethodField()
 
     class Meta:
         model = Collection
-        fields = ["public_id", "name", "emoji", "description", "place_count", "updated_at"]
+        fields = ["public_id", "name", "emoji", "description", "place_count", "place_public_ids", "updated_at"]
         read_only_fields = ["public_id", "updated_at"]
+
+    def get_place_public_ids(self, obj):
+        return [cp.place.public_id for cp in obj.collection_places.all()]
 
 
 class CollectionDetailSerializer(CollectionSerializer):

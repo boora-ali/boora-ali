@@ -86,12 +86,22 @@ export default function PlaceDetailPage() {
     return () => window.clearInterval(interval);
   }, [id, place?.coords_status]);
 
-  async function openCollectionSheet() {
-    setCollectionSheetOpen(true);
+  useEffect(() => {
+    if (!place) return;
     if (collectionsLoaded.current) return;
     collectionsLoaded.current = true;
-    const data = await collectionsService.list();
-    setCollections(data);
+    collectionsService.list().then((data) => {
+      setCollections(data);
+      const ids = new Set(
+        data.filter((c) => c.place_public_ids.includes(place.public_id)).map((c) => c.public_id)
+      );
+      setPlaceCollectionIds(ids);
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [place?.public_id]);
+
+  function openCollectionSheet() {
+    setCollectionSheetOpen(true);
   }
 
   async function handleToggleCollection(collectionId: string) {
@@ -180,25 +190,28 @@ export default function PlaceDetailPage() {
                 </div>
               </div>
 
-              <div className="grid w-full grid-cols-[1fr_auto] gap-2 sm:w-auto sm:min-w-[280px]">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[280px]">
                 <Link to={`/places/${place.public_id}/visits/new`} className="w-full">
                   <Button size="sm" className="w-full">{t("placeDetail.visits.add")}</Button>
                 </Link>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={openCollectionSheet}
-                  aria-label={t("collections.add_to")}
-                  className="col-span-2 w-full"
-                >
-                  {t("collections.add_to")}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" size="sm" aria-label={t("placeDetail.actions")}>
-                      ⋯
-                    </Button>
-                  </DropdownMenuTrigger>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={openCollectionSheet}
+                    aria-label={t("collections.add_to")}
+                    className="flex-1"
+                  >
+                    {placeCollectionIds.size > 0
+                      ? t("collections.in_collections", { count: placeCollectionIds.size })
+                      : t("collections.add_to")}
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="secondary" size="sm" aria-label={t("placeDetail.actions")}>
+                        ⋯
+                      </Button>
+                    </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuGroup>
                       <DropdownMenuItem asChild>
@@ -218,6 +231,7 @@ export default function PlaceDetailPage() {
                     </DropdownMenuGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                </div>
               </div>
             </div>
           </div>
@@ -412,7 +426,7 @@ export default function PlaceDetailPage() {
       </Dialog>
 
       <Sheet open={collectionSheetOpen} onOpenChange={setCollectionSheetOpen}>
-        <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto">
+        <SheetContent side="right" className="w-80 overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{t("collections.add_to")}</SheetTitle>
           </SheetHeader>
