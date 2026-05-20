@@ -1,5 +1,7 @@
 # Feat — Coleções de Places
 
+> ✅ **IMPLEMENTADO**
+
 ## Problema
 
 Não há como agrupar places por critério temático. Um usuário que tem 200 lugares não consegue

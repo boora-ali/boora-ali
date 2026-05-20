@@ -22,6 +22,8 @@ const EditVisitPage = lazy(() => import("./routes/EditVisitPage"));
 const AccountPage = lazy(() => import("./routes/AccountPage"));
 const TrashPage = lazy(() => import("./routes/TrashPage"));
 const NotFoundPage = lazy(() => import("./routes/NotFoundPage"));
+const CollectionListPage = lazy(() => import("./routes/CollectionListPage"));
+const CollectionDetailPage = lazy(() => import("./routes/CollectionDetailPage"));
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -150,6 +152,26 @@ export default function App() {
                 <ProtectedRoute>
                   <ProtectedLayout>
                     <EditVisitPage />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/collections"
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <CollectionListPage />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/collections/:id"
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <CollectionDetailPage />
                   </ProtectedLayout>
                 </ProtectedRoute>
               }

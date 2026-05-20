@@ -9,7 +9,7 @@ from core.validators import (
 )
 
 from .maps import extract_coords
-from .models import CoordsStatus, Place, Visit, VisitItem
+from .models import Collection, CoordsStatus, Place, Visit, VisitItem
 
 
 def _get_owner_id(context) -> int:
@@ -374,3 +374,36 @@ class PlaceWriteSerializer(FlexFieldsModelSerializer):
         if photo_file is not serializers.empty:
             self._handle_photo(instance, photo_file)
         return instance
+
+
+class CollectionSerializer(serializers.ModelSerializer):
+    place_count = serializers.IntegerField(read_only=True, default=0)
+    place_public_ids = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Collection
+        fields = [
+            "public_id",
+            "name",
+            "emoji",
+            "description",
+            "place_count",
+            "place_public_ids",
+            "updated_at",
+        ]
+        read_only_fields = ["public_id", "updated_at"]
+
+    def get_place_public_ids(self, obj):
+        return [cp.place.public_id for cp in obj.collection_places.all()]
+
+
+class CollectionDetailSerializer(CollectionSerializer):
+    places = serializers.SerializerMethodField()
+
+    class Meta(CollectionSerializer.Meta):
+        fields = CollectionSerializer.Meta.fields + ["places"]
+
+    def get_places(self, obj):
+        # collection_places is prefetched in viewset get_queryset
+        qs = [cp.place for cp in obj.collection_places.all()]
+        return PlaceListSerializer(qs, many=True, context=self.context).data
