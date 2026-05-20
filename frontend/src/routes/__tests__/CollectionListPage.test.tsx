@@ -64,5 +64,7 @@ test("shows error state when list rejects", async () => {
     expect(screen.queryByText(/Cafés favoritos/)).not.toBeInTheDocument(),
   );
   // The error branch renders an ErrorMessage component
-  await waitFor(() => expect(screen.getByText("Loading...")).toBeInTheDocument());
+  await waitFor(() =>
+    expect(screen.getByText(/something went wrong/i)).toBeInTheDocument(),
+  );
 });
