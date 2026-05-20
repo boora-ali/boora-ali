@@ -17,30 +17,19 @@ def build_public_media_url(file_field, request=None) -> str:
     if not name:
         return ""
 
-    # Encrypted per-user files are served through our authenticated view
-    if name.startswith("users/"):
-        if request:
-            return request.build_absolute_uri(f"/api/media/{name}")
-        return f"/api/media/{name}"
-
-    # Legacy paths — S3 presigned URL or local URL fallback
-    if _use_s3_signing() and name:
+    # Production: return presigned URL directly so the browser fetches from R2
+    # without any auth proxy. <img src={url}> works because the browser does not
+    # send Origin on image requests, avoiding the withCredentials CORS issue.
+    if _use_s3_signing():
         signed = _build_signed_url(name)
         if signed:
             return signed
 
-    public_base = getattr(settings, "AWS_S3_PUBLIC_URL", "").rstrip("/")
-    if public_base and name:
-        return f"{public_base}/{name}"
-
-    try:
-        raw_url = file_field.url
-    except Exception:
-        return ""
-
-    if request and raw_url.startswith("/"):
-        return request.build_absolute_uri(raw_url)
-    return raw_url
+    # Dev/fallback (USE_VERSITYGW=False, local filesystem): serve through the
+    # authenticated Django view so images are still protected in development.
+    if request:
+        return request.build_absolute_uri(f"/api/media/{name}")
+    return f"/api/media/{name}"
 
 
 def _use_s3_signing() -> bool:
