@@ -298,3 +298,37 @@ class VisitItem(PublicIdModel, TimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+
+
+class Collection(PublicIdModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="collections"
+    )
+    name = models.CharField(max_length=100)
+    emoji = models.CharField(max_length=8, blank=True, default="📍")
+    description = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "places_collection"
+        ordering = ["-updated_at"]
+
+
+class CollectionPlace(models.Model):
+    collection = models.ForeignKey(
+        Collection, on_delete=models.CASCADE, related_name="collection_places"
+    )
+    place = models.ForeignKey(
+        "Place", on_delete=models.CASCADE, related_name="collection_places"
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "places_collection_place"
+        ordering = ["-added_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["collection", "place"], name="collection_place_unique"
+            )
+        ]

@@ -1,14 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Bora Ali</title>
-  <desc id="desc">Marca do Bora Ali com pin de localização e prato minimalista.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="ba-title ba-desc">
+  <title id="ba-title">Boora Ali</title>
+  <desc id="ba-desc">Pin de localização com fita de marcação — marca do Boora Ali.</desc>
+
+  <!--
+    Conceito: pin de localização cujo recorte interno é uma fita de bookmark.
+    Leitura dual — "marcar um lugar" + "marcar na memória / diário pessoal".
+    Dois elementos, zero ruído.
+  -->
+
+  <!-- Corpo do pin -->
   <path
-    fill="#ea1d2c"
-    d="M256 40c-76.8 0-139 62.2-139 139 0 94.2 139 293 139 293s139-198.8 139-293c0-76.8-62.2-139-139-139z"
+    fill="#D42028"
+    d="M256 472
+       C168 452 106 344 106 210
+       A150 150 0 0 1 406 210
+       C406 344 344 452 256 472Z"
   />
-  <circle cx="256" cy="178" r="78" fill="#fff" />
-  <circle cx="256" cy="178" r="36" fill="#ea1d2c" />
+
+  <!-- Recorte: fita bookmark (retângulo com V invertido na base) -->
   <path
-    fill="#1f1f1f"
-    d="M205 246h102c4.4 0 8 3.6 8 8v18c0 4.4-3.6 8-8 8h-102c-4.4 0-8-3.6-8-8v-18c0-4.4 3.6-8 8-8z"
+    fill="#FAF7F2"
+    d="M218 138H294Q306 138 306 150V264L256 234L206 264V150Q206 138 218 138Z"
   />
 </svg>

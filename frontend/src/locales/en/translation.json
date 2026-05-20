@@ -299,6 +299,7 @@
   },
   "common": {
     "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close",
@@ -329,6 +330,21 @@
       "title": "Trash is empty",
       "description": "No deleted places."
     }
+  },
+  "collections": {
+    "title": "Collections",
+    "new": "New collection",
+    "places_count": "place(s)",
+    "add_to": "Add to collection",
+    "in_collections": "In {{count}} collection(s)",
+    "remove_place": "Remove from collection",
+    "delete": "Delete collection",
+    "delete_confirm": "Delete this collection? Places will not be deleted.",
+    "empty": "No collections yet",
+    "empty_places": "No places in this collection",
+    "name_placeholder": "Collection name",
+    "description_placeholder": "Description (optional)",
+    "place_removed": "Place removed from collection"
   },
   "termsModal": {
     "title": "Terms of Use",
