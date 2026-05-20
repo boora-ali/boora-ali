@@ -23,6 +23,8 @@ export default function CollectionDetailPage() {
     if (prevId.current === id) return;
     prevId.current = id;
 
+    setState({ status: "loading", data: null });
+
     collectionsService
       .get(id)
       .then((data) => setState({ status: "idle", data }))
@@ -33,8 +35,6 @@ export default function CollectionDetailPage() {
           setState({ status: "error", data: null });
         }
       });
-
-    setState({ status: "loading", data: null });
   }, [id]);
 
   if (notFound) return <NotFoundPage />;

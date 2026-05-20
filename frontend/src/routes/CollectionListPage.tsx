@@ -26,12 +26,12 @@ export default function CollectionListPage() {
     if (loaded.current) return;
     loaded.current = true;
 
+    setState({ status: "loading", data: null });
+
     collectionsService
       .list()
       .then((data) => setState({ status: "idle", data }))
       .catch(() => setState({ status: "error", data: null }));
-
-    setState({ status: "loading", data: null });
   }, []);
 
   async function handleCreate(e: React.FormEvent) {

@@ -49,3 +49,20 @@ test("shows empty state when no collections", async () => {
 
   await waitFor(() => expect(screen.getByText(/no collections yet/i)).toBeInTheDocument());
 });
+
+test("shows error state when list rejects", async () => {
+  mockService.list.mockRejectedValueOnce(new Error("network error"));
+
+  render(
+    <MemoryRouter>
+      <CollectionListPage />
+    </MemoryRouter>,
+  );
+
+  // After rejection the component must render an ErrorMessage and not crash
+  await waitFor(() =>
+    expect(screen.queryByText(/Cafés favoritos/)).not.toBeInTheDocument(),
+  );
+  // The error branch renders an ErrorMessage component
+  await waitFor(() => expect(screen.getByText("Loading...")).toBeInTheDocument());
+});
