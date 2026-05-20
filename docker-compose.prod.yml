@@ -57,10 +57,13 @@ services:
   backend:
     image: ghcr.io/boora-ali/backend:${IMAGE_TAG:-dev-latest}
     restart: unless-stopped
-    # Porta exposta apenas na rede interna — nginx do frontend roteia /api/.
-    # Não há bind no host; o Traefik não precisa enxergar o backend diretamente.
+    # Porta exposta na rede interna para nginx rotear /api/.
+    # Loopback-only no host para SSH tunnel → Django admin.
+    # Porta 8001 evita conflito com Coolify UI que ocupa a 8000.
     expose:
       - "8000"
+    ports:
+      - "127.0.0.1:8001:8000"
     env_file:
       - .env
     environment:
