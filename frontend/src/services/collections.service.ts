@@ -15,7 +15,8 @@ export interface CollectionDetail extends Collection {
 }
 
 export const collectionsService = {
-  list: () => api.get<Collection[]>("/collections/").then((r) => r.data),
+  list: () =>
+    api.get<{ count: number; results: Collection[] }>("/collections/").then((r) => r.data.results),
   create: (data: Pick<Collection, "name" | "emoji" | "description">) =>
     api.post<Collection>("/collections/", data).then((r) => r.data),
   get: (id: string) => api.get<CollectionDetail>(`/collections/${id}/`).then((r) => r.data),
