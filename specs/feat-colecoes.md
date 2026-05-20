@@ -20,11 +20,11 @@ separar "Restaurantes em SP", "Para ir com família", "Viagem Rio 2026" — tudo
 ## Skills a invocar antes de implementar
 
 Backend:
-- `/django-expert` — M2M through model, viewsets, nested routes
+- `/django-expert` — tabela associativa, viewsets, nested routes
 - `/bora-ali-backend` — PublicIdModel, MutationMixin, convenções de URL
 
 Frontend:
-- `/bora-ali-frontend` — React Query, serviços de API, roteamento
+- `/bora-ali-frontend` — serviços de API, hooks com useState/useEffect, roteamento
 - `/frontend-design` — Card, Sheet, Button, Badge (shadcn/ui)
 
 > **Dependências**: nenhuma. Feature autossuficiente.
@@ -52,6 +52,10 @@ Frontend:
 
 ### 1. `models.py` — `Collection` e `CollectionPlace`
 
+Padrão de tabela associativa explícita: sem `ManyToManyField` no `Collection`.
+Toda a manipulação da relação passa por `CollectionPlace` diretamente — evita ter dois
+caminhos para a mesma operação e mantém controle total sobre campos extras (ex.: `added_at`).
+
 ```python
 # backend/places/models.py
 class Collection(PublicIdModel):
@@ -64,31 +68,37 @@ class Collection(PublicIdModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    places = models.ManyToManyField(
-        "Place",
-        through="CollectionPlace",
-        related_name="collections",
-    )
-
     class Meta:
         db_table = "places_collection"
         ordering = ["-updated_at"]
 
 
 class CollectionPlace(models.Model):
-    collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    place = models.ForeignKey("Place", on_delete=models.CASCADE)
+    collection = models.ForeignKey(
+        Collection, on_delete=models.CASCADE, related_name="collection_places"
+    )
+    place = models.ForeignKey(
+        "Place", on_delete=models.CASCADE, related_name="collection_places"
+    )
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "places_collection_place"
-        unique_together = [("collection", "place")]
         ordering = ["-added_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["collection", "place"], name="collection_place_unique"
+            )
+        ]
 ```
 
+> `unique_together` é depreciado desde Django 4.2 — usar `UniqueConstraint`.
 > Rodar `python manage.py makemigrations places` após criar os modelos.
 
 ### 2. `serializers.py`
+
+`place_count` vem da anotação do queryset. Para o detail, places são acessados via
+`collection_places` (reverse FK da tabela associativa) — sem depender do campo M2M.
 
 ```python
 # backend/places/serializers.py
@@ -102,17 +112,26 @@ class CollectionSerializer(serializers.ModelSerializer):
 
 
 class CollectionDetailSerializer(CollectionSerializer):
-    places = PlaceListSerializer(many=True, read_only=True)
+    places = serializers.SerializerMethodField()
 
     class Meta(CollectionSerializer.Meta):
         fields = CollectionSerializer.Meta.fields + ["places"]
+
+    def get_places(self, obj):
+        # collection_places é prefetched no get_queryset do viewset
+        qs = [cp.place for cp in obj.collection_places.all()]
+        return PlaceListSerializer(qs, many=True).data
 ```
 
 ### 3. `views.py` — `CollectionViewSet`
 
+`Count("collection_places")` — via FK reverso da tabela associativa, não via campo M2M.
+`select_related("user")` removido — a queryset já filtra `user=request.user`, não há necessidade
+de join.
+
 ```python
 # backend/places/views.py
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from core.viewsets import ViewSetBase
 from core.views import MutationMixin
 
@@ -120,10 +139,15 @@ class CollectionViewSet(ViewSetBase):
     lookup_field = "public_id"
 
     def get_queryset(self):
-        qs = Collection.objects.filter(user=self.request.user).select_related("user")
+        qs = Collection.objects.filter(user=self.request.user)
         if self.action == "list":
-            return qs.annotate(place_count=Count("places"))
-        return qs.prefetch_related("places")
+            return qs.annotate(place_count=Count("collection_places"))
+        return qs.prefetch_related(
+            Prefetch(
+                "collection_places",
+                queryset=CollectionPlace.objects.select_related("place").order_by("-added_at"),
+            )
+        )
 
     def get_serializer_class(self):
         if self.action == "retrieve":
@@ -148,8 +172,8 @@ class CollectionPlaceView(MutationMixin, APIView):
         collection, place = self._get_collection_and_place(
             request, collection_public_id, place_public_id
         )
-        CollectionPlace.objects.get_or_create(collection=collection, place=place)
-        return Response(status=201)
+        _, created = CollectionPlace.objects.get_or_create(collection=collection, place=place)
+        return Response(status=201 if created else 200)
 
     def delete(self, request, collection_public_id, place_public_id):
         collection, place = self._get_collection_and_place(
@@ -180,8 +204,13 @@ path(
 
 ### 5. Frontend — `services/collections.service.ts`
 
+`baseURL` do axios já inclui `/api` — caminhos sem prefixo `/api/`.
+
 ```typescript
 // frontend/src/services/collections.service.ts
+import { api } from "./api";
+import type { Place } from "./places.service";
+
 export interface Collection {
   public_id: string;
   name: string;
@@ -191,42 +220,58 @@ export interface Collection {
   updated_at: string;
 }
 
+export interface CollectionDetail extends Collection {
+  places: Place[];
+}
+
 export const collectionsService = {
-  list: () => api.get<Collection[]>("/api/collections/"),
+  list: () => api.get<Collection[]>("/collections/"),
   create: (data: Pick<Collection, "name" | "emoji" | "description">) =>
-    api.post<Collection>("/api/collections/", data),
-  get: (id: string) => api.get<Collection & { places: Place[] }>(`/api/collections/${id}/`),
-  update: (id: string, data: Partial<Collection>) =>
-    api.patch<Collection>(`/api/collections/${id}/`, data),
-  delete: (id: string) => api.delete(`/api/collections/${id}/`),
+    api.post<Collection>("/collections/", data),
+  get: (id: string) => api.get<CollectionDetail>(`/collections/${id}/`),
+  update: (id: string, data: Partial<Pick<Collection, "name" | "emoji" | "description">>) =>
+    api.patch<Collection>(`/collections/${id}/`, data),
+  delete: (id: string) => api.delete(`/collections/${id}/`),
   addPlace: (collectionId: string, placeId: string) =>
-    api.post(`/api/collections/${collectionId}/places/${placeId}/`),
+    api.post(`/collections/${collectionId}/places/${placeId}/`),
   removePlace: (collectionId: string, placeId: string) =>
-    api.delete(`/api/collections/${collectionId}/places/${placeId}/`),
+    api.delete(`/collections/${collectionId}/places/${placeId}/`),
 };
 ```
 
 ### 6. Frontend — `CollectionListPage.tsx`
 
+O projeto não usa `@tanstack/react-query`. Usar `useState` + `useEffect`.
+
 ```tsx
 // frontend/src/routes/CollectionListPage.tsx
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { collectionsService, type Collection } from "../services/collections.service";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+
 export function CollectionListPage() {
-  const { data: collections } = useQuery({
-    queryKey: ["collections"],
-    queryFn: collectionsService.list,
-  });
+  const { t } = useTranslation();
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  useEffect(() => {
+    collectionsService.list().then(({ data }) => setCollections(data));
+  }, []);
 
   return (
     <div className="space-y-3 p-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">{t("collections.title")}</h1>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
           {t("collections.new")}
         </Button>
       </div>
-      {collections?.map((c) => (
+      {collections.map((c) => (
         <Link key={c.public_id} to={`/collections/${c.public_id}`}>
-          <Card className="p-4 flex items-center gap-3">
+          <Card className="flex items-center gap-3 p-4">
             <span className="text-2xl">{c.emoji}</span>
             <div>
               <p className="font-medium">{c.name}</p>
@@ -237,6 +282,7 @@ export function CollectionListPage() {
           </Card>
         </Link>
       ))}
+      {/* TODO: CreateCollectionModal open={createOpen} onClose={() => setCreateOpen(false)} */}
     </div>
   );
 }
@@ -244,20 +290,35 @@ export function CollectionListPage() {
 
 ### 7. Botão "Adicionar a coleção" no PlaceDetail
 
+`handleToggle` deve ser `async` e awaitar as chamadas para garantir feedback de erro ao usuário.
+
 ```tsx
-// Dropdown ou Sheet listando as coleções do usuário com checkbox
 function AddToCollectionSheet({ placePublicId }: { placePublicId: string }) {
-  const { data: collections } = useQuery({ queryKey: ["collections"], queryFn: collectionsService.list });
-  const { data: place } = useQuery({ queryKey: ["place", placePublicId], queryFn: ... });
+  const { t } = useTranslation();
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [placeCollectionIds, setPlaceCollectionIds] = useState<Set<string>>(new Set());
 
-  const placeCollectionIds = new Set(place?.collections?.map((c) => c.public_id));
+  useEffect(() => {
+    collectionsService.list().then(({ data }) => setCollections(data));
+    // place.collections preenchido pelo endpoint GET /places/:id/ (expandir se necessário)
+  }, [placePublicId]);
 
-  function handleToggle(collectionId: string) {
+  async function handleToggle(collectionId: string) {
     const isIn = placeCollectionIds.has(collectionId);
-    if (isIn) {
-      collectionsService.removePlace(collectionId, placePublicId);
-    } else {
-      collectionsService.addPlace(collectionId, placePublicId);
+    try {
+      if (isIn) {
+        await collectionsService.removePlace(collectionId, placePublicId);
+        setPlaceCollectionIds((prev) => {
+          const next = new Set(prev);
+          next.delete(collectionId);
+          return next;
+        });
+      } else {
+        await collectionsService.addPlace(collectionId, placePublicId);
+        setPlaceCollectionIds((prev) => new Set(prev).add(collectionId));
+      }
+    } catch {
+      // exibir toast de erro
     }
   }
   // ...
@@ -294,7 +355,8 @@ scripts/dev-check.sh frontend
 
 Teste manual:
 1. `POST /api/collections/` → cria coleção
-2. `POST /api/collections/{id}/places/{place_id}/` → adiciona place
-3. `GET /api/collections/{id}/` → retorna places da coleção
-4. `DELETE /api/collections/{id}/places/{place_id}/` → remove place
-5. Frontend: criar coleção, adicionar place pelo PlaceDetail, ver coleção com place listado
+2. `POST /api/collections/{id}/places/{place_id}/` → adiciona place, retorna 201
+3. `POST /api/collections/{id}/places/{place_id}/` novamente → retorna 200 (idempotente)
+4. `GET /api/collections/{id}/` → retorna places da coleção
+5. `DELETE /api/collections/{id}/places/{place_id}/` → remove place
+6. Frontend: criar coleção, adicionar place pelo PlaceDetail, ver coleção com place listado

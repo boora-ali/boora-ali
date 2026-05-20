@@ -48,6 +48,8 @@ endpoint para confirmar o token, e (opcional) bloquear acesso enquanto não veri
 
 ### 1. `settings.py` — backend de email
 
+`PUBLIC_BASE_URL` já existe em `settings.py`. Adicionar apenas as configurações de email:
+
 ```python
 # backend/config/settings.py
 EMAIL_BACKEND = os.getenv(
@@ -82,10 +84,15 @@ class UserProfile(models.Model):
 
 ```python
 # backend/accounts/views.py
+import logging
 import secrets
-from django.core.mail import send_mail
+
 from django.conf import settings
+from django.core.mail import send_mail
 from django.utils import timezone
+
+_log = logging.getLogger("accounts.views")
+
 
 def _send_verification_email(user, profile):
     token = secrets.token_urlsafe(32)
@@ -94,32 +101,52 @@ def _send_verification_email(user, profile):
     profile.save(update_fields=["email_verification_token", "email_verification_sent_at"])
 
     verification_url = f"{settings.PUBLIC_BASE_URL}/verify-email?token={token}"
-    send_mail(
-        subject="Confirme seu email — Bora Ali",
-        message=f"Acesse para verificar: {verification_url}",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=True,  # não bloquear registro se email falhar
-    )
+    try:
+        send_mail(
+            subject="Confirme seu email — Bora Ali",
+            message=f"Acesse para verificar: {verification_url}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception:
+        # Não bloquear o registro se o email falhar, mas logar para rastreio
+        _log.exception("Falha ao enviar email de verificação para %s", user.email)
+
 
 # Chamar _send_verification_email() após criar o usuário no RegisterView
 ```
 
-### 4. `views.py` — endpoint de verificação
+### 4. `views.py` — endpoints de verificação e reenvio
 
 ```python
 # backend/accounts/views.py
+from datetime import timedelta
+
+from django.conf import settings
+from django.utils import timezone
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
+
 from core.views import MutationMixin
+from accounts.models import UserProfile
+
 
 class VerifyEmailView(MutationMixin, APIView):
-    permission_classes = []  # público — token é o segredo
+    permission_classes = [AllowAny]  # público — token é o segredo
 
     def post(self, request):
-        token = request.data.get("token", "")
+        token = request.data.get("token", "").strip()
         if not token:
             raise ValidationError({"token": "Token obrigatório."})
 
-        profile = UserProfile.objects.filter(email_verification_token=token).first()
+        # Filtrar por token não-vazio evita match acidental no default=""
+        profile = UserProfile.objects.filter(
+            email_verification_token=token,
+            email_verification_sent_at__isnull=False,
+        ).first()
         if not profile:
             raise ValidationError({"token": "Token inválido ou expirado."})
 
@@ -131,14 +158,43 @@ class VerifyEmailView(MutationMixin, APIView):
         profile.email_verification_token = ""
         profile.save(update_fields=["email_verified", "email_verification_token"])
         return Response({"detail": "Email verificado com sucesso."})
+
+
+class ResendVerificationEmailView(MutationMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        profile = request.user.profile
+        if profile.email_verified:
+            return Response({"detail": "Email já verificado."})
+        _send_verification_email(request.user, profile)
+        return Response({"detail": "Email de verificação reenviado."})
 ```
 
-### 5. (Opcional) Bloquear acesso enquanto não verificado
+### 5. `urls.py` — registrar as novas rotas
+
+```python
+# backend/accounts/urls.py
+from django.urls import path
+from accounts.views import VerifyEmailView, ResendVerificationEmailView
+
+urlpatterns = [
+    # ... rotas existentes ...
+    path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
+    path("resend-verification/", ResendVerificationEmailView.as_view(), name="resend-verification"),
+]
+```
+
+### 6. (Opcional) Bloquear acesso enquanto não verificado
 
 ```python
 # backend/accounts/authentication.py — em SingleSessionJWTAuthentication.authenticate()
-# Após validar o token, verificar se email está confirmado:
-if not user.profile.email_verified and not user.is_google_account:
+# Após validar o token JWT, verificar se email está confirmado.
+# Contas Google (GoogleIdentity relacionada) são isentas — email já validado pelo Google.
+from accounts.models import GoogleIdentity
+
+is_google = GoogleIdentity.objects.filter(user=user).exists()
+if not user.profile.email_verified and not is_google:
     raise EmailNotVerifiedException()
 ```
 
@@ -158,3 +214,6 @@ Teste manual:
 1. Registrar conta → verificar email no console (dev) ou caixa de entrada (prod)
 2. Chamar `POST /api/auth/verify-email/` com o token → `email_verified = True`
 3. Token expirado → retornar erro 400
+4. Chamar `POST /api/auth/verify-email/` com token vazio `""` → erro 400 (não 500)
+5. Chamar `POST /api/auth/resend-verification/` autenticado → novo token gerado
+6. Conta Google → `email_verified` deve ser `True` no registro (Google já validou)

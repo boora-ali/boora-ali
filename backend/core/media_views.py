@@ -2,7 +2,7 @@ import logging
 import posixpath
 
 from django.core.files.storage import default_storage
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponse
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -35,17 +35,25 @@ def serve_user_media(request, path):
 
     try:
         if _use_s3_signing():
-            signed_url = _build_signed_url(path)
+            media_url = _build_signed_url(path)
         else:
-            signed_url = default_storage.url(path)
-        if not signed_url:
+            media_url = default_storage.url(path)
+        if not media_url:
             raise Http404
     except Http404:
         raise
     except Exception:
-        logger.warning("Failed to sign URL for %s", path, exc_info=True)
+        logger.warning("Failed to build media URL for %s", path, exc_info=True)
         raise Http404
 
-    response = HttpResponseRedirect(signed_url)
-    response["Cache-Control"] = "private, max-age=0, no-store"
+    # X-Accel-Redirect: nginx intercepta este response vazio, descarta o body,
+    # e faz subrequest interno para /_r2_proxy/ que faz proxy_pass para a URL
+    # assinada do R2/VersityGW (passada via X-Accel-Target).
+    # Resultado: browser faz 1 request autenticado → recebe bytes diretamente.
+    # Sem redirect cross-origin → sem CORS. Sem URL assinada no cliente → sem expiração.
+    # Cache-Control permite o browser cachear: mesma imagem na sessão = 0 requests extras.
+    response = HttpResponse()
+    response["X-Accel-Redirect"] = "/_r2_proxy/"
+    response["X-Accel-Target"] = media_url
+    response["Cache-Control"] = "private, max-age=31536000, immutable"
     return response
