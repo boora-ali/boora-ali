@@ -71,7 +71,7 @@ export default function RegisterPage() {
         cf_turnstile_response: turnstileToken || undefined,
         terms_accepted: true,
       });
-      nav("/login");
+      nav("/login", { state: { emailSent: true } });
     } catch (error) {
       const apiError = getApiErrorState(error, t("auth.register.error"));
       toast.error(apiError.message);
@@ -89,9 +89,9 @@ export default function RegisterPage() {
         <meta name="description" content="Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali." />
         <link rel="canonical" href="https://booraali.com.br/register" />
       </Helmet>
-      <div className="flex-1 max-w-sm w-full mx-auto p-6 mt-16 space-y-4">
+      <div className="flex-1 max-w-sm w-full mx-auto p-6 mt-8 space-y-3">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <h1 className="font-fraunces text-3xl font-bold text-center text-foreground">
               {t("auth.register.title")}
             </h1>

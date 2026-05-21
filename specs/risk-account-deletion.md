@@ -1,4 +1,4 @@
-# Risco — Exclusão de conta sem período de carência
+# Risco — Exclusão de conta sem período de carência ✅ IMPLEMENTADO
 
 ## Problema
 
@@ -27,11 +27,14 @@ pode ser acionada por acidente ou por acesso indevido à conta.
 
 Backend:
 - `/django-expert` — padrões Django, models, views, tasks, migrations
+- `/django-patterns` — grace period pattern, cascade delete, periodic tasks de purge
 - `/bora-ali-backend` — convenções do projeto (UserProfile, SingleSessionTokenObtainPairSerializer, MutationMixin)
 
 Frontend:
 - `/bora-ali-frontend` — convenções do frontend (serviços de API, i18n, testes)
 - `/frontend-design` — componentes shadcn/ui (`AlertDialog`, `Card`, `Button`)
+- `/impeccable` — danger zone layout, AlertDialog de confirmação destrutiva, loading state
+- `/design-taste-frontend` — botão destrutivo com estado pending, feedback pós-ação
 
 > Pré-requisito: implementar `feat-notifications.md` antes (notificação de conta agendada usada no passo 2).
 
@@ -208,15 +211,21 @@ import {
 import { authService } from "../services/auth.service";
 
 // Dentro do componente AccountPage:
+const navigate = useNavigate();
 const [deleteError, setDeleteError] = useState("");
+const [isDeleting, setIsDeleting] = useState(false);
 
 async function onDeleteAccount() {
+  setIsDeleting(true);
+  setDeleteError("");
   try {
     await authService.deleteAccount();
-    // Redirecionar para logout após solicitar exclusão
-    // A conta ainda existe — o usuário pode logar e cancelar
+    // Conta ainda existe — redireciona para login com aviso de carência
+    navigate("/login?deleted=1");
   } catch {
     setDeleteError(t("account.delete.error"));
+  } finally {
+    setIsDeleting(false);
   }
 }
 
@@ -230,7 +239,9 @@ async function onDeleteAccount() {
       {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="destructive" size="sm">{t("account.delete.button")}</Button>
+          <Button variant="destructive" size="sm" disabled={isDeleting}>
+            {t("account.delete.button")}
+          </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -240,12 +251,13 @@ async function onDeleteAccount() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90"
+              disabled={isDeleting}
               onClick={onDeleteAccount}
             >
-              {t("account.delete.confirm.action")}
+              {isDeleting ? t("account.delete.deleting") : t("account.delete.confirm.action")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -265,7 +277,8 @@ async function onDeleteAccount() {
 "account.delete.error": "Erro ao solicitar exclusão. Tente novamente.",
 "account.delete.confirm.title": "Excluir conta permanentemente?",
 "account.delete.confirm.description": "Sua conta ficará agendada para exclusão em 7 dias. Se fizer login antes disso, ela será reativada automaticamente.",
-"account.delete.confirm.action": "Sim, excluir minha conta"
+"account.delete.confirm.action": "Sim, excluir minha conta",
+"account.delete.deleting": "Excluindo..."
 ```
 
 ---

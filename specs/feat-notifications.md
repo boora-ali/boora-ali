@@ -1,4 +1,4 @@
-# Feature — Sistema de Notificações
+# Feature — Sistema de Notificações ✅ IMPLEMENTADO
 
 ## Objetivo
 

@@ -22,11 +22,13 @@ contato. Não há página pública para o estabelecimento ser descoberto por out
 
 Backend:
 - `/django-expert` — ModelViewSet, serializers, ImageService, nested routes
+- `/django-patterns` — service layer, queryset managers, signals
 - `/bora-ali-backend` — PublicIdModel, MutationMixin, ImageService, convenções
 
 Frontend:
 - `/bora-ali-frontend` — React Query, React Hook Form + Zod, i18n
-- `/frontend-design` — Card, Avatar, Badge, Sheet (shadcn/ui)
+- `/impeccable` — layout de página pública, lista de cardápio, skeleton states
+- `/design-taste-frontend` — cover photo, affordances de botão de contato
 
 > **Dependências**: `feat-tipo-conta.md` (obrigatório) + `feat-perfil-publico.md`
 > (para `username` em `UserProfile`).
@@ -125,6 +127,7 @@ class MenuItem(PublicIdModel):
 ```python
 # backend/establishments/serializers.py
 from rest_framework import serializers
+from core.image_service import ImageService
 from .models import EstablishmentProfile, MenuItem
 
 
@@ -150,9 +153,11 @@ class EstablishmentProfileSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         cover_photo = validated_data.pop("cover_photo", None)
         if cover_photo:
-            ImageService.delete(instance.cover_photo)
-            ImageService.save(instance, cover_photo, category="establishments/covers",
-                              owner_pk=instance.user_id)
+            if instance.cover_photo:
+                ImageService.delete(instance.cover_photo)
+            instance.cover_photo = ImageService.save(
+                cover_photo, user_id=instance.user_id, category="establishments/covers"
+            )
         return super().update(instance, validated_data)
 
 
@@ -177,7 +182,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from core.views import MutationMixin
-from core.viewsets import ViewSetBase
 from .models import EstablishmentProfile, MenuItem
 from .serializers import (
     EstablishmentProfileSerializer, MenuItemSerializer, PublicEstablishmentSerializer
@@ -278,61 +282,106 @@ export const establishmentService = {
 
 ```tsx
 // frontend/src/routes/EstablishmentPublicPage.tsx
+import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet-async";
+import { establishmentService } from "@/services/establishment.service";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { NotFound } from "@/components/NotFound";
+
 export function EstablishmentPublicPage() {
   const { username } = useParams<{ username: string }>();
-  const { data, isError } = useQuery({
+  const { t } = useTranslation();
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["establishment", username],
     queryFn: () => establishmentService.getPublic(username!),
   });
 
   if (isError) return <NotFound />;
 
+  if (isLoading) {
+    return (
+      <div className="max-w-lg mx-auto space-y-4">
+        <Skeleton className="w-full aspect-[4/3]" />
+        <div className="p-4 space-y-3">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-lg mx-auto p-4 space-y-6">
+    <div className="max-w-lg mx-auto pb-8">
       <Helmet>
         <title>{data?.business_name} — Bora Ali</title>
         <meta name="robots" content="noindex" />
       </Helmet>
 
+      {/* Foto bleeding-edge — sem padding lateral, sem radius, sem altura fixa */}
       {data?.cover_photo && (
-        <img src={data.cover_photo} className="w-full rounded-xl h-48 object-cover" />
+        <img
+          src={data.cover_photo}
+          alt={data.business_name}
+          className="w-full aspect-[4/3] object-cover"
+        />
       )}
 
-      <div>
-        <Badge>{data?.category}</Badge>
-        <h1 className="text-2xl font-semibold mt-1">{data?.business_name}</h1>
-        <p className="text-muted-foreground text-sm">{data?.description}</p>
-      </div>
-
-      <div className="flex gap-3">
-        {data?.menu_url && (
-          <Button asChild variant="outline" size="sm">
-            <a href={data.menu_url} target="_blank">{t("establishment.view_menu")}</a>
-          </Button>
-        )}
-        {data?.phone && (
-          <Button asChild variant="outline" size="sm">
-            <a href={`tel:${data.phone}`}>{t("establishment.call")}</a>
-          </Button>
-        )}
-      </div>
-
-      {data?.menu_items && data.menu_items.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="font-medium">{t("establishment.menu")}</h2>
-          {data.menu_items.map((item) => (
-            <div key={item.public_id} className="flex justify-between items-start border rounded-lg p-3">
-              <div>
-                <p className="font-medium">{item.name}</p>
-                <p className="text-sm text-muted-foreground">{item.description}</p>
-              </div>
-              <span className="font-medium text-sm">
-                {formatCurrency(item.price)}
-              </span>
-            </div>
-          ))}
+      <div className="p-4 space-y-5">
+        <div>
+          {data?.category && <Badge className="mb-1">{data.category}</Badge>}
+          <h1 className="text-2xl font-semibold mt-1">{data?.business_name}</h1>
+          {data?.description && (
+            <p className="text-muted-foreground text-sm mt-1">{data.description}</p>
+          )}
         </div>
-      )}
+
+        <div className="flex gap-3">
+          {data?.menu_url && (
+            <Button asChild variant="outline" size="sm">
+              <a href={data.menu_url} target="_blank" rel="noopener noreferrer">
+                {t("establishment.view_menu")}
+              </a>
+            </Button>
+          )}
+          {data?.phone && (
+            <Button asChild variant="outline" size="sm">
+              <a href={`tel:${data.phone}`}>{t("establishment.call")}</a>
+            </Button>
+          )}
+        </div>
+
+        {/* Cardápio — divide-y sem card por item */}
+        {data?.menu_items && data.menu_items.length > 0 ? (
+          <div>
+            <h2 className="font-medium mb-2">{t("establishment.menu")}</h2>
+            <div className="divide-y">
+              {data.menu_items.map((item) => (
+                <div key={item.public_id} className="flex justify-between items-start py-3">
+                  <div className="min-w-0 pr-4">
+                    <p className="font-medium truncate">{item.name}</p>
+                    {item.description && (
+                      <p className="text-sm text-muted-foreground">{item.description}</p>
+                    )}
+                  </div>
+                  <span className="font-medium text-sm shrink-0">
+                    {formatCurrency(item.price)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            {t("establishment.no_menu_items")}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -344,6 +393,7 @@ export function EstablishmentPublicPage() {
 "establishment.view_menu": "Ver cardápio",
 "establishment.call": "Ligar",
 "establishment.menu": "Cardápio",
+"establishment.no_menu_items": "Cardápio em breve",
 "dashboard.profile_saved": "Perfil salvo!",
 "dashboard.menu_item_added": "Item adicionado ao cardápio"
 ```

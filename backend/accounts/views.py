@@ -1,7 +1,12 @@
 import logging
+import secrets
+from datetime import timedelta
 
+import resend
+from django.conf import settings
 from django.utils import timezone
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -27,7 +32,38 @@ from .token_serializers import (
 )
 from .turnstile import TurnstileMixin
 
+resend.api_key = settings.RESEND_API_KEY
+
 logger = logging.getLogger(__name__)
+
+_email_log = logging.getLogger("accounts.email")
+
+
+def _send_verification_email(user, profile) -> None:
+    token = secrets.token_urlsafe(32)
+    profile.email_verification_token = token
+    profile.email_verification_sent_at = timezone.now()
+    profile.save(
+        update_fields=["email_verification_token", "email_verification_sent_at"]
+    )
+
+    verification_url = f"{settings.PUBLIC_BASE_URL}/verify-email?token={token}"
+    try:
+        resend.Emails.send(
+            {
+                "from": settings.EMAIL_FROM,
+                "to": [user.email],
+                "subject": "Confirme seu email — Bora Ali",
+                "html": (
+                    "<p>Olá! Acesse o link abaixo para verificar seu email:</p>"
+                    f"<p><a href='{verification_url}'>{verification_url}</a></p>"
+                    f"<p>O link expira em {settings.EMAIL_VERIFICATION_TIMEOUT_HOURS} horas.</p>"
+                ),
+            }
+        )
+    except Exception:
+        _email_log.exception("Falha ao enviar email de verificação para %s", user.email)
+
 
 REFRESH_COOKIE_NAME = "boraali_refresh"
 REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7  # 7 days
@@ -53,6 +89,11 @@ class RegisterView(
     permission_classes = [permissions.AllowAny]
     throttle_classes = [AuthRateThrottle]
     throttle_scope = "auth"
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        _send_verification_email(user, profile)
 
 
 class ThrottledLoginView(
@@ -129,6 +170,66 @@ class PasswordChangeView(MutationMixin, RateLimitHeadersMixin, generics.GenericA
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class DeleteAccountView(MutationMixin, APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        if profile.deletion_requested_at:
+            return Response({"detail": "Exclusão já solicitada."}, status=400)
+        profile.deletion_requested_at = timezone.now()
+        profile.save(update_fields=["deletion_requested_at"])
+
+        from notifications.models import NotificationType
+        from notifications.service import notify
+
+        notify(
+            user=request.user,
+            notification_type=NotificationType.ACCOUNT_DELETION,
+            title="Conta agendada para exclusão",
+            body="Sua conta será excluída permanentemente em 7 dias. "
+            "Faça login antes disso para cancelar.",
+        )
+
+        return Response({"detail": "Conta agendada para exclusão em 7 dias."})
+
+
+class VerifyEmailView(MutationMixin, APIView):
+    permission_classes = [permissions.AllowAny]  # token é o segredo
+
+    def post(self, request):
+        token = request.data.get("token", "").strip()
+        if not token:
+            raise ValidationError({"token": "Token obrigatório."})
+
+        profile = UserProfile.objects.filter(
+            email_verification_token=token,
+            email_verification_sent_at__isnull=False,
+        ).first()
+        if not profile:
+            raise ValidationError({"token": "Token inválido ou expirado."})
+
+        timeout = timedelta(hours=settings.EMAIL_VERIFICATION_TIMEOUT_HOURS)
+        if timezone.now() - profile.email_verification_sent_at > timeout:
+            raise ValidationError({"token": "Token expirado. Solicite um novo."})
+
+        profile.email_verified = True
+        profile.email_verification_token = ""
+        profile.save(update_fields=["email_verified", "email_verification_token"])
+        return Response({"detail": "Email verificado com sucesso."})
+
+
+class ResendVerificationEmailView(MutationMixin, APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        if profile.email_verified:
+            return Response({"detail": "Email já verificado."})
+        _send_verification_email(request.user, profile)
+        return Response({"detail": "Email de verificação reenviado."})
 
 
 class TermsAcceptView(MutationMixin, APIView):

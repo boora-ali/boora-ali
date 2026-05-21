@@ -46,10 +46,10 @@ def test_create_place_accepts_manual_coordinates(auth_client):
     assert r.data["longitude"] == "-60.0250000"
 
 
-@pytest.mark.django_db(transaction=True)
+@patch("places.views.transaction.on_commit", side_effect=lambda fn: fn())
 @patch("places.views.resolve_place_coords.delay")
 def test_create_place_with_short_maps_url_queues_background_resolution(
-    mock_delay, auth_client
+    mock_delay, _mock_on_commit, auth_client
 ):
     r = auth_client.post(
         "/api/places/",
@@ -72,7 +72,7 @@ def test_create_place_with_short_maps_url_queues_background_resolution(
     mock_delay.assert_called_once_with(place.pk)
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 @patch("places.views.resolve_place_coords.delay")
 def test_create_place_with_long_maps_url_resolves_coords_inline(
     mock_delay, auth_client
@@ -150,10 +150,10 @@ def test_create_place_rejects_non_google_maps_url(auth_client):
     assert "maps_url" in r.data["field_errors"]
 
 
-@pytest.mark.django_db(transaction=True)
+@patch("places.views.transaction.on_commit", side_effect=lambda fn: fn())
 @patch("places.views.resolve_place_coords.delay")
 def test_update_place_with_short_maps_url_queues_background_resolution(
-    mock_delay, auth_client, user
+    mock_delay, _mock_on_commit, auth_client, user
 ):
     place = baker.make("places.Place", user=user, maps_url="")
 

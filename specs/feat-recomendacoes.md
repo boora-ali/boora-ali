@@ -22,11 +22,14 @@ precisa buscar ativamente.
 
 Backend:
 - `/django-expert` — annotate, Count, Subquery, queryset otimizado
+- `/django-patterns` — queryset de recomendações, N+1 em categorias, periodic tasks
 - `/bora-ali-backend` — convenções de views, tasks.py, Place/Visit models
 
 Frontend:
 - `/bora-ali-frontend` — React Query, i18n, scroll horizontal
 - `/frontend-design` — Card, Badge, ScrollArea (shadcn/ui)
+- `/impeccable` — seção de recomendados, scroll horizontal, empty state
+- `/design-taste-frontend` — card de estabelecimento recomendado, affordances de CTA
 
 > **Dependências**: `feat-estabelecimento-perfil.md` (obrigatório — `EstablishmentProfile`
 > precisa existir) + `feat-notifications.md` (para notificações periódicas).

@@ -6,7 +6,7 @@ import { visitsService } from "../services/visits.service";
 import { collectionsService, type Collection } from "../services/collections.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -418,7 +418,7 @@ export default function PlaceDetailPage() {
       )}
 
       <Dialog open={coverLightboxOpen} onOpenChange={setCoverLightboxOpen}>
-        <DialogContent className="max-w-screen-md p-0 overflow-hidden">
+        <DialogContent className="max-w-screen-md p-0 overflow-hidden" aria-describedby={undefined}>
           {place.cover_photo && (
             <AuthImage src={place.cover_photo} alt={place.name} className="w-full h-auto max-h-[90vh] object-contain" />
           )}
@@ -507,11 +507,11 @@ export default function PlaceDetailPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("placeDetail.deleteConfirmTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("placeDetail.deleteConfirmMessage")} {t("placeDetail.deleteConfirmRestore")}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {t("placeDetail.deleteConfirmMessage")} {t("placeDetail.deleteConfirmRestore")}
-            </p>
             <div className="flex gap-2 pt-1">
               <Button variant="secondary" className="flex-1" onClick={() => setDeleteConfirmOpen(false)}>
                 {t("common.cancel")}

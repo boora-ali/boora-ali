@@ -13,7 +13,8 @@ from core.exceptions import (
 )
 
 from .authentication import invalidate_session_cache
-from .models import UserSession
+from .exceptions import EmailNotVerifiedException
+from .models import GoogleIdentity, UserSession
 
 User = get_user_model()
 
@@ -55,7 +56,19 @@ class SingleSessionTokenObtainPairSerializer(TokenObtainPairSerializer):
         if not user or not user.is_active:
             raise InvalidCredentialsException
 
-        return build_token_pair_for_user(user)
+        profile = getattr(user, "profile", None)
+        if profile and not profile.email_verified:
+            if not GoogleIdentity.objects.filter(user=user).exists():
+                raise EmailNotVerifiedException
+
+        data = build_token_pair_for_user(user)
+
+        if profile is not None and profile.deletion_requested_at is not None:
+            profile.deletion_requested_at = None
+            profile.save(update_fields=["deletion_requested_at"])
+            data["account_reactivated"] = True
+
+        return data
 
 
 def build_token_pair_for_user(user):

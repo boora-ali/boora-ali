@@ -26,6 +26,9 @@ class PlaceQuerySet(models.QuerySet):
     def for_user(self, user):
         return self.filter(user=user).live()
 
+    def with_avg_rating(self):
+        return self.annotate(avg_rating=Avg("visits__overall_rating"))
+
     def with_consumable_stats(self):
         live_consumables = Q(
             visits__deleted_at__isnull=True,

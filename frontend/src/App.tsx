@@ -24,6 +24,7 @@ const TrashPage = lazy(() => import("./routes/TrashPage"));
 const NotFoundPage = lazy(() => import("./routes/NotFoundPage"));
 const CollectionListPage = lazy(() => import("./routes/CollectionListPage"));
 const CollectionDetailPage = lazy(() => import("./routes/CollectionDetailPage"));
+const VerifyEmailPage = lazy(() => import("./routes/VerifyEmailPage"));
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -74,6 +75,7 @@ export default function App() {
                 </PublicRoute>
               }
             />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
             <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
             <Route

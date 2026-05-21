@@ -1,15 +1,15 @@
 import { startTransition, useEffect, useRef, useState, type ComponentType } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { placesService, placePageCache, type Page } from "../services/places.service";
+import { placesService, placePageCache, type Page, type PlaceFilters } from "../services/places.service";
 import type { Place, PlaceStatus } from "../types/place";
 import { PLACE_STATUSES } from "../utils/constants";
 import { PLACES_CHANGED_EVENT } from "../utils/places-state";
 import { useDebounce } from "../hooks/useDebounce";
 import { PlaceCard } from "../components/places/PlaceCard";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Eye, Check, Star, X, BookOpen } from "lucide-react";
+import { PlaceFilterPopover } from "../components/places/PlaceFilterPopover";
 import { EmptyState } from "../components/ui/EmptyState";
 import { LoadingState } from "../components/ui/LoadingState";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
@@ -54,6 +54,7 @@ export default function PlacesPage() {
   const [showMap, setShowMap] = useState(false);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const skipNextSelect = useRef(false);
+  const [advFilters, setAdvFilters] = useState<PlaceFilters>({});
 
   useEffect(() => {
     const handlePlacesChanged = () => setRefreshTick((value) => value + 1);
@@ -62,19 +63,21 @@ export default function PlacesPage() {
   }, []);
 
   // Reset cache and page when filters/search change (React docs pattern: storing prev render info)
-  const [prevFilters, setPrevFilters] = useState({ debouncedSearch, status, refreshTick });
+  const advFiltersKey = JSON.stringify(advFilters);
+  const [prevFilters, setPrevFilters] = useState({ debouncedSearch, status, refreshTick, advFiltersKey });
   if (
     prevFilters.debouncedSearch !== debouncedSearch ||
     prevFilters.status !== status ||
-    prevFilters.refreshTick !== refreshTick
+    prevFilters.refreshTick !== refreshTick ||
+    prevFilters.advFiltersKey !== advFiltersKey
   ) {
-    setPrevFilters({ debouncedSearch, status, refreshTick });
+    setPrevFilters({ debouncedSearch, status, refreshTick, advFiltersKey });
     placePageCache.invalidate();
     setPage(1);
   }
 
   useEffect(() => {
-    const cached = placePageCache.get(page, debouncedSearch, status);
+    const cached = placePageCache.get(page, debouncedSearch, status, advFilters);
     if (cached) {
       startTransition(() => {
         setData(cached);
@@ -88,10 +91,10 @@ export default function PlacesPage() {
       setLoading(true);
     });
     placesService
-      .list({ page, search: debouncedSearch || undefined, status: (status as PlaceStatus) || undefined })
+      .list({ page, search: debouncedSearch || undefined, status: (status as PlaceStatus) || undefined, ...advFilters })
       .then((nextData) => {
         if (cancelled) return;
-        placePageCache.set(page, nextData, debouncedSearch, status);
+        placePageCache.set(page, nextData, debouncedSearch, status, advFilters);
         setData(nextData);
         setError("");
       })
@@ -109,13 +112,13 @@ export default function PlacesPage() {
     return () => {
       cancelled = true;
     };
-  }, [navigate, debouncedSearch, status, page, t, refreshTick]);
+  }, [navigate, debouncedSearch, status, page, t, refreshTick, advFilters]);
 
   useEffect(() => {
     if (!showMap) return;
     let cancelled = false;
     placesService
-      .listMapPins({ search: debouncedSearch || undefined, status: (status as PlaceStatus) || undefined })
+      .listMapPins({ search: debouncedSearch || undefined, status: (status as PlaceStatus) || undefined, ...advFilters })
       .then((places) => {
         if (!cancelled) setMapPlaces(places);
       })
@@ -125,7 +128,7 @@ export default function PlacesPage() {
     return () => {
       cancelled = true;
     };
-  }, [showMap, debouncedSearch, status, refreshTick]);
+  }, [showMap, debouncedSearch, status, refreshTick, advFilters]);
 
   const totalPages = data ? Math.max(1, Math.ceil(data.count / PAGE_SIZE)) : 1;
 
@@ -178,14 +181,13 @@ export default function PlacesPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <Input
-        placeholder={t("places.search")}
-        value={search}
-        onChange={(e) => {
-          setPage(1);
-          setSearch(e.target.value);
-        }}
+      {/* Search + filter inline */}
+      <PlaceFilterPopover
+        filters={advFilters}
+        onApply={(f) => { setPage(1); setAdvFilters(f); }}
+        search={search}
+        onSearchChange={(v) => { setPage(1); setSearch(v); }}
+        searchPlaceholder={t("places.search")}
       />
 
       {/* Status filters */}
@@ -244,7 +246,7 @@ export default function PlacesPage() {
           <CarouselContent>
             {Array.from({ length: totalPages }, (_, i) => {
               const slidePage = i + 1;
-              const cached = placePageCache.get(slidePage, debouncedSearch, status)?.results;
+              const cached = placePageCache.get(slidePage, debouncedSearch, status, advFilters)?.results;
               const slidePlaces = cached ?? (slidePage === page ? data.results : undefined);
               return (
                 <CarouselItem key={i}>
