@@ -2,13 +2,16 @@ from django.urls import path
 
 from .views import (
     CookieTokenRefreshView,
+    DeleteAccountView,
     GoogleLoginView,
     LogoutView,
     MeView,
     PasswordChangeView,
     RegisterView,
+    ResendVerificationEmailView,
     TermsAcceptView,
     ThrottledLoginView,
+    VerifyEmailView,
 )
 
 urlpatterns = [
@@ -20,4 +23,7 @@ urlpatterns = [
     path("me/", MeView.as_view()),
     path("password/", PasswordChangeView.as_view()),
     path("terms/accept/", TermsAcceptView.as_view()),
+    path("me/delete/", DeleteAccountView.as_view()),
+    path("verify-email/", VerifyEmailView.as_view()),
+    path("resend-verification/", ResendVerificationEmailView.as_view()),
 ]

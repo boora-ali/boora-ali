@@ -13,9 +13,11 @@
       "noAccount": "Não tem conta?",
       "register": "Criar conta",
       "sessionExpired": "Sua sessão foi encerrada porque você entrou em outro dispositivo.",
+      "emailSent": "Conta criada! Verifique seu e-mail para ativar o acesso antes de entrar.",
       "emptyFields": "Preencha todos os campos",
       "turnstileRequired": "Conclua a verificação de segurança.",
-      "turnstileUnavailable": "A verificação de segurança não carregou. Recarregue a página e tente novamente."
+      "turnstileUnavailable": "A verificação de segurança não carregou. Recarregue a página e tente novamente.",
+      "emailNotVerified": "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada."
     },
     "turnstile": {
       "loading": "Carregando verificação de segurança...",
@@ -40,7 +42,29 @@
       "termsAnd": "e a",
       "privacyLink": "Política de Privacidade",
       "termsRequired": "Você precisa aceitar os Termos de Uso e a Política de Privacidade para criar uma conta."
+    },
+    "verifyEmail": {
+      "loading": "Verificando seu e-mail...",
+      "successTitle": "E-mail verificado!",
+      "successSubtitle": "Sua conta está ativa. Agora você já pode entrar.",
+      "errorTitle": "Link inválido ou expirado",
+      "errorGeneric": "Não foi possível verificar o e-mail. Tente novamente.",
+      "noToken": "Nenhum token de verificação encontrado. Use o link enviado ao seu e-mail.",
+      "resend": "Reenviar e-mail de verificação",
+      "resentSuccess": "E-mail reenviado! Verifique sua caixa de entrada.",
+      "goToLogin": "Ir para o login"
     }
+  },
+  "filters": {
+    "title": "Filtrar lugares",
+    "status": "Status",
+    "min_rating": "Nota mínima",
+    "max_rating": "Nota máxima",
+    "date_from": "Visitado após",
+    "date_to": "Visitado antes",
+    "apply": "Aplicar",
+    "clear": "Limpar filtros",
+    "any": "Qualquer"
   },
   "places": {
     "title": "Boora Ali",
@@ -123,6 +147,20 @@
       "save": "Salvar senha",
       "saved": "Senha atualizada.",
       "error": "Não foi possível trocar a senha."
+    },
+    "delete": {
+      "title": "Zona de perigo",
+      "description": "Ao excluir sua conta, todos os seus lugares, visitas e dados serão removidos permanentemente.",
+      "grace": "Você tem 7 dias para mudar de ideia — basta fazer login novamente para cancelar.",
+      "button": "Excluir minha conta",
+      "deleting": "Excluindo...",
+      "error": "Erro ao solicitar exclusão. Tente novamente.",
+      "scheduled": "Conta agendada para exclusão em 7 dias. Faça login novamente para cancelar.",
+      "confirm": {
+        "title": "Excluir conta permanentemente?",
+        "description": "Sua conta ficará agendada para exclusão em 7 dias. Se fizer login antes disso, ela será reativada automaticamente.",
+        "action": "Sim, excluir minha conta"
+      }
     }
   },
   "placeDetail": {

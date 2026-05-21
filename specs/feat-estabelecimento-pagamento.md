@@ -21,7 +21,13 @@ O fluxo precisa ser confiável: PIX gerado → confirmação por webhook → cam
 
 Backend:
 - `/django-expert` — APIView, Celery tasks, signals, webhook idempotência
+- `/django-patterns` — service layer (AbacatePayService), idempotência, caching
 - `/bora-ali-backend` — MutationMixin, PublicIdModel, estrutura de tasks.py
+
+Frontend:
+- `/bora-ali-frontend` — React Query polling, useMutation, useEffect para RQ v5
+- `/impeccable` — fluxo de pagamento PIX, seleção de plano, estados de loading
+- `/design-taste-frontend` — QR code display, feedback de aguardando pagamento
 
 > **Dependências**: `feat-tipo-conta.md` + `feat-estabelecimento-perfil.md`
 > (obrigatórios — `EstablishmentProfile` precisa existir).
@@ -298,54 +304,127 @@ path("establishment/webhooks/abacate-pay/", AbacatePayWebhookView.as_view()),
 
 ### 7. Frontend — `PromotionsPage.tsx`
 
+> Todos os sub-componentes (`PlanCard`, `PixPaymentCard`, `ActiveCampaignCard`) são
+> inlineados aqui para evitar referencias não definidas na spec.
+> `onSuccess` do `useQuery` foi removido no React Query v5 — usar `useEffect`.
+
 ```tsx
 // frontend/src/routes/dashboard/PromotionsPage.tsx
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { promotionsService } from "@/services/promotions.service";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Campaign } from "@/services/promotions.service";
+
 export function PromotionsPage() {
-  const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: promotionsService.getPlans });
-  const { data: campaigns } = useQuery({ queryKey: ["campaigns"], queryFn: promotionsService.getCampaigns });
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(null);
+
+  const { data: plans, isLoading: plansLoading } = useQuery({
+    queryKey: ["plans"],
+    queryFn: promotionsService.getPlans,
+  });
+
+  const { data: campaigns } = useQuery({
+    queryKey: ["campaigns"],
+    queryFn: promotionsService.getCampaigns,
+  });
+
+  // Polling a cada 5s enquanto há campanha PENDING_PAYMENT
+  const { data: campaignData } = useQuery({
+    queryKey: ["campaign", activeCampaign?.public_id],
+    queryFn: () => promotionsService.getCampaign(activeCampaign!.public_id),
+    enabled: activeCampaign?.status === "pending_payment",
+    refetchInterval: 5000,
+  });
+
+  // onSuccess foi removido do useQuery no React Query v5 — useEffect é o substituto correto
+  useEffect(() => {
+    if (campaignData?.status === "active") {
+      setActiveCampaign(null);
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+    }
+  }, [campaignData?.status, queryClient]);
 
   const createCampaign = useMutation({
     mutationFn: (planId: number) => promotionsService.createCampaign(planId),
     onSuccess: (campaign) => setActiveCampaign(campaign),
   });
 
-  // Polling a cada 5s enquanto há campanha PENDING_PAYMENT
-  useQuery({
-    queryKey: ["campaign", activeCampaign?.public_id],
-    queryFn: () => promotionsService.getCampaign(activeCampaign!.public_id),
-    enabled: activeCampaign?.status === "pending_payment",
-    refetchInterval: 5000,
-    onSuccess: (data) => {
-      if (data.status === "active") {
-        setActiveCampaign(null);
-        queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      }
-    },
-  });
+  const currentActiveCampaign = campaigns?.find((c) => c.status === "active");
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-lg space-y-6 p-4">
       <h1 className="text-xl font-semibold">{t("promotions.title")}</h1>
 
       {/* Campanha ativa */}
-      {campaigns?.find((c) => c.status === "active") && (
-        <ActiveCampaignCard campaign={campaigns.find((c) => c.status === "active")!} />
-      )}
-
-      {/* QR Code PIX pendente */}
-      {activeCampaign?.status === "pending_payment" && (
-        <PixPaymentCard campaign={activeCampaign} />
-      )}
-
-      {/* Seleção de plano */}
-      {!activeCampaign && (
-        <div className="grid grid-cols-2 gap-4">
-          {plans?.map((plan) => (
-            <PlanCard key={plan.id} plan={plan}
-              onSelect={() => createCampaign.mutate(plan.id)} />
-          ))}
+      {currentActiveCampaign && (
+        <div className="rounded-lg border p-4 bg-muted/40">
+          <p className="text-sm text-muted-foreground">
+            {t("promotions.active_until", {
+              date: new Date(currentActiveCampaign.ends_at).toLocaleDateString("pt-BR"),
+            })}
+          </p>
         </div>
+      )}
+
+      {/* QR Code PIX pendente — inline, sem sub-componente undefined */}
+      {activeCampaign?.status === "pending_payment" && activeCampaign.payment && (
+        <div className="space-y-3">
+          <p className="text-sm font-medium">{t("promotions.scan_qr")}</p>
+          <img
+            src={activeCampaign.payment.pix_qr_code}
+            alt="QR Code PIX"
+            className="w-48 h-48 mx-auto border rounded-lg"
+          />
+          <div className="flex items-center gap-2 rounded-lg border p-2">
+            <code className="flex-1 text-xs truncate">
+              {activeCampaign.payment.pix_copy_paste}
+            </code>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() =>
+                navigator.clipboard.writeText(activeCampaign.payment!.pix_copy_paste)
+              }
+            >
+              {t("promotions.or_copy")}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            {t("promotions.waiting_payment")}
+          </p>
+        </div>
+      )}
+
+      {/* Seleção de plano — só quando não há campanha ativa ou pendente */}
+      {!activeCampaign && !currentActiveCampaign && (
+        <>
+          {plansLoading ? (
+            <div className="grid grid-cols-2 gap-4">
+              {[1, 2].map((i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
+            </div>
+          ) : (
+            // 2 planos lado a lado: card é o affordance correto para seleção binária de preço
+            <div className="grid grid-cols-2 gap-4">
+              {plans?.map((plan) => (
+                <button
+                  key={plan.id}
+                  onClick={() => createCampaign.mutate(plan.id)}
+                  disabled={createCampaign.isPending}
+                  className="text-left rounded-lg border p-4 hover:border-primary hover:bg-muted/40 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <p className="text-xs text-muted-foreground">{plan.name}</p>
+                  <p className="text-2xl font-bold">R$ {plan.price_brl}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{plan.duration_days} dias</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

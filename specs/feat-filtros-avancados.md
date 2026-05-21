@@ -1,4 +1,4 @@
-# Feat — Filtros Avançados de Places
+# Feat — Filtros Avançados de Places ✅ IMPLEMENTADO
 
 ## Problema
 

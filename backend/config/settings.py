@@ -3,6 +3,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import resend as _resend
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
@@ -33,6 +34,12 @@ AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL", "http://localhost:8081")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+_resend.api_key = RESEND_API_KEY
+EMAIL_FROM = os.getenv("EMAIL_FROM", "Bora Ali <noreply@boraali.com.br>")
+EMAIL_VERIFICATION_TIMEOUT_HOURS = int(
+    os.getenv("EMAIL_VERIFICATION_TIMEOUT_HOURS", "24")
+)
 TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/1")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/2")
@@ -41,6 +48,7 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_ALWAYS_EAGER = os.getenv("CELERY_TASK_ALWAYS_EAGER", "False") == "True"
 HISTORY_RETENTION_DAYS = int(os.getenv("HISTORY_RETENTION_DAYS", "90"))
+TRASH_RETENTION_DAYS = int(os.getenv("TRASH_RETENTION_DAYS", "30"))
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret")
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
@@ -139,6 +147,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "accounts",
     "places",
+    "notifications",
 ]
 
 UNFOLD = {
@@ -603,3 +612,4 @@ LOGGING = {
         },
     },
 }
+

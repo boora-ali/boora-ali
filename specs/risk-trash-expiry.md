@@ -1,4 +1,4 @@
-# Risco #3 — Lixeira sem expiração automática
+# Risco #3 — Lixeira sem expiração automática ✅ IMPLEMENTADO
 
 ## Problema
 
@@ -24,7 +24,9 @@ há mais de `TRASH_RETENTION_DAYS` dias (default: 30). A limpeza remove Place + 
 
 ## Skills a invocar antes de implementar
 
+Backend:
 - `/django-expert` — padrões Django, Celery tasks, signals, queryset delete vs individual delete
+- `/django-patterns` — periodic tasks, loop individual vs queryset.delete(), iterator() em bulk ops
 - `/bora-ali-backend` — convenções do projeto (ImageService, Place/Visit/VisitItem, signals de cleanup)
 
 > Pré-requisito: implementar `feat-notifications.md` antes (usado no passo 4).

@@ -1,4 +1,4 @@
-# Risco #5 — Registro sem verificação de email
+# Risco #5 — Registro sem verificação de email ✅ IMPLEMENTADO
 
 ## Problema
 
@@ -18,15 +18,26 @@ tem `email_verified = False` permanentemente.
 
 ## Objetivo
 
-Implementar o fluxo completo: enviar email de verificação no registro,
+Implementar o fluxo completo: enviar email de verificação no registro via Resend,
 endpoint para confirmar o token, e (opcional) bloquear acesso enquanto não verificado.
 
 ---
 
 ## Skills a invocar antes de implementar
 
+Backend:
 - `/django-expert` — padrões Django, models, views, autenticação, migrations
+- `/django-patterns` — token de verificação, TTL via DateTimeField, idempotência de reenvio
 - `/bora-ali-backend` — convenções do projeto (UserProfile, RegisterView, exceptions)
+
+---
+
+## Dependências
+
+```bash
+pip install resend
+# adicionar ao requirements.txt
+```
 
 ---
 
@@ -34,9 +45,9 @@ endpoint para confirmar o token, e (opcional) bloquear acesso enquanto não veri
 
 | Arquivo | O que muda |
 |---------|-----------|
-| `backend/config/settings.py` | Configurar `EMAIL_BACKEND` para produção |
+| `backend/config/settings.py` | Adicionar `RESEND_API_KEY` e `EMAIL_FROM` |
 | `backend/accounts/models.py` | Adicionar `email_verification_token` + `email_verification_sent_at` em `UserProfile` |
-| `backend/accounts/views.py` | Enviar email no registro; adicionar endpoint `POST /api/auth/verify-email/` e `POST /api/auth/resend-verification/` |
+| `backend/accounts/views.py` | Enviar email no registro; adicionar endpoints `POST /api/auth/verify-email/` e `POST /api/auth/resend-verification/` |
 | `backend/accounts/urls.py` | Registrar novas rotas |
 | `backend/accounts/serializers.py` | Serializer para `verify-email` |
 
@@ -46,24 +57,21 @@ endpoint para confirmar o token, e (opcional) bloquear acesso enquanto não veri
 
 ## Implementação passo a passo
 
-### 1. `settings.py` — backend de email
-
-`PUBLIC_BASE_URL` já existe em `settings.py`. Adicionar apenas as configurações de email:
+### 1. `settings.py` — configuração Resend
 
 ```python
 # backend/config/settings.py
-EMAIL_BACKEND = os.getenv(
-    "EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend"  # console em dev, SMTP em prod
-)
-EMAIL_HOST = os.getenv("EMAIL_HOST", "")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@boraali.com.br")
+import resend as _resend
+
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+EMAIL_FROM = os.getenv("EMAIL_FROM", "Bora Ali <noreply@boraali.com.br>")
 EMAIL_VERIFICATION_TIMEOUT_HOURS = int(os.getenv("EMAIL_VERIFICATION_TIMEOUT_HOURS", "24"))
+
+_resend.api_key = RESEND_API_KEY
 ```
+
+> Configurar `resend.api_key` no módulo `settings.py` garante que esteja definido
+> antes de qualquer import — mesmo padrão do exemplo oficial do Django + Resend.
 
 ### 2. `models.py` — campos de verificação em `UserProfile`
 
@@ -87,8 +95,8 @@ class UserProfile(models.Model):
 import logging
 import secrets
 
+import resend
 from django.conf import settings
-from django.core.mail import send_mail
 from django.utils import timezone
 
 _log = logging.getLogger("accounts.views")
@@ -102,13 +110,16 @@ def _send_verification_email(user, profile):
 
     verification_url = f"{settings.PUBLIC_BASE_URL}/verify-email?token={token}"
     try:
-        send_mail(
-            subject="Confirme seu email — Bora Ali",
-            message=f"Acesse para verificar: {verification_url}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
+        resend.Emails.send({
+            "from": settings.EMAIL_FROM,
+            "to": [user.email],
+            "subject": "Confirme seu email — Bora Ali",
+            "html": (
+                f"<p>Olá! Acesse o link abaixo para verificar seu email:</p>"
+                f"<p><a href='{verification_url}'>{verification_url}</a></p>"
+                f"<p>O link expira em {settings.EMAIL_VERIFICATION_TIMEOUT_HOURS} horas.</p>"
+            ),
+        })
     except Exception:
         # Não bloquear o registro se o email falhar, mas logar para rastreio
         _log.exception("Falha ao enviar email de verificação para %s", user.email)
@@ -202,6 +213,19 @@ if not user.profile.email_verified and not is_google:
 > que não receberam o email. Recomendado: exibir aviso no frontend sem bloquear, e
 > bloquear somente após 7 dias sem verificação.
 
+### 7. Variáveis de ambiente necessárias
+
+```bash
+# .env
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
+EMAIL_FROM=Bora Ali <noreply@boraali.com.br>
+EMAIL_VERIFICATION_TIMEOUT_HOURS=24
+```
+
+> Em desenvolvimento, o Resend oferece `onboarding@resend.dev` como remetente de teste
+> (sem domínio verificado). Para produção, verificar o domínio `boraali.com.br` no
+> painel Resend antes de usar `noreply@boraali.com.br`.
+
 ---
 
 ## Verificação
@@ -211,9 +235,9 @@ scripts/dev-check.sh backend
 ```
 
 Teste manual:
-1. Registrar conta → verificar email no console (dev) ou caixa de entrada (prod)
+1. Registrar conta → verificar email recebido via Resend
 2. Chamar `POST /api/auth/verify-email/` com o token → `email_verified = True`
 3. Token expirado → retornar erro 400
 4. Chamar `POST /api/auth/verify-email/` com token vazio `""` → erro 400 (não 500)
-5. Chamar `POST /api/auth/resend-verification/` autenticado → novo token gerado
+5. Chamar `POST /api/auth/resend-verification/` autenticado → novo token gerado e email reenviado
 6. Conta Google → `email_verified` deve ser `True` no registro (Google já validou)

@@ -74,6 +74,51 @@ def resolve_place_coords(self, place_pk: int):
 
 
 @shared_task
+def purge_expired_trash():
+    """Permanent delete de lugares na lixeira há mais de TRASH_RETENTION_DAYS dias."""
+    cutoff = timezone.now() - timedelta(days=settings.TRASH_RETENTION_DAYS)
+
+    expired = Place.objects.deleted().filter(deleted_at__lt=cutoff)
+
+    count = expired.count()
+    if count == 0:
+        return {"deleted": 0}
+
+    # Notificar por usuário antes de deletar
+    from django.db.models import Count
+
+    from notifications.models import NotificationType
+    from notifications.service import notify
+
+    by_user = expired.values("user").annotate(total=Count("id"))
+    for row in by_user:
+        from django.contrib.auth import get_user_model
+
+        owner = get_user_model().objects.filter(pk=row["user"]).first()
+        if owner:
+            notify(
+                user=owner,
+                notification_type=NotificationType.TRASH_EXPIRY,
+                title="Lugares excluídos permanentemente",
+                body=f"{row['total']} lugar(es) da lixeira foram removidos permanentemente.",
+            )
+
+    # place.delete() individual — dispara post_delete signals (cleanup de storage em
+    # Place, Visit e VisitItem). queryset.delete() pularia esses signals, vazando imagens.
+    deleted_count = 0
+    for place in expired.select_related().iterator():
+        place.delete()
+        deleted_count += 1
+
+    _log.info(
+        "purge_expired_trash: %d lugares permanentemente deletados (cutoff=%s)",
+        deleted_count,
+        cutoff.date(),
+    )
+    return {"deleted": deleted_count}
+
+
+@shared_task
 def cleanup_old_history():
     from .models import Visit, VisitItem
 

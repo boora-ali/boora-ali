@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,9 +31,11 @@ export default function LoginPage() {
   const { t } = useTranslation();
   const { login, googleLogin } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileError, setTurnstileError] = useState(false);
   const [turnstileReset, setTurnstileReset] = useState(0);
+  const showEmailSentMessage = (location.state as { emailSent?: boolean } | null)?.emailSent === true;
   const [showSessionMessage] = useState(() => {
     if (localStorage.getItem(SESSION_INVALIDATED_KEY)) {
       localStorage.removeItem(SESSION_INVALIDATED_KEY);
@@ -69,8 +71,11 @@ export default function LoginPage() {
       nav("/places");
     } catch (error) {
       const apiError = getApiErrorState(error, t("auth.login.error"));
-      toast.error(apiError.message);
-      form.setError("root", { message: apiError.message });
+      const message = apiError.code === "email_not_verified"
+        ? t("auth.login.emailNotVerified")
+        : apiError.message;
+      toast.error(message);
+      form.setError("root", { message });
       applyApiErrors(form.setError, apiError.fieldErrors);
       setTurnstileReset((n) => n + 1);
       setTurnstileToken("");
@@ -106,6 +111,11 @@ export default function LoginPage() {
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {showEmailSentMessage && (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                {t("auth.login.emailSent")}
+              </div>
+            )}
             {showSessionMessage && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 {t("auth.login.sessionExpired")}

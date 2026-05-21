@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/useAuth";
 import { AuthImage } from "../ui/AuthImage";
 import { LanguageToggle } from "../ui/LanguageToggle";
 import { DarkModeToggle } from "../ui/DarkModeToggle";
+import { NotificationBell } from "./NotificationBell";
 
 export function AccountMenu() {
   const { t } = useTranslation();
@@ -27,7 +28,8 @@ export function AccountMenu() {
   if (pathname === "/account") return null;
 
   return (
-    <div ref={menuRef} className="fixed right-4 top-4 z-40">
+    <div ref={menuRef} className="fixed right-4 top-4 z-40 flex items-center gap-2">
+      <NotificationBell />
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}

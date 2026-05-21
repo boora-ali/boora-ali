@@ -1,6 +1,4 @@
-FROM python:3.12-alpine AS builder
-
-RUN apk add --no-cache build-base libffi-dev musl-dev postgresql-dev postgresql-libs libffi
+FROM python:3.12-slim AS builder
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install gunicorn -r requirements.txt && \
@@ -9,20 +7,26 @@ RUN pip install --no-cache-dir --prefix=/install gunicorn -r requirements.txt &&
     find /install -name "tests" -type d -exec rm -rf {} + 2>/dev/null || true
 
 
-FROM python:3.12-alpine
+FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=config.settings
 
-RUN apk add --no-cache postgresql-libs libffi gettext su-exec
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    libffi8 \
+    gettext \
+    gosu \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /install /usr/local
 
 WORKDIR /app
 COPY . .
 
-RUN addgroup -S app && adduser -S app -G app && \
+RUN groupadd -r app && useradd -r -g app app && \
     chmod +x /app/entrypoint.sh && \
     mkdir -p /app/staticfiles && \
     chmod -R 777 /app/staticfiles

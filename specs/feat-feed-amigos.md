@@ -21,11 +21,14 @@ manualmente (`feat-place-sharing.md`) sem contexto de quem recomendou o quê.
 
 Backend:
 - `/django-expert` — M2M, cursor pagination, queryset com select_related, annotate
+- `/django-patterns` — CursorPagination, Follow queryset, índices de performance
 - `/bora-ali-backend` — PublicIdModel, MutationMixin, convenções de viewset e URL
 
 Frontend:
 - `/bora-ali-frontend` — React Query infinite scroll, serviços de API
 - `/frontend-design` — Card, Avatar, Badge, Button (shadcn/ui)
+- `/impeccable` — feed com divide-y, formatação de data relativa, empty e error states
+- `/design-taste-frontend` — follow/unfollow optimistic update, feed item layout
 
 > **Dependências**: `feat-perfil-publico.md` — obrigatório.
 > `is_public` em Place e UserProfile precisam existir antes deste feature.
@@ -41,7 +44,8 @@ Frontend:
 | `backend/accounts/serializers.py` | `FeedItemSerializer` |
 | `backend/accounts/urls.py` | Registrar `/u/:username/follow/` e `/feed/` |
 | `backend/accounts/migrations/` | `makemigrations accounts` após criar `Follow` |
-| `frontend/src/services/social.service.ts` | `follow()`, `unfollow()`, `getFeed()` (novo) |
+| `frontend/src/services/social.service.ts` | `follow()`, `unfollow()`, `getFeed()` + tipos `FeedItem` (novo) |
+| `frontend/src/services/auth.service.ts` | `PublicProfile` extendido com `is_following: boolean` |
 | `frontend/src/routes/FeedPage.tsx` | Feed com infinite scroll (nova) |
 | `frontend/src/routes/PublicProfilePage.tsx` | Botão follow/unfollow |
 | `frontend/src/App.tsx` | Registrar rota `/feed` dentro do `PrivateRoute` |
@@ -90,7 +94,14 @@ class Follow(models.Model):
 
 ```python
 # backend/accounts/views.py
+from rest_framework.exceptions import ValidationError as DRFValidationError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 from core.views import MutationMixin
+from .models import UserProfile, Follow
+from places.models import Place
 
 class FollowView(MutationMixin, APIView):
     permission_classes = [IsAuthenticated]
@@ -103,7 +114,7 @@ class FollowView(MutationMixin, APIView):
             is_public=True,
         )
         if profile.user == self.request.user:
-            raise ValidationError({"detail": "Você não pode seguir a si mesmo."})
+            raise DRFValidationError({"detail": "Você não pode seguir a si mesmo."})
         return profile.user
 
     def post(self, request, username):
@@ -133,10 +144,14 @@ class FeedView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        # values_list lazy → Django combina numa única query com subselect
         following_ids = Follow.objects.filter(
             follower=request.user
         ).values_list("following_id", flat=True)
 
+        # Atenção: Place.objects.live() assume PlaceQuerySet com método live().
+        # Verificar em places/managers.py. Se não existir, substituir pelo
+        # filtro equivalente (ex: .filter(deletion_requested_at__isnull=True)).
         places = Place.objects.live().filter(
             user__in=following_ids,
             is_public=True,
@@ -188,10 +203,27 @@ data["is_following"] = is_following
 return Response(data)
 ```
 
-### 7. Frontend — `services/social.service.ts`
+### 7. `auth.service.ts` — atualizar tipo `PublicProfile`
+
+> `feat-perfil-publico.md` define `PublicProfile`. Agora que `PublicProfileView` retorna
+> `is_following`, o tipo precisa ser extendido:
+
+```typescript
+// frontend/src/services/auth.service.ts — atualizar interface PublicProfile
+export interface PublicProfile {
+  username: string;
+  bio: string;
+  places: PublicPlace[];
+  is_following: boolean;  // adicionado em feat-feed-amigos
+}
+```
+
+### 8. Frontend — `services/social.service.ts`
 
 ```typescript
 // frontend/src/services/social.service.ts
+import { api } from "@/lib/api";
+
 export interface FeedItem {
   public_id: string;
   name: string;
@@ -215,16 +247,33 @@ export const socialService = {
 };
 ```
 
-### 8. Frontend — `FeedPage.tsx` com infinite scroll
+### 9. Frontend — `FeedPage.tsx` com infinite scroll
 
 ```tsx
 // frontend/src/routes/FeedPage.tsx
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { socialService } from "@/services/social.service";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MapPin } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+function formatRelativeDate(iso: string) {
+  return formatDistanceToNow(new Date(iso), { addSuffix: true, locale: ptBR });
+}
+
 export function FeedPage() {
+  const { t } = useTranslation();
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isLoading,
+    isError,
   } = useInfiniteQuery({
     queryKey: ["feed"],
     queryFn: ({ pageParam }) => socialService.getFeed(pageParam as string | undefined),
@@ -232,30 +281,73 @@ export function FeedPage() {
     getNextPageParam: (last) => last.next ?? undefined,
   });
 
+  if (isLoading) {
+    return (
+      <div className="max-w-lg mx-auto p-4 space-y-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="space-y-2 p-4 border rounded-lg">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-4 w-36" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-lg mx-auto p-4">
+        <p className="text-sm text-destructive text-center py-8">{t("feed.error")}</p>
+      </div>
+    );
+  }
+
   const items = data?.pages.flatMap((p) => p.results) ?? [];
 
   return (
-    <div className="max-w-lg mx-auto p-4 space-y-4">
-      <h1 className="text-xl font-semibold">{t("feed.title")}</h1>
+    <div className="max-w-lg mx-auto p-4">
+      <h1 className="text-xl font-semibold mb-4">{t("feed.title")}</h1>
+
       {items.length === 0 && (
-        <p className="text-muted-foreground text-sm text-center py-8">
+        <p className="text-muted-foreground text-sm text-center py-12">
           {t("feed.empty")}
         </p>
       )}
-      {items.map((item) => (
-        <Card key={item.public_id} className="p-4 space-y-1">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>@{item.author_username}</span>
-            <span>·</span>
-            <span>{formatRelativeDate(item.created_at)}</span>
+
+      {/* Lista com divide-y — sem Card idêntico repetido (impeccable: "identical card grids banned") */}
+      <div className="divide-y">
+        {items.map((item) => (
+          <div key={item.public_id} className="py-4 space-y-1">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">@{item.author_username}</span>
+              <span>·</span>
+              <span>{formatRelativeDate(item.created_at)}</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <Badge variant="secondary" className="text-xs mb-1">{item.category}</Badge>
+                <p className="font-medium truncate">{item.name}</p>
+                <p className="text-sm text-muted-foreground truncate">{item.address}</p>
+              </div>
+              {item.maps_url && (
+                <a
+                  href={item.maps_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 text-muted-foreground hover:text-foreground transition-colors mt-1"
+                >
+                  <MapPin className="w-4 h-4" />
+                </a>
+              )}
+            </div>
           </div>
-          <Badge>{item.category}</Badge>
-          <p className="font-medium">{item.name}</p>
-          <p className="text-sm text-muted-foreground">{item.address}</p>
-        </Card>
-      ))}
+        ))}
+      </div>
+
       {hasNextPage && (
-        <Button variant="ghost" className="w-full" onClick={() => fetchNextPage()}
+        <Button variant="ghost" className="w-full mt-2" onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}>
           {isFetchingNextPage ? t("feed.loading") : t("feed.load_more")}
         </Button>
@@ -265,22 +357,46 @@ export function FeedPage() {
 }
 ```
 
-### 9. `PublicProfilePage.tsx` — botão follow/unfollow
+> `date-fns` e `date-fns/locale` devem estar em `package.json`. Verificar antes de implementar.
+> Se não estiver, usar `npm install date-fns`.
+
+### 10. `PublicProfilePage.tsx` — botão follow/unfollow
 
 ```tsx
 // frontend/src/routes/PublicProfilePage.tsx
+// Adicionar ao componente existente (junto com useQuery já presente)
 const { user } = useAuth();
 const queryClient = useQueryClient();
 
 const followMutation = useMutation({
   mutationFn: (isFollowing: boolean) =>
     isFollowing ? socialService.unfollow(username!) : socialService.follow(username!),
-  onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profile", username] }),
+
+  // Optimistic update — UI atualiza instantaneamente sem esperar o servidor
+  onMutate: async (isFollowing) => {
+    await queryClient.cancelQueries({ queryKey: ["profile", username] });
+    const prev = queryClient.getQueryData(["profile", username]);
+    queryClient.setQueryData(["profile", username], (old: any) => ({
+      ...old,
+      is_following: !isFollowing,
+    }));
+    return { prev };
+  },
+  onError: (_err, _vars, context) => {
+    // Rollback em caso de erro
+    queryClient.setQueryData(["profile", username], context?.prev);
+  },
+  onSettled: () => {
+    queryClient.invalidateQueries({ queryKey: ["profile", username] });
+  },
 });
 
+// Inserir no header do perfil (no slot reservado em PublicProfilePage):
 {user && (
   <Button
     variant={data?.is_following ? "outline" : "default"}
+    size="sm"
+    disabled={followMutation.isPending}
     onClick={() => followMutation.mutate(data?.is_following ?? false)}
   >
     {data?.is_following ? t("profile.unfollow") : t("profile.follow")}
@@ -288,13 +404,14 @@ const followMutation = useMutation({
 )}
 ```
 
-### 10. Traduções i18n (pt-BR)
+### 11. Traduções i18n (pt-BR)
 
 ```json
 "feed.title": "Feed",
 "feed.empty": "Siga outras pessoas para ver o que elas estão descobrindo",
 "feed.loading": "Carregando...",
 "feed.load_more": "Ver mais",
+"feed.error": "Erro ao carregar o feed. Tente novamente.",
 "profile.follow": "Seguir",
 "profile.unfollow": "Deixar de seguir"
 ```

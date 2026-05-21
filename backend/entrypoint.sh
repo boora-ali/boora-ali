@@ -14,4 +14,4 @@ python manage.py compilemessages || true
 chown -R app:app /app/staticfiles || true
 chmod -R 775 /app/staticfiles || true
 
-exec su-exec app "$@"
+exec gosu app "$@"

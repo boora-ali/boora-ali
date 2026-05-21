@@ -27,6 +27,14 @@ import { CharacterCount } from "../components/ui/CharacterCount";
 import { Label } from "@/components/ui/label";
 import { PwaInstallButton } from "../components/layout/PwaInstallButton";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   updateProfileSchema,
   changePasswordSchema,
   type UpdateProfileFormValues,
@@ -44,6 +52,10 @@ export default function AccountPage() {
   const [profileMessage, setProfileMessage] = useState("");
   const [profilePhotoError, setProfilePhotoError] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteRequested, setDeleteRequested] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const profileForm = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileSchema),
@@ -152,6 +164,20 @@ export default function AccountPage() {
       applyApiErrors(passwordForm.setError, apiError.fieldErrors);
     }
   };
+
+  async function onDeleteAccount() {
+    setIsDeleting(true);
+    setDeleteError("");
+    try {
+      await authService.deleteAccount();
+      setDeleteRequested(true);
+      setShowDeleteDialog(false);
+    } catch {
+      setDeleteError(t("account.delete.error"));
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 pb-8">
@@ -348,6 +374,46 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       )}
+
+      <Card className="border-destructive/40">
+        <CardContent className="pt-6">
+          <div className="space-y-2">
+            <h3 className="font-medium text-destructive">{t("account.delete.title")}</h3>
+            <p className="text-sm text-muted-foreground">{t("account.delete.description")}</p>
+            <p className="text-xs text-muted-foreground">{t("account.delete.grace")}</p>
+            {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+            {deleteRequested ? (
+              <p className="text-sm font-medium text-primary">{t("account.delete.scheduled")}</p>
+            ) : (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                {t("account.delete.button")}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={showDeleteDialog} onOpenChange={(open) => { if (!open) setShowDeleteDialog(false); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("account.delete.confirm.title")}</DialogTitle>
+            <DialogDescription>{t("account.delete.confirm.description")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="secondary" disabled={isDeleting} onClick={() => setShowDeleteDialog(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="destructive" disabled={isDeleting} onClick={onDeleteAccount}>
+              {isDeleting ? t("account.delete.deleting") : t("account.delete.confirm.action")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Button
         type="button"

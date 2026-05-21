@@ -2,6 +2,9 @@
 
 Diário pessoal de lugares. `User → Place → Visit → VisitItem`.
 
+Camada social: `UserProfile.username/is_public` + `Place.is_public` + `Follow` → feed de amigos.
+Estabelecimentos: app `establishments` → `EstablishmentProfile` + `MenuItem` + `PromotionCampaign`.
+
 ## Stack
 
 - `backend/`: Django + DRF + SimpleJWT + PostgreSQL + Valkey
@@ -28,12 +31,15 @@ docker compose up -d --build
 
 ## Invariantes globais
 
-- queryset sempre filtrado por `request.user`
+- queryset sempre filtrado por `request.user` (exceto views `permission_classes = []`)
 - `public_id` exposto; `id` só interno
 - exceções backend via `core.exceptions`
-- imagens via `core.image_service.ImageService`
+- imagens via `core.image_service.ImageService` — `save(file_obj, user_id, category)`, `decrypt(data, user_id)`, `delete(path)`
+- `MutationMixin` vem de `core.views`, não de `core.viewsets`
+- rotas públicas: `/api/u/<username>/`, `/api/e/<username>/`, `/api/feed/`
 - não mexer automaticamente em `backend/*/migrations/`
 - forms frontend com React Hook Form + Zod
+- `onSuccess` em `useQuery` foi removido no React Query v5 — usar `useEffect`
 
 ## Carregamento gradual
 

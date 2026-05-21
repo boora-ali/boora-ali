@@ -17,6 +17,7 @@ urlpatterns = [
     path("admin/", admin_site.urls),
     path("api/auth/", include("accounts.urls")),
     path("api/", include("places.urls")),
+    path("api/notifications/", include("notifications.urls")),
     path("api/media/<path:path>", serve_user_media, name="serve-user-media"),
 ]
 
