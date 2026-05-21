@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { fmtDate, fmtRating, fmtPrice } from "../../utils/formatters";
 import { AuthImage } from "../ui/AuthImage";
 import { visitsService } from "../../services/visits.service";
@@ -148,7 +148,7 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
         <p className="mt-2 text-sm text-muted">{t("visitCard.empty")}</p>
       )}
       <Dialog open={Boolean(lightboxSrc)} onOpenChange={(o) => { if (!o) setLightboxSrc(null); }}>
-        <DialogContent className="max-w-screen-sm p-0 overflow-hidden">
+        <DialogContent className="max-w-screen-sm p-0 overflow-hidden" aria-describedby={undefined}>
           {lightboxSrc && (
             <AuthImage src={lightboxSrc} alt="" className="w-full h-auto max-h-[90vh] object-contain" />
           )}
@@ -159,9 +159,9 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("visitCard.deleteConfirmTitle")}</DialogTitle>
+            <DialogDescription>{t("visitCard.deleteConfirmMessage")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted">{t("visitCard.deleteConfirmMessage")}</p>
             <div className="flex gap-2 pt-1">
               <Button
                 type="button"

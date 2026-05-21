@@ -103,7 +103,7 @@ describe("submit", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /create account/i }));
 
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/login"));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/login", { state: { emailSent: true } }));
     expect(mockAuthService.register).toHaveBeenCalledTimes(1);
   });
 

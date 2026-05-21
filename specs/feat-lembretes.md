@@ -22,7 +22,12 @@ precisa lembrar de abrir para consultar a lista.
 
 Backend:
 - `/django-expert` — Celery beat, annotate, subquery, queryset filtering
+- `/django-patterns` — periodic tasks, queryset de lembretes pendentes, signals
 - `/bora-ali-backend` — convenções (Place, Visit, tasks.py, signals.py)
+
+Frontend:
+- `/impeccable` — toggle de lembrete no PlaceDetail, feedback de estado ativo/inativo
+- `/design-taste-frontend` — affordances de switch, estados loading/disabled
 
 > **Dependências**: `feat-notifications.md` — obrigatório. Task dispara `notify()`.
 > **Pré-requisito**: configurar Celery Beat no admin antes de ativar.

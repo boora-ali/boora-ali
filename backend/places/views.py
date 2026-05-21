@@ -92,7 +92,7 @@ class PlaceViewSet(ViewSetBase):
         queryset = Place.objects.for_user(self.request.user)
 
         if self.action == "list":
-            return queryset.with_list_expansion(expand_param)
+            return queryset.with_avg_rating().with_list_expansion(expand_param)
 
         if self.action == "retrieve":
             return queryset.with_consumable_stats().with_detail_payload(

@@ -28,3 +28,8 @@ class GoogleIdentityPasswordChangeNotAllowedException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = _("Contas do Google nao podem trocar senha.")
     default_code = "google_identity_password_change_not_allowed"
+
+
+class EmailNotVerifiedException(AuthenticationFailed):
+    default_detail = _("Confirme seu e-mail antes de entrar.")
+    default_code = "email_not_verified"

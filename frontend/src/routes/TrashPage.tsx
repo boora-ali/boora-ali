@@ -4,7 +4,7 @@ import { placesService, type Page } from "../services/places.service";
 import type { Place } from "../types/place";
 import { BackButton } from "../components/ui/BackButton";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState } from "../components/ui/EmptyState";
 import { LoadingState } from "../components/ui/LoadingState";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
@@ -144,9 +144,9 @@ export default function TrashPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("trash.permanentDeleteTitle")}</DialogTitle>
+            <DialogDescription>{t("trash.permanentDeleteMessage")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">{t("trash.permanentDeleteMessage")}</p>
             <div className="flex gap-2 pt-1">
               <Button
                 variant="secondary"

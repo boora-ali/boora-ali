@@ -4,21 +4,30 @@ import type { Place, PlaceStatus } from "../types/place";
 import type { Visit } from "../types/visit";
 import { AUTH_STATE_CHANGED_EVENT } from "../utils/client-state";
 
+export interface PlaceFilters {
+  category?: string;
+  status?: PlaceStatus;
+  min_rating?: number;
+  max_rating?: number;
+  date_from?: string;
+  date_to?: string;
+}
+
 type CacheKey = string;
 
 class PlacePageCache {
   private store: Map<CacheKey, Page<Place>> = new Map();
 
-  private key(page: number, search?: string, status?: string): CacheKey {
-    return `${page}|${search ?? ""}|${status ?? ""}`;
+  private key(page: number, search?: string, status?: string, filters?: PlaceFilters): CacheKey {
+    return `${page}|${search ?? ""}|${status ?? ""}|${JSON.stringify(filters ?? {})}`;
   }
 
-  get(page: number, search?: string, status?: string): Page<Place> | undefined {
-    return this.store.get(this.key(page, search, status));
+  get(page: number, search?: string, status?: string, filters?: PlaceFilters): Page<Place> | undefined {
+    return this.store.get(this.key(page, search, status, filters));
   }
 
-  set(page: number, data: Page<Place>, search?: string, status?: string): void {
-    this.store.set(this.key(page, search, status), data);
+  set(page: number, data: Page<Place>, search?: string, status?: string, filters?: PlaceFilters): void {
+    this.store.set(this.key(page, search, status, filters), data);
   }
 
   invalidate(): void {
@@ -55,7 +64,7 @@ function toPayload(data: PlacePayload) {
 }
 
 export const placesService = {
-  list: (params: { page?: number; status?: PlaceStatus; search?: string } = {}) =>
+  list: (params: { page?: number; status?: PlaceStatus; search?: string } & PlaceFilters = {}) =>
     api.get<Page<Place>>("/places/", { params }).then((r) => r.data),
 
   listAll: async (params: { status?: PlaceStatus; search?: string } = {}) => {

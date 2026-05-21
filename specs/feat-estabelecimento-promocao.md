@@ -20,12 +20,14 @@ só mostra places de pessoas seguidas — não há slot para conteúdo pago.
 ## Skills a invocar antes de implementar
 
 Backend:
-- `/django-expert` — queryset, serializers, paginação
+- `/django-expert` — queryset com Subquery/OuterRef, annotate, distinct
+- `/django-patterns` — N+1 em feed misto, order_by("?") vs seed diário
 - `/bora-ali-backend` — convenções de views, PublicIdModel
 
 Frontend:
-- `/bora-ali-frontend` — React Query, infinite scroll, i18n
-- `/frontend-design` — Card, Badge, Button (shadcn/ui)
+- `/bora-ali-frontend` — React Query, infinite scroll, intercalação de tipos no feed
+- `/impeccable` — SponsoredCard visual distinto do feed orgânico, badge "Patrocinado"
+- `/design-taste-frontend` — placeholder de cover photo, affordances de CTA no card
 
 > **Dependências**: `feat-estabelecimento-perfil.md` + `feat-estabelecimento-pagamento.md`
 > + `feat-feed-amigos.md` (feed base precisa existir).
@@ -110,16 +112,25 @@ path("feed/sponsored/", SponsoredFeedView.as_view()),
 
 ```tsx
 // frontend/src/components/SponsoredCard.tsx
+import { useTranslation } from "react-i18next";
+import { Store } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { SponsoredEstablishment } from "@/services/social.service";
+
 interface Props {
   establishment: SponsoredEstablishment;
 }
 
 export function SponsoredCard({ establishment }: Props) {
+  const { t } = useTranslation();
+
   return (
+    // Card justificado: elevation distingue sponsored do feed orgânico (divide-y)
     <div className="rounded-xl border bg-card overflow-hidden">
       <div className="relative">
-        {/* cover photo — sem criptografia: usar placeholder até ter endpoint público */}
-        <div className="h-36 bg-muted flex items-center justify-center">
+        {/* cover photo — placeholder até existir endpoint de mídia pública */}
+        <div className="aspect-video bg-muted flex items-center justify-center">
           <Store className="h-10 w-10 text-muted-foreground" />
         </div>
         <Badge
@@ -132,24 +143,28 @@ export function SponsoredCard({ establishment }: Props) {
 
       <div className="p-4 space-y-3">
         <div>
-          <Badge variant="outline" className="mb-1">{establishment.category}</Badge>
+          {establishment.category && (
+            <Badge variant="outline" className="mb-1">{establishment.category}</Badge>
+          )}
           <h3 className="font-semibold">{establishment.business_name}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {establishment.description}
-          </p>
+          {establishment.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {establishment.description}
+            </p>
+          )}
         </div>
 
         <div className="flex gap-2">
           {establishment.menu_url && (
             <Button asChild size="sm" className="flex-1">
-              <a href={establishment.menu_url} target="_blank">
+              <a href={establishment.menu_url} target="_blank" rel="noopener noreferrer">
                 {t("feed.view_menu")}
               </a>
             </Button>
           )}
           {establishment.website_url && (
             <Button asChild size="sm" variant="outline" className="flex-1">
-              <a href={establishment.website_url} target="_blank">
+              <a href={establishment.website_url} target="_blank" rel="noopener noreferrer">
                 {t("feed.visit_site")}
               </a>
             </Button>
@@ -172,11 +187,14 @@ const { data: sponsored } = useQuery({
 });
 
 // Intercalar: a cada 5 items orgânicos, inserir 1 patrocinado
+type SponsoredEntry = SponsoredEstablishment & { _type: "sponsored" };
+type FeedEntry = FeedItem | SponsoredEntry;
+
 function buildFeedItems(
   organic: FeedItem[],
   sponsored: SponsoredEstablishment[]
-): (FeedItem | SponsoredEstablishment & { _type: "sponsored" })[] {
-  const result = [];
+): FeedEntry[] {
+  const result: FeedEntry[] = [];
   let sponsoredIdx = 0;
 
   organic.forEach((item, i) => {
@@ -189,11 +207,15 @@ function buildFeedItems(
   return result;
 }
 
-// Na renderização:
-{buildFeedItems(items, sponsored ?? []).map((item, i) =>
+// PlaceFeedCard: extrair os itens inline do FeedPage para componente separado.
+// O FeedPage original renderiza itens diretamente com divide-y — extrair o bloco
+// <div key={item.public_id} className="py-4 space-y-1"> para PlaceFeedCard.tsx.
+
+// Na renderização (dentro do <div className="divide-y"> existente em FeedPage):
+{buildFeedItems(items, sponsored ?? []).map((item) =>
   "_type" in item && item._type === "sponsored"
     ? <SponsoredCard key={`sp-${item.public_id}`} establishment={item} />
-    : <PlaceFeedCard key={item.public_id} item={item as FeedItem} />
+    : <PlaceFeedCard key={(item as FeedItem).public_id} item={item as FeedItem} />
 )}
 ```
 

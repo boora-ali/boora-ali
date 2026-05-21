@@ -74,7 +74,9 @@ def resolve_google_user(claims: dict[str, Any]):
             identity.email = email
             identity.email_verified = email_verified
             identity.save(update_fields=["email", "email_verified", "updated_at"])
-            UserProfile.objects.get_or_create(user=identity.user)
+            UserProfile.objects.update_or_create(
+                user=identity.user, defaults={"email_verified": True}
+            )
             return identity.user
 
         if not email_verified:
@@ -121,7 +123,9 @@ def resolve_google_user(claims: dict[str, Any]):
                         "updated_at",
                     ]
                 )
-            UserProfile.objects.get_or_create(user=user)
+            UserProfile.objects.update_or_create(
+                user=user, defaults={"email_verified": True}
+            )
             return user
 
         username = _build_unique_username(email=email, sub=google_sub, claims=claims)
@@ -138,7 +142,9 @@ def resolve_google_user(claims: dict[str, Any]):
         user.set_unusable_password()
         user.save(update_fields=["password"])
 
-        UserProfile.objects.get_or_create(user=user)
+        UserProfile.objects.update_or_create(
+            user=user, defaults={"email_verified": True}
+        )
         GoogleIdentity.objects.create(
             user=user,
             google_sub=google_sub,

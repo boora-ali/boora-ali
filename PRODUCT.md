@@ -8,6 +8,10 @@ Não é rede social. Não é guia de restaurantes. É memória afetiva de lugare
 
 **Fluxo central:** Lugar → Visita → Item consumido (consumable) → avaliação + preço.
 
+**Camada social leve (opt-in):** Usuários com perfil público partilham lugares no feed de quem os segue. Nenhum algoritmo, nenhum engagement metric. Quem não ativa `is_public` permanece 100% privado.
+
+**Estabelecimentos:** Negócios podem criar um perfil público em `/e/:username` com cardápio e contato. Promoção paga (PIX via Abacate Pay) insere cards no feed orgânico de usuários. Não é diretório: o card aparece no feed de quem já usa o app, não em busca pública.
+
 ## Usuários
 
 Samuel e pessoas como ele: brasileiros que gostam de comer bem e querem lembrar dos lugares que já foram. Curioso, afetivo, avesso a burocracia. Usa o celular pra tudo. Fala pt-BR mas não estranha inglês.
@@ -68,11 +72,20 @@ O app deveria parecer um **caderno pessoal bem-cuidado** — não um diário fof
 
 ## Telas principais
 
+**Usuário pessoal:**
 1. **Login / Registro** — porta de entrada, impressão inicial
 2. **Lista de Lugares** (`/places`) — tela principal, mais usada
 3. **Detalhe do Lugar** (`/places/:id`) — hub de informação de um lugar
 4. **Nova Visita / Editar Visita** — entrada de dados, deve ser rápida
 5. **Coleções** (`/collections`) — curadoria pessoal
-6. **Conta / Perfil** (`/account`) — configurações e identidade
+6. **Conta / Perfil** (`/account`) — configurações, username, bio, toggle público
 7. **Lixeira** (`/places/trash`) — recuperação
-8. **404** — edge case com personalidade
+8. **Feed de amigos** (`/feed`) — places públicos de quem o usuário segue
+9. **Perfil público de usuário** (`/u/:username`) — visível sem login, botão follow
+10. **404** — edge case com personalidade
+
+**Estabelecimento:**
+11. **Perfil público** (`/e/:username`) — cardápio, contato, sem autenticação
+12. **Dashboard — Perfil** (`/dashboard/profile`) — editar dados e cover photo
+13. **Dashboard — Cardápio** (`/dashboard/menu`) — CRUD de itens
+14. **Dashboard — Promoções** (`/dashboard/promotions`) — planos PIX + QR code

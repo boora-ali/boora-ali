@@ -61,6 +61,27 @@ class UserProfile(models.Model):
         default="",
         verbose_name=_("terms version"),
     )
+    deletion_requested_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("deletion requested at"),
+    )
+    email_verified = models.BooleanField(
+        default=False,
+        verbose_name=_("email verified"),
+    )
+    email_verification_token = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        db_index=True,
+        verbose_name=_("email verification token"),
+    )
+    email_verification_sent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("email verification sent at"),
+    )
 
     class Meta:
         db_table = "accounts_user_profile"

@@ -17,6 +17,7 @@ export interface Place {
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
+  avg_rating?: number | null;
 }
 
 export interface PlaceConsumablesSummary {

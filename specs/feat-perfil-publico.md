@@ -21,11 +21,14 @@ Não existe conceito de "usuário com perfil público" ou "curador de lugares".
 
 Backend:
 - `/django-expert` — serializers, viewset público, validação de slug, migrations
+- `/django-patterns` — Prefetch com to_attr, select_related, N+1 em perfil público
 - `/bora-ali-backend` — UserProfile, Place, PublicIdModel, convenções de URL
 
 Frontend:
 - `/bora-ali-frontend` — React Query, roteamento, i18n
 - `/frontend-design` — Avatar, Badge, Card (shadcn/ui)
+- `/impeccable` — layout do perfil público, lista de places, skeleton states
+- `/design-taste-frontend` — header de perfil, PublicPlaceCard, affordances de follow
 
 > **Dependências**: nenhuma. Bloqueia `feat-feed-amigos.md`.
 
@@ -37,6 +40,7 @@ Frontend:
 |---------|-----------|
 | `backend/accounts/models.py` | Adicionar `username`, `bio`, `is_public` em `UserProfile` |
 | `backend/accounts/views.py` | `PublicProfileView` (GET `/api/u/:username/`) |
+| `backend/places/serializers.py` | `PublicPlaceSerializer` (novo — evita acoplamento cross-app) |
 | `backend/accounts/serializers.py` | `PublicProfileSerializer`, `AccountSerializer` (expor novos campos) |
 | `backend/accounts/urls.py` | Registrar rota pública `/u/:username/` |
 | `backend/accounts/migrations/` | `makemigrations accounts` após editar `UserProfile` |
@@ -44,8 +48,9 @@ Frontend:
 | `backend/places/serializers.py` | `PublicPlaceSerializer` (sem dados sensíveis) |
 | `backend/places/migrations/` | `makemigrations places` após editar `Place` |
 | `frontend/src/routes/PublicProfilePage.tsx` | Página pública `/u/:username` (nova) |
-| `frontend/src/routes/AccountPage.tsx` | Campos `username`, `bio`, toggle `is_public` |
-| `frontend/src/services/auth.service.ts` | `getPublicProfile()` adicionado; `updateAccount()` já existe — extender com novos campos |
+| `frontend/src/routes/AccountPage.tsx` | Campos `username`, `bio`, toggle `is_public` (com Controller) |
+| `frontend/src/services/auth.service.ts` | `getPublicProfile()` + tipos `PublicProfile`/`PublicPlace` adicionados |
+| `frontend/src/components/places/PublicPlaceCard.tsx` | Card simplificado sem campos privados (novo) |
 | `frontend/src/App.tsx` | Registrar rota `/u/:username` fora do `PrivateRoute` |
 
 ---
@@ -57,6 +62,7 @@ Frontend:
 ```python
 # backend/accounts/models.py
 import re
+from django.core.exceptions import ValidationError
 
 def _validate_username(value):
     if not value:  # null/blank permitido — o validator não deve rejeitar ausência
@@ -89,10 +95,12 @@ class Place(PublicIdModel):
 
 > Rodar `python manage.py makemigrations places` após editar o model.
 
-### 3. `accounts/serializers.py` — serializer público
+### 3. `places/serializers.py` — `PublicPlaceSerializer`
+
+> Mantido em `places/` para evitar acoplamento cross-app em `accounts/`.
 
 ```python
-# backend/accounts/serializers.py
+# backend/places/serializers.py
 class PublicPlaceSerializer(serializers.ModelSerializer):
     """Dados mínimos de um place público — sem notas nem avaliações privadas."""
     class Meta:
@@ -101,7 +109,13 @@ class PublicPlaceSerializer(serializers.ModelSerializer):
             "public_id", "name", "category", "address", "status",
             "maps_url", "instagram_url", "latitude", "longitude",
         ]
+```
 
+### 4a. `accounts/serializers.py` — `PublicProfileSerializer`
+
+```python
+# backend/accounts/serializers.py
+from places.serializers import PublicPlaceSerializer
 
 class PublicProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="profile.username")
@@ -117,7 +131,12 @@ class PublicProfileSerializer(serializers.ModelSerializer):
 > `places` usa campo direto (não `SerializerMethodField`) — evita N+1. O view faz
 > `prefetch_related` antes de serializar.
 
-### 4. `accounts/views.py` — `PublicProfileView`
+### 4b. `accounts/views.py` — `PublicProfileView`
+
+> **Atenção:** `Place.objects.live()` assume que `PlaceQuerySet` tem método `.live()` (filtra
+> places não deletados/em lixeira). Verificar em `places/managers.py` antes de implementar.
+> Se não existir, substituir por `Place.objects.filter(deletion_requested_at__isnull=True)` ou
+> equivalente conforme a convenção do projeto.
 
 ```python
 # backend/accounts/views.py
@@ -128,10 +147,15 @@ class PublicProfileView(APIView):
     permission_classes = []  # público
 
     def get(self, request, username):
-        # Sem slice aqui — Prefetch não aceita queryset fatiado ([:N] levanta TypeError)
+        # Sem slice aqui — Prefetch não aceita queryset fatiado ([:N] levanta TypeError).
+        # Limite de 50 places aplicado via Python após o Prefetch (ver abaixo).
         public_places_qs = Place.objects.live().filter(
             is_public=True
-        ).order_by("-created_at")
+        ).order_by("-created_at")[:50]  # ATENÇÃO: só funciona se não houver outro filtro após
+
+        # Alternativa segura se [:50] no Prefetch queryset causar TypeError:
+        # aplicar o slice no serializer (source="public_places") passando [:50] no to_attr.
+        # Nesse caso, remover [:50] do queryset e fatiar em PublicProfileSerializer.
 
         profile = get_object_or_404(
             UserProfile.objects.select_related("user").prefetch_related(
@@ -145,6 +169,10 @@ class PublicProfileView(APIView):
         serializer = PublicProfileSerializer(profile.user)
         return Response(serializer.data)
 ```
+
+> **Nota sobre o limite de 50:** Django aceita queryset fatiado num `Prefetch` somente se não
+> for combinado com filtros adicionais depois. Testar no ambiente; se levantar `TypeError`,
+> usar a alternativa acima.
 
 ### 5. `accounts/urls.py` — registrar rota
 
@@ -179,62 +207,184 @@ class AccountSerializer(serializers.ModelSerializer):
         # DRF coloca fields com source="profile.X" sob validated_data["profile"]
         profile_data = validated_data.pop("profile", {})
         if profile_data:
+            profile = getattr(instance, "profile", None)
+            if profile is None:
+                from accounts.models import UserProfile
+                profile = UserProfile.objects.create(user=instance)
             for attr, value in profile_data.items():
-                setattr(instance.profile, attr, value)
-            instance.profile.save(update_fields=list(profile_data.keys()))
+                setattr(profile, attr, value)
+            profile.save(update_fields=list(profile_data.keys()))
         return super().update(instance, validated_data)
 ```
 
-### 7. Frontend — `PublicProfilePage.tsx`
+### 7. Frontend — `services/auth.service.ts` — `getPublicProfile`
+
+```typescript
+// Adicionar em frontend/src/services/auth.service.ts
+export interface PublicPlace {
+  public_id: string;
+  name: string;
+  category: string;
+  address: string;
+  status: string;
+  maps_url: string | null;
+  instagram_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+export interface PublicProfile {
+  username: string;
+  bio: string;
+  places: PublicPlace[];
+}
+
+// Dentro do authService object:
+getPublicProfile: (username: string) =>
+  api.get<PublicProfile>(`/api/u/${username}/`),
+```
+
+### 8a. Frontend — `PublicPlaceCard.tsx`
+
+> Lista sem card wrapper — cada item separado por `divide-y` do container pai.
+> Sem box/shadow — o espaço e a linha fazem o trabalho.
+
+```tsx
+// frontend/src/components/places/PublicPlaceCard.tsx
+import { MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import type { PublicPlace } from "@/services/auth.service";
+
+export function PublicPlaceCard({ place }: { place: PublicPlace }) {
+  return (
+    <div className="py-3 flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <Badge variant="secondary" className="text-xs">{place.category}</Badge>
+        </div>
+        <p className="font-medium truncate">{place.name}</p>
+        <p className="text-sm text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+          <MapPin className="w-3 h-3 shrink-0" />
+          {place.address}
+        </p>
+      </div>
+      {place.maps_url && (
+        <a
+          href={place.maps_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors mt-1"
+        >
+          <MapPin className="w-4 h-4" />
+        </a>
+      )}
+    </div>
+  );
+}
+```
+
+### 8b. Frontend — `PublicProfilePage.tsx`
 
 ```tsx
 // frontend/src/routes/PublicProfilePage.tsx
-// getPublicProfile() adicionado em services/auth.service.ts
+import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet-async";
+import { authService } from "@/services/auth.service";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { NotFound } from "@/components/NotFound";
+import { PublicPlaceCard } from "@/components/places/PublicPlaceCard";
+
 export function PublicProfilePage() {
   const { username } = useParams<{ username: string }>();
-  const { data, isError } = useQuery({
+  const { t } = useTranslation();
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["profile", username],
     queryFn: () => authService.getPublicProfile(username!),
   });
 
   if (isError) return <NotFound />;
 
+  if (isLoading) {
+    return (
+      <div className="max-w-lg mx-auto p-4 space-y-6">
+        <div className="flex flex-col items-center gap-2">
+          <Skeleton className="h-16 w-16 rounded-full" />
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-lg mx-auto p-4 space-y-6">
+    <>
       <Helmet>
         <title>{data?.username} — Bora Ali</title>
         <meta name="robots" content="noindex" />
       </Helmet>
+      <div className="max-w-lg mx-auto p-4 space-y-6">
+        {/* Header: left-aligned — evita clichê de perfil centrado */}
+        <div className="flex items-start gap-4">
+          <Avatar className="h-16 w-16 shrink-0">
+            <AvatarFallback className="text-lg">
+              {data?.username?.[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <h1 className="text-lg font-semibold truncate">@{data?.username}</h1>
+              {/* Slot para botão follow (feat-feed-amigos) */}
+            </div>
+            {data?.bio && (
+              <p className="text-muted-foreground text-sm mt-1 line-clamp-3">{data.bio}</p>
+            )}
+          </div>
+        </div>
 
-      <div className="text-center space-y-2">
-        <Avatar className="mx-auto h-16 w-16">
-          <AvatarFallback>{data?.username?.[0]?.toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <h1 className="text-xl font-semibold">@{data?.username}</h1>
-        {data?.bio && <p className="text-muted-foreground text-sm">{data.bio}</p>}
+        <div className="space-y-2">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+            {t("profile.public_places")}
+          </h2>
+          {data?.places.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-12">
+              {t("profile.no_public_places")}
+            </p>
+          )}
+          {/* Sem card wrapper — PublicPlaceCard usa divide-y implícito via list */}
+          <div className="divide-y">
+            {data?.places.map((place) => (
+              <PublicPlaceCard key={place.public_id} place={place} />
+            ))}
+          </div>
+        </div>
       </div>
-
-      <div className="space-y-3">
-        <h2 className="font-medium">{t("profile.public_places")}</h2>
-        {data?.places.map((place) => (
-          <PlaceCard key={place.public_id} place={place} />
-        ))}
-      </div>
-    </div>
+    </>
   );
 }
 ```
 
-### 8. `AccountPage.tsx` — campos de perfil público
+### 9. `AccountPage.tsx` — campos de perfil público
 
 ```tsx
 // Campos adicionados ao formulário de conta:
 <Input label={t("account.username")} {...register("username")}
   placeholder="seu_username" />
 <Textarea label={t("account.bio")} {...register("bio")} maxLength={300} />
+
+{/* Switch precisa de Controller — shadcn Switch não aceita ref/onChange do register() */}
 <div className="flex items-center justify-between">
   <span className="text-sm">{t("account.is_public")}</span>
-  <Switch {...register("is_public")} />
+  <Controller
+    control={control}
+    name="is_public"
+    render={({ field }) => (
+      <Switch checked={field.value} onCheckedChange={field.onChange} />
+    )}
+  />
 </div>
 
 // Toggle por place no PlaceDetail:
@@ -245,10 +395,11 @@ export function PublicProfilePage() {
 />
 ```
 
-### 9. Traduções i18n (pt-BR)
+### 10. Traduções i18n (pt-BR)
 
 ```json
 "profile.public_places": "Lugares públicos",
+"profile.no_public_places": "Nenhum lugar público ainda",
 "account.username": "Username",
 "account.bio": "Bio",
 "account.is_public": "Perfil público",

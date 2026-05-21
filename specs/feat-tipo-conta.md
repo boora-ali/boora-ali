@@ -22,11 +22,14 @@ cardápio e promoção paga no feed.
 
 Backend:
 - `/django-expert` — choices enum, serializer, migrations
+- `/django-patterns` — guard de rota por account_type, middleware/mixin de permissão
 - `/bora-ali-backend` — UserProfile, RegisterView, convenções do projeto
 
 Frontend:
 - `/bora-ali-frontend` — React Query, roteamento, PrivateRoute
 - `/frontend-design` — RadioGroup, Card (shadcn/ui)
+- `/impeccable` — tela de seleção de tipo de conta, onboarding, estados de loading
+- `/design-taste-frontend` — RadioGroup de tipo de conta, affordances de escolha binária
 
 > **Dependências**: nenhuma. Bloqueia `feat-estabelecimento-perfil.md`,
 > `feat-estabelecimento-pagamento.md`.

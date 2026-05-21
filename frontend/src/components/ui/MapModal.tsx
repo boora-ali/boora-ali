@@ -20,7 +20,7 @@ export function MapModal({ open, onClose, name, latitude, longitude, mapsUrl }: 
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{name}</DialogTitle>
         </DialogHeader>

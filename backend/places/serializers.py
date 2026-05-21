@@ -194,6 +194,7 @@ class VisitWriteSerializer(FlexFieldsModelSerializer):
 
 class PlaceListSerializer(FlexFieldsModelSerializer):
     cover_photo = serializers.SerializerMethodField()
+    avg_rating = serializers.FloatField(read_only=True, default=None)
 
     def get_cover_photo(self, obj):
         return build_public_media_url(obj.cover_photo, self.context.get("request"))
@@ -211,6 +212,7 @@ class PlaceListSerializer(FlexFieldsModelSerializer):
             "latitude",
             "longitude",
             "status",
+            "avg_rating",
             "cover_photo",
             "created_at",
             "updated_at",

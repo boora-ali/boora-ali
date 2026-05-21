@@ -16,18 +16,79 @@ consegue enviar uma recomendação de lugar para um amigo nem importar recomenda
 
 ---
 
+## Fluxo de compartilhamento (ShareButton)
+
+### Comportamento do botão "Compartilhar" no PlaceDetail
+
+**Mobile** (quando `navigator.share()` disponível):
+- Chama `navigator.share({ title, url })` → abre share sheet nativo do OS
+- Usuário escolhe WhatsApp, Instagram, Telegram, SMS etc. diretamente pelo SO
+- Nenhuma lista de apps mantida no código
+
+**Desktop** (fallback quando `navigator.share()` não disponível):
+- Abre um popover com duas opções:
+  - **WhatsApp** → `https://wa.me/?text=Olha esse lugar: {encodeURIComponent(url)}`
+  - **Copiar link** → copia URL para clipboard, ícone muda para ✓ por 2s
+- Instagram não tem URL de share por link no desktop — omitido do fallback
+
+**Geração do link:**
+- Primeiro clique: `POST /api/places/{id}/share/` → cria token, armazena URL em memória
+- Cliques seguintes: usa URL já em memória, sem nova request
+
+---
+
+## Fluxo do destinatário (SharePage `/share/:token`)
+
+### Cenário 1 — Usuário logado
+1. Abre `/share/:token` → vê dados do place (foto, nome, categoria, endereço, chips Maps/Instagram)
+2. CTA: **"Adicionar à minha lista"**
+3. `POST /api/share/:token/import/` → place criado com `status=WANT_TO_VISIT`
+4. Redireciona para `/places/{public_id}` do place importado
+5. Dono não recebe notificação (YAGNI — `feat-notifications.md` pode adicionar depois)
+
+### Cenário 2 — Tem conta mas não está logado
+1. Abre `/share/:token` → vê a página normalmente (token é a autorização, sem auth obrigatória)
+2. CTA: **"Adicionar à minha lista"**
+3. Redireciona para `/login?next=/share/:token`
+4. Após login, volta para `/share/:token` e pode importar
+
+### Cenário 3 — Sem conta
+1. Abre `/share/:token` → vê a página normalmente (visualização nunca bloqueada)
+2. CTA: **"Entre ou cadastre-se para adicionar"**
+3. Redireciona para `/register?next=/share/:token`
+4. Após cadastro + login, volta para `/share/:token` e pode importar
+
+---
+
+## Relação com perfil público
+
+O share por token é **independente** de `UserProfile.is_public`:
+
+| | Perfil público `/u/:username` | Share link `/share/:token` |
+|---|---|---|
+| Quem vê | Qualquer um | Só quem tem o link |
+| Indexado | Sim (opt-in do dono) | Nunca (`noindex` obrigatório) |
+| Revogável | Não (é o perfil) | Sim (`is_active=False`) |
+| Importável | Futuro | Sim (MVP) |
+
+Dono pode ter perfil 100% privado e ainda compartilhar places via link — o token é a autorização, não o perfil.
+
+---
+
 ## Skills a invocar antes de implementar
 
 Backend:
 - `/django-expert` — serializers, viewsets, DRF APIView, Celery tasks
+- `/django-patterns` — HMAC signed URL, re-criptografia via Celery, idempotência de import
 - `/bora-ali-backend` — convenções do projeto (ImageService, MutationMixin, PublicIdModel, SingleSession)
 
 Frontend:
 - `/bora-ali-frontend` — serviços de API, React Query, roteamento, i18n
 - `/frontend-design` — componentes shadcn/ui (Button, Badge, Sheet)
+- `/impeccable` — SharePage pública, foto bleeding-edge, CTA sticky no fundo
+- `/design-taste-frontend` — chips de link (Maps/Instagram), skeleton de loading
 
 > **Dependências**:
-> - `ImageService.read_decrypted()` precisa ser criado junto (bloqueia o Celery task de import)
 > - `feat-notifications.md` — opcional, pode notificar o dono quando alguém importa. Não bloqueia MVP.
 
 ---
@@ -40,7 +101,7 @@ Frontend:
 | `backend/places/views.py` | `PlaceShareCreateView`, `PlaceShareDetailView`, `PlaceShareMediaView`, `PlaceShareImportView` |
 | `backend/places/urls.py` | Registrar `/share/`, `/places/{id}/share/` |
 | `backend/places/tasks.py` | Adicionar `copy_shared_place_photo` |
-| `backend/core/image_service.py` | Adicionar `ImageService.read_decrypted()` |
+| `backend/core/image_service.py` | Sem alterações — usar `decrypt()` + `default_storage.open()` |
 | `backend/places/migrations/` | `makemigrations places` após criar `PlaceShare` |
 | `frontend/src/routes/SharePage.tsx` | Página pública (nova) |
 | `frontend/src/services/share.service.ts` | `createShare()`, `getShare()`, `importShare()` |
@@ -81,16 +142,17 @@ class PlaceShare(models.Model):
 
 > Rodar `python manage.py makemigrations places` após criar o model.
 
-### 2. `image_service.py` — `read_decrypted()`
+### 2. `image_service.py` — sem alterações necessárias
+
+`ImageService.decrypt(data: bytes, user_id: int) -> bytes` já existe.
+Para ler do storage antes de descriptografar, use `default_storage.open(path).read()`.
 
 ```python
-# backend/core/image_service.py
-@staticmethod
-def read_decrypted(image_field, owner_pk: int) -> bytes:
-    """Lê e descriptografa uma imagem usando a chave do owner."""
-    fernet = ImageService._get_fernet(owner_pk)
-    raw = image_field.read()
-    return fernet.decrypt(raw)
+from django.core.files.storage import default_storage
+
+# Ler + descriptografar (substitui o read_decrypted que o spec anterior propunha)
+raw = default_storage.open(place.cover_photo).read()
+decrypted = ImageService.decrypt(raw, user_id=owner_pk)
 ```
 
 ### 3. `views.py` — endpoints
@@ -99,6 +161,16 @@ def read_decrypted(image_field, owner_pk: int) -> bytes:
 # backend/places/views.py
 import hmac, hashlib, time
 from django.conf import settings
+from django.core.files.storage import default_storage
+from django.http import HttpResponse
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
+from core.image_service import ImageService
+from core.views import MutationMixin
+from .models import Place, PlaceShare, PlaceStatus
+from .tasks import copy_shared_place_photo
 
 def _make_signed_media_url(share_token: str, image_path: str, ttl: int = 3600) -> str:
     exp = int(time.time()) + ttl
@@ -112,6 +184,8 @@ class PlaceShareCreateView(MutationMixin, APIView):
 
     def post(self, request, public_id):
         place = get_object_or_404(Place, public_id=public_id, user=request.user)
+        # Decisão de design: cada chamada cria token independente (revogável individualmente).
+        # Usuário pode ter N links ativos pro mesmo place — comportamento intencional.
         share = PlaceShare.objects.create(place=place, owner=request.user)
         return Response({"token": share.token, "url": f"{settings.PUBLIC_BASE_URL}/share/{share.token}"})
 
@@ -176,14 +250,12 @@ class PlaceShareMediaView(APIView):
             is_active=True,
         )
         try:
-            decrypted = ImageService.read_decrypted(
-                share.place.cover_photo, owner_pk=share.owner.pk
-            )
+            raw = default_storage.open(share.place.cover_photo).read()
+            decrypted = ImageService.decrypt(raw, user_id=share.owner.pk)
         except Exception:
             return Response(status=404)
-        from django.http import HttpResponse
         # Seguir padrão de media_views.py: stream sem Content-Disposition forçado
-        return HttpResponse(decrypted, content_type="image/jpeg")
+        return HttpResponse(decrypted, content_type=ImageService.detect_content_type(decrypted))
 
 
 class PlaceShareImportView(MutationMixin, APIView):
@@ -199,6 +271,14 @@ class PlaceShareImportView(MutationMixin, APIView):
             return Response({"detail": "Você já é dono deste lugar."}, status=400)
 
         place = share.place
+
+        # Evita importações duplicadas do mesmo place (mesmo nome + endereço)
+        already_imported = Place.objects.filter(
+            user=request.user, name=place.name, address=place.address
+        ).exists()
+        if already_imported:
+            return Response({"detail": "Você já tem este lugar na sua lista."}, status=400)
+
         imported = Place.objects.create(
             user=request.user,
             name=place.name,
@@ -231,7 +311,9 @@ class PlaceShareImportView(MutationMixin, APIView):
 @shared_task(bind=True, max_retries=3)
 def copy_shared_place_photo(self, source_place_pk, source_owner_pk, target_place_pk, target_owner_pk):
     from django.core.files.base import ContentFile
+    from django.core.files.storage import default_storage
     from places.models import Place as PlaceModel
+    from core.image_service import ImageService
 
     try:
         source_place = PlaceModel.objects.get(pk=source_place_pk)
@@ -244,9 +326,11 @@ def copy_shared_place_photo(self, source_place_pk, source_owner_pk, target_place
         return  # Place importado foi deletado antes da task — sem retry
 
     try:
-        raw_bytes = ImageService.read_decrypted(source_place.cover_photo, owner_pk=source_owner_pk)
-        # ImageService.save() deriva o owner da FK place.user — não precisa de owner_pk
-        ImageService.save(target_place, ContentFile(raw_bytes), category="places/covers")
+        raw = default_storage.open(source_place.cover_photo).read()
+        decrypted = ImageService.decrypt(raw, user_id=source_owner_pk)
+        path = ImageService.save(ContentFile(decrypted), user_id=target_owner_pk, category="places/covers")
+        target_place.cover_photo = path
+        target_place.save(update_fields=["cover_photo"])
     except Exception as exc:
         raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
 ```
@@ -257,7 +341,10 @@ def copy_shared_place_photo(self, source_place_pk, source_owner_pk, target_place
 
 ```python
 # backend/places/urls.py
-from .views import PlaceShareCreateView, PlaceShareRevokeView
+from .views import (
+    PlaceShareCreateView, PlaceShareRevokeView,
+    PlaceShareDetailView, PlaceShareMediaView, PlaceShareImportView,
+)
 
 # Autenticados (dentro do router de places)
 path("places/<public_id>/share/", PlaceShareCreateView.as_view()),
@@ -273,6 +360,18 @@ path("share/<str:token>/import/", PlaceShareImportView.as_view()),
 
 ```typescript
 // frontend/src/services/share.service.ts
+export interface ShareDetail {
+  name: string;
+  category: string;
+  address: string;
+  status: string;
+  instagram_url: string | null;
+  maps_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  cover_photo_url: string | null;
+}
+
 export const shareService = {
   createShare: (placePublicId: string) =>
     api.post<{ token: string; url: string }>(`/api/places/${placePublicId}/share/`),
@@ -289,8 +388,22 @@ export const shareService = {
 
 ```tsx
 // frontend/src/routes/SharePage.tsx
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet-async";
+import { shareService } from "@/services/share.service";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { NotFound } from "@/components/NotFound";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MapPin, Instagram } from "lucide-react";
+
 export function SharePage() {
   const { token } = useParams<{ token: string }>();
+  const { t } = useTranslation();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["share", token],
     queryFn: () => shareService.getShare(token!),
@@ -311,29 +424,84 @@ export function SharePage() {
 
   if (isError) return <NotFound />;
 
-  return (
-    <div className="max-w-lg mx-auto p-4 space-y-4">
-      {data?.cover_photo_url && (
-        <img src={data.cover_photo_url} className="w-full rounded-xl object-cover h-56" />
-      )}
-      <div>
-        <Badge>{data?.category}</Badge>
-        <h1 className="text-2xl font-semibold mt-1">{data?.name}</h1>
-        <p className="text-muted-foreground text-sm">{data?.address}</p>
+  if (isLoading) {
+    return (
+      <div className="max-w-lg mx-auto p-4 space-y-4">
+        <Skeleton className="w-full h-56 rounded-xl" />
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-36" />
+        <Skeleton className="h-10 w-full" />
       </div>
-      {data?.maps_url && <a href={data.maps_url}>{t("share.view_maps")}</a>}
-      {data?.instagram_url && <a href={data.instagram_url}>{t("share.view_instagram")}</a>}
+    );
+  }
 
-      {user ? (
-        <Button onClick={handleImport} disabled={importing} className="w-full">
-          {importing ? t("share.importing") : t("share.import_button")}
-        </Button>
-      ) : (
-        <Button asChild className="w-full">
-          <a href={`/login?next=/share/${token}`}>{t("share.login_to_import")}</a>
-        </Button>
-      )}
-    </div>
+  return (
+    <>
+      <Helmet>
+        <title>{data?.name} — Bora Ali</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
+      <div className="max-w-lg mx-auto">
+        {/* Foto ocupa topo sem padding — bleeding edge no mobile */}
+        {data?.cover_photo_url && (
+          <img
+            src={data.cover_photo_url}
+            alt={data.name}
+            className="w-full aspect-[4/3] object-cover"
+          />
+        )}
+
+        <div className="p-4 space-y-4">
+          <div>
+            <Badge variant="secondary" className="mb-2">{data?.category}</Badge>
+            <h1 className="text-2xl font-semibold leading-tight">{data?.name}</h1>
+            <p className="text-muted-foreground text-sm mt-1">{data?.address}</p>
+          </div>
+
+          {/* Links como chips, não <a> raw */}
+          {(data?.maps_url || data?.instagram_url) && (
+            <div className="flex gap-2">
+              {data.maps_url && (
+                <a
+                  href={data.maps_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs border rounded-full px-3 py-1.5 hover:bg-muted transition-colors"
+                >
+                  <MapPin className="w-3 h-3" />
+                  {t("share.view_maps")}
+                </a>
+              )}
+              {data.instagram_url && (
+                <a
+                  href={data.instagram_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs border rounded-full px-3 py-1.5 hover:bg-muted transition-colors"
+                >
+                  <Instagram className="w-3 h-3" />
+                  {t("share.view_instagram")}
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* CTA sticky no fundo em mobile — não se perde ao scrollar */}
+        <div className="sticky bottom-0 bg-background border-t p-4">
+          {user ? (
+            <Button onClick={handleImport} disabled={importing} className="w-full">
+              {importing ? t("share.importing") : t("share.import_button")}
+            </Button>
+          ) : (
+            <Button asChild className="w-full">
+              <a href={`/login?next=/share/${token}`}>{t("share.login_to_import")}</a>
+            </Button>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 ```
@@ -343,28 +511,67 @@ export function SharePage() {
 
 ### 8. Frontend — `ShareButton` no PlaceDetail
 
+Comportamento descrito em "Fluxo de compartilhamento" acima. Implementação:
+
 ```tsx
-function ShareButton({ placePublicId }: { placePublicId: string }) {
+function ShareButton({ placePublicId, placeName }: { placePublicId: string; placeName: string }) {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  async function handleShare() {
-    if (!shareUrl) {
-      const result = await shareService.createShare(placePublicId);
-      setShareUrl(result.url);
-      await navigator.clipboard.writeText(result.url);
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function getOrCreateUrl(): Promise<string> {
+    if (shareUrl) return shareUrl;
+    const result = await shareService.createShare(placePublicId);
+    setShareUrl(result.url);
+    return result.url;
   }
 
+  async function handleShare() {
+    const url = await getOrCreateUrl();
+    // Mobile: Web Share API (share sheet nativo do SO)
+    if (navigator.share) {
+      await navigator.share({ title: placeName, url });
+      return;
+    }
+    // Desktop: abre popover com opções
+    setPopoverOpen(true);
+  }
+
+  async function handleCopy(url: string) {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => { setCopied(false); setPopoverOpen(false); }, 2000);
+  }
+
+  // Popover desktop com WhatsApp + Copiar link
+  // Instagram omitido: sem URL de share no desktop
   return (
-    <Button variant="outline" size="sm" onClick={handleShare}>
-      <Share2 className="w-4 h-4 mr-2" />
-      {copied ? t("share.copied") : t("share.button")}
-    </Button>
+    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" onClick={handleShare}>
+          <Share2 className="w-4 h-4 mr-2" />
+          {t("share.button")}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-48 p-2 flex flex-col gap-1">
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(`${placeName}: ${shareUrl ?? ""}`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted"
+        >
+          <MessageCircle className="w-4 h-4 text-green-600" />
+          WhatsApp
+        </a>
+        <button
+          onClick={() => shareUrl && handleCopy(shareUrl)}
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted text-left"
+        >
+          {copied ? <Check className="w-4 h-4" /> : <Link className="w-4 h-4" />}
+          {copied ? t("share.copied") : t("share.copy_link")}
+        </button>
+      </PopoverContent>
+    </Popover>
   );
 }
 ```
@@ -373,10 +580,11 @@ function ShareButton({ placePublicId }: { placePublicId: string }) {
 
 ```json
 "share.button": "Compartilhar",
+"share.copy_link": "Copiar link",
 "share.copied": "Link copiado!",
 "share.import_button": "Adicionar à minha lista",
 "share.importing": "Adicionando...",
-"share.login_to_import": "Entre para adicionar à sua lista",
+"share.login_to_import": "Entre ou cadastre-se para adicionar",
 "share.view_maps": "Ver no Maps",
 "share.view_instagram": "Instagram"
 ```
