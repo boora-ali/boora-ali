@@ -16,6 +16,65 @@ consegue enviar uma recomendação de lugar para um amigo nem importar recomenda
 
 ---
 
+## Fluxo de compartilhamento (ShareButton)
+
+### Comportamento do botão "Compartilhar" no PlaceDetail
+
+**Mobile** (quando `navigator.share()` disponível):
+- Chama `navigator.share({ title, url })` → abre share sheet nativo do OS
+- Usuário escolhe WhatsApp, Instagram, Telegram, SMS etc. diretamente pelo SO
+- Nenhuma lista de apps mantida no código
+
+**Desktop** (fallback quando `navigator.share()` não disponível):
+- Abre um popover com duas opções:
+  - **WhatsApp** → `https://wa.me/?text=Olha esse lugar: {encodeURIComponent(url)}`
+  - **Copiar link** → copia URL para clipboard, ícone muda para ✓ por 2s
+- Instagram não tem URL de share por link no desktop — omitido do fallback
+
+**Geração do link:**
+- Primeiro clique: `POST /api/places/{id}/share/` → cria token, armazena URL em memória
+- Cliques seguintes: usa URL já em memória, sem nova request
+
+---
+
+## Fluxo do destinatário (SharePage `/share/:token`)
+
+### Cenário 1 — Usuário logado
+1. Abre `/share/:token` → vê dados do place (foto, nome, categoria, endereço, chips Maps/Instagram)
+2. CTA: **"Adicionar à minha lista"**
+3. `POST /api/share/:token/import/` → place criado com `status=WANT_TO_VISIT`
+4. Redireciona para `/places/{public_id}` do place importado
+5. Dono não recebe notificação (YAGNI — `feat-notifications.md` pode adicionar depois)
+
+### Cenário 2 — Tem conta mas não está logado
+1. Abre `/share/:token` → vê a página normalmente (token é a autorização, sem auth obrigatória)
+2. CTA: **"Adicionar à minha lista"**
+3. Redireciona para `/login?next=/share/:token`
+4. Após login, volta para `/share/:token` e pode importar
+
+### Cenário 3 — Sem conta
+1. Abre `/share/:token` → vê a página normalmente (visualização nunca bloqueada)
+2. CTA: **"Entre ou cadastre-se para adicionar"**
+3. Redireciona para `/register?next=/share/:token`
+4. Após cadastro + login, volta para `/share/:token` e pode importar
+
+---
+
+## Relação com perfil público
+
+O share por token é **independente** de `UserProfile.is_public`:
+
+| | Perfil público `/u/:username` | Share link `/share/:token` |
+|---|---|---|
+| Quem vê | Qualquer um | Só quem tem o link |
+| Indexado | Sim (opt-in do dono) | Nunca (`noindex` obrigatório) |
+| Revogável | Não (é o perfil) | Sim (`is_active=False`) |
+| Importável | Futuro | Sim (MVP) |
+
+Dono pode ter perfil 100% privado e ainda compartilhar places via link — o token é a autorização, não o perfil.
+
+---
+
 ## Skills a invocar antes de implementar
 
 Backend:
@@ -452,28 +511,67 @@ export function SharePage() {
 
 ### 8. Frontend — `ShareButton` no PlaceDetail
 
+Comportamento descrito em "Fluxo de compartilhamento" acima. Implementação:
+
 ```tsx
-function ShareButton({ placePublicId }: { placePublicId: string }) {
+function ShareButton({ placePublicId, placeName }: { placePublicId: string; placeName: string }) {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  async function handleShare() {
-    if (!shareUrl) {
-      const result = await shareService.createShare(placePublicId);
-      setShareUrl(result.url);
-      await navigator.clipboard.writeText(result.url);
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function getOrCreateUrl(): Promise<string> {
+    if (shareUrl) return shareUrl;
+    const result = await shareService.createShare(placePublicId);
+    setShareUrl(result.url);
+    return result.url;
   }
 
+  async function handleShare() {
+    const url = await getOrCreateUrl();
+    // Mobile: Web Share API (share sheet nativo do SO)
+    if (navigator.share) {
+      await navigator.share({ title: placeName, url });
+      return;
+    }
+    // Desktop: abre popover com opções
+    setPopoverOpen(true);
+  }
+
+  async function handleCopy(url: string) {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => { setCopied(false); setPopoverOpen(false); }, 2000);
+  }
+
+  // Popover desktop com WhatsApp + Copiar link
+  // Instagram omitido: sem URL de share no desktop
   return (
-    <Button variant="outline" size="sm" onClick={handleShare}>
-      <Share2 className="w-4 h-4 mr-2" />
-      {copied ? t("share.copied") : t("share.button")}
-    </Button>
+    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" onClick={handleShare}>
+          <Share2 className="w-4 h-4 mr-2" />
+          {t("share.button")}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-48 p-2 flex flex-col gap-1">
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(`${placeName}: ${shareUrl ?? ""}`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted"
+        >
+          <MessageCircle className="w-4 h-4 text-green-600" />
+          WhatsApp
+        </a>
+        <button
+          onClick={() => shareUrl && handleCopy(shareUrl)}
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted text-left"
+        >
+          {copied ? <Check className="w-4 h-4" /> : <Link className="w-4 h-4" />}
+          {copied ? t("share.copied") : t("share.copy_link")}
+        </button>
+      </PopoverContent>
+    </Popover>
   );
 }
 ```
@@ -482,10 +580,11 @@ function ShareButton({ placePublicId }: { placePublicId: string }) {
 
 ```json
 "share.button": "Compartilhar",
+"share.copy_link": "Copiar link",
 "share.copied": "Link copiado!",
 "share.import_button": "Adicionar à minha lista",
 "share.importing": "Adicionando...",
-"share.login_to_import": "Entre para adicionar à sua lista",
+"share.login_to_import": "Entre ou cadastre-se para adicionar",
 "share.view_maps": "Ver no Maps",
 "share.view_instagram": "Instagram"
 ```
