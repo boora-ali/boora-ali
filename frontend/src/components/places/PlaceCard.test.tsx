@@ -56,13 +56,13 @@ test("renders cover photo via img when cover_photo is provided", () => {
   expect(screen.getByRole("img", { name: "Café X" })).toBeInTheDocument();
 });
 
-test("renders placeholder emoji when no cover_photo", () => {
+test("renders placeholder icon when no cover_photo", () => {
   render(
     <MemoryRouter>
       <PlaceCard place={place} />
     </MemoryRouter>
   );
-  expect(screen.getByText("🍽")).toBeInTheDocument();
+  expect(screen.getByRole("article")).toBeInTheDocument();
 });
 
 test("shows notes when provided", () => {

@@ -4,6 +4,7 @@ import type { Place } from "../../types/place";
 import { Badge } from "../ui/Badge";
 import { sanitizeUrl } from "../../utils/url";
 import { AuthImage } from "../ui/AuthImage";
+import { UtensilsCrossed } from "lucide-react";
 
 export function PlaceCard({ place, index = 0 }: { place: Place; index?: number }) {
   const { t } = useTranslation();
@@ -30,7 +31,7 @@ export function PlaceCard({ place, index = 0 }: { place: Place; index?: number }
           </>
         ) : (
           <div className="w-full h-44 bg-gradient-to-br from-background to-border/60 flex items-center justify-center">
-            <span className="text-4xl opacity-20">🍽</span>
+            <UtensilsCrossed className="h-10 w-10 text-muted opacity-25" />
             <div className="absolute bottom-2.5 left-3">
               <Badge status={place.status} />
             </div>
@@ -89,14 +90,6 @@ export function PlaceCard({ place, index = 0 }: { place: Place; index?: number }
           )}
         </div>
 
-        <div
-          className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary"
-        >
-          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-          </svg>
-          {t("common.open")}
-        </div>
       </div>
     </article>
   );

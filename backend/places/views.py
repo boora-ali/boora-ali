@@ -1,16 +1,21 @@
 from django.db import transaction
+from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from core.views import MutationMixin
 from core.viewsets import ViewSetBase, WriteViewSetBase
 
 from .filters import PlaceFilter, VisitFilter, VisitItemFilter
-from .models import CoordsStatus, Place, Visit, VisitItem
+from .models import Collection, CollectionPlace, CoordsStatus, Place, Visit, VisitItem
 from .params_serializers import PlaceVisitParamsSerializer, VisitItemParamsSerializer
 from .serializers import (
+    CollectionDetailSerializer,
+    CollectionSerializer,
     PlaceDetailSerializer,
     PlaceListSerializer,
     PlaceWriteSerializer,
@@ -241,6 +246,61 @@ class VisitViewSet(WriteViewSetBase):
         serializer.is_valid(raise_exception=True)
         item = serializer.save(visit=visit)
         return Response(VisitItemSerializer(item).data, status=status.HTTP_201_CREATED)
+
+
+class CollectionViewSet(ViewSetBase):
+    lookup_field = "public_id"
+    queryset = Collection.objects.all()
+
+    def get_queryset(self):
+        qs = Collection.objects.filter(user=self.request.user)
+        place_prefetch = Prefetch(
+            "collection_places",
+            queryset=CollectionPlace.objects.select_related("place").order_by(
+                "-added_at"
+            ),
+        )
+        return (
+            qs.annotate(place_count=Count("collection_places"))
+            .prefetch_related(place_prefetch)
+            .order_by("-updated_at")
+        )
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return CollectionDetailSerializer
+        return CollectionSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class CollectionPlaceView(MutationMixin, APIView):
+    """POST /collections/{public_id}/places/{place_public_id}/ — add
+    DELETE /collections/{public_id}/places/{place_public_id}/ — remove"""
+
+    def _get_collection_and_place(self, request, collection_public_id, place_public_id):
+        collection = get_object_or_404(
+            Collection, public_id=collection_public_id, user=request.user
+        )
+        place = get_object_or_404(Place, public_id=place_public_id, user=request.user)
+        return collection, place
+
+    def post(self, request, collection_public_id, place_public_id):
+        collection, place = self._get_collection_and_place(
+            request, collection_public_id, place_public_id
+        )
+        _, created = CollectionPlace.objects.get_or_create(
+            collection=collection, place=place
+        )
+        return Response(status=201 if created else 200)
+
+    def delete(self, request, collection_public_id, place_public_id):
+        collection, place = self._get_collection_and_place(
+            request, collection_public_id, place_public_id
+        )
+        CollectionPlace.objects.filter(collection=collection, place=place).delete()
+        return Response(status=204)
 
 
 class VisitItemViewSet(WriteViewSetBase):

@@ -302,6 +302,7 @@
   },
   "common": {
     "loading": "Carregando...",
+    "error": "Algo deu errado. Tente novamente.",
     "save": "Salvar",
     "cancel": "Cancelar",
     "close": "Fechar",
@@ -332,6 +333,21 @@
       "title": "Lixeira vazia",
       "description": "Nenhum lugar excluído."
     }
+  },
+  "collections": {
+    "title": "Coleções",
+    "new": "Nova coleção",
+    "places_count": "lugar(es)",
+    "add_to": "Adicionar a coleção",
+    "in_collections": "Em {{count}} coleção(ões)",
+    "remove_place": "Remover da coleção",
+    "delete": "Excluir coleção",
+    "delete_confirm": "Excluir esta coleção? Os lugares não serão apagados.",
+    "empty": "Nenhuma coleção ainda",
+    "empty_places": "Nenhum lugar nesta coleção",
+    "name_placeholder": "Nome da coleção",
+    "description_placeholder": "Descrição (opcional)",
+    "place_removed": "Lugar removido da coleção"
   },
   "termsModal": {
     "title": "Termos de Uso",

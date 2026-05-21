@@ -7,6 +7,7 @@
     "dev": "vite",
     "dev:local": "vite --mode development --host localhost --port 5173",
     "dev:preprod": "vite --mode preprod --host 0.0.0.0 --port 5173",
+    "icons": "node scripts/generate-icons.mjs",
     "prebuild": "node scripts/generate-og-image.mjs",
     "build": "tsc -b && vite build",
     "build:preprod": "tsc -b && vite build --mode preprod",
