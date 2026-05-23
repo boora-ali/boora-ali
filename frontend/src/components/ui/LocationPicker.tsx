@@ -3,7 +3,8 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 const DEFAULT_CENTER: [number, number] = [-60.0217314, -3.1190275];
-const MAP_STYLE = "https://tiles.openfreemap.org/styles/bright";
+const TILES_ORIGIN = "https://tiles.openfreemap.org";
+const MAP_STYLE = "/_tiles/styles/bright";
 
 type Props = {
   label: string;
@@ -66,6 +67,11 @@ export function LocationPicker({
       center: initCenter,
       zoom: 15,
       attributionControl: false,
+      transformRequest: (url) => ({
+        url: url.startsWith(TILES_ORIGIN)
+          ? `${window.location.origin}/_tiles${url.slice(TILES_ORIGIN.length)}`
+          : url,
+      }),
     });
 
     map.addControl(

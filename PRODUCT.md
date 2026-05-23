@@ -70,6 +70,14 @@ O app deveria parecer um **caderno pessoal bem-cuidado** — não um diário fof
 - Distinção de camadas: surface elevada tem sombra real, não `shadow-sm`.
 - Transições: entrada de conteúdo com fade leve, sem bounce.
 
+## Features implementadas
+
+### Compartilhamento de places (`feat-place-sharing`) — implementado
+- **Backend:** `PlaceShare` model (token opaco, revogável), 5 endpoints (`/api/places/:id/share/`, `/api/share/:token/`, `/api/share/:token/import/`, etc.), HMAC-SHA256 para servir mídia sem autenticação, Celery task `copy_shared_place_photo` para re-encriptar foto no import.
+- **Frontend:** `SharePage` (`/share/:token`) — página pública, foto hero que dissolve no creme, tipografia editorial (font-fraunces), CTA glass com botão Voltar + Adicionar. `ShareButton` no `PlaceDetailPage` — Web Share API com fallback popover (WhatsApp + copiar link). Context menu no `PlaceCard` (botão direito / long press): Abrir, Compartilhar, Apagar.
+- **Erros específicos:** owner e duplicado retornam mensagem do backend diretamente (não genérico).
+- **Testes:** 7 model + 23 view (backend), SharePage.test + ShareButton.test (frontend).
+
 ## Telas principais
 
 **Usuário pessoal:**
@@ -80,12 +88,13 @@ O app deveria parecer um **caderno pessoal bem-cuidado** — não um diário fof
 5. **Coleções** (`/collections`) — curadoria pessoal
 6. **Conta / Perfil** (`/account`) — configurações, username, bio, toggle público
 7. **Lixeira** (`/places/trash`) — recuperação
-8. **Feed de amigos** (`/feed`) — places públicos de quem o usuário segue
-9. **Perfil público de usuário** (`/u/:username`) — visível sem login, botão follow
-10. **404** — edge case com personalidade
+8. **Compartilhamento** (`/share/:token`) — página pública de place compartilhado
+9. **Feed de amigos** (`/feed`) — places públicos de quem o usuário segue
+10. **Perfil público de usuário** (`/u/:username`) — visível sem login, botão follow
+11. **404** — edge case com personalidade
 
 **Estabelecimento:**
-11. **Perfil público** (`/e/:username`) — cardápio, contato, sem autenticação
-12. **Dashboard — Perfil** (`/dashboard/profile`) — editar dados e cover photo
-13. **Dashboard — Cardápio** (`/dashboard/menu`) — CRUD de itens
-14. **Dashboard — Promoções** (`/dashboard/promotions`) — planos PIX + QR code
+12. **Perfil público** (`/e/:username`) — cardápio, contato, sem autenticação
+13. **Dashboard — Perfil** (`/dashboard/profile`) — editar dados e cover photo
+14. **Dashboard — Cardápio** (`/dashboard/menu`) — CRUD de itens
+15. **Dashboard — Promoções** (`/dashboard/promotions`) — planos PIX + QR code

@@ -137,6 +137,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import os,glob,sys; sys.exit(0 if any(b'beat' in open(f+'/cmdline','rb').read() for f in glob.glob('/proc/[0-9]*') if os.path.exists(f+'/cmdline')) else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     env_file:
       - .env.dev
     environment:

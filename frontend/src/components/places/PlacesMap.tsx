@@ -4,7 +4,8 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Place, PlaceStatus } from "../../types/place";
 
-const MAP_STYLE = "https://tiles.openfreemap.org/styles/bright";
+const TILES_ORIGIN = "https://tiles.openfreemap.org";
+const MAP_STYLE = "/_tiles/styles/bright";
 const DEFAULT_CENTER: [number, number] = [-60.0217314, -3.1190275];
 
 const STATUS_COLORS: Record<PlaceStatus, string> = {
@@ -88,6 +89,11 @@ export function PlacesMap({ places }: { places: Place[] }) {
       center: DEFAULT_CENTER,
       zoom: 12,
       attributionControl: false,
+      transformRequest: (url) => ({
+        url: url.startsWith(TILES_ORIGIN)
+          ? `${window.location.origin}/_tiles${url.slice(TILES_ORIGIN.length)}`
+          : url,
+      }),
     });
 
     map.addControl(

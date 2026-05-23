@@ -1,17 +1,35 @@
+import hashlib
+import hmac
+import time
+
+from django.conf import settings
+from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import Count, Prefetch
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.image_service import ImageService
 from core.views import MutationMixin
 from core.viewsets import ViewSetBase, WriteViewSetBase
 
 from .filters import PlaceFilter, VisitFilter, VisitItemFilter
-from .models import Collection, CollectionPlace, CoordsStatus, Place, Visit, VisitItem
+from .models import (
+    Collection,
+    CollectionPlace,
+    CoordsStatus,
+    Place,
+    PlaceShare,
+    PlaceStatus,
+    Visit,
+    VisitItem,
+)
 from .params_serializers import PlaceVisitParamsSerializer, VisitItemParamsSerializer
 from .serializers import (
     CollectionDetailSerializer,
@@ -25,7 +43,7 @@ from .serializers import (
     VisitSummarySerializer,
     VisitWriteSerializer,
 )
-from .tasks import resolve_place_coords
+from .tasks import copy_shared_place_photo, resolve_place_coords
 
 
 def save_deleted_at_with_history(queryset, deleted_at):
@@ -317,3 +335,152 @@ class VisitItemViewSet(WriteViewSetBase):
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
         instance.save(update_fields=["deleted_at"])
+
+
+# ---------------------------------------------------------------------------
+# Share views
+# ---------------------------------------------------------------------------
+
+
+def _make_signed_media_url(share_token: str, image_path: str, ttl: int = 3600) -> str:
+    exp = int(time.time()) + ttl
+    msg = f"{share_token}:{image_path}:{exp}".encode()
+    sig = hmac.new(settings.SECRET_KEY.encode(), msg, hashlib.sha256).hexdigest()
+    return f"{settings.PUBLIC_BASE_URL}/api/share/{share_token}/media/{image_path}?sig={sig}&exp={exp}"
+
+
+class PlaceShareCreateView(MutationMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, public_id):
+        place = get_object_or_404(Place, public_id=public_id, user=request.user)
+        share = PlaceShare.objects.create(place=place, owner=request.user)
+        return Response(
+            {
+                "token": share.token,
+                "url": f"{settings.PUBLIC_BASE_URL}/share/{share.token}",
+            },
+            status=201,
+        )
+
+
+class PlaceShareRevokeView(MutationMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, public_id, token):
+        share = get_object_or_404(
+            PlaceShare, token=token, place__public_id=public_id, owner=request.user
+        )
+        share.is_active = False
+        share.save(update_fields=["is_active"])
+        return Response(status=204)
+
+
+class PlaceShareDetailView(APIView):
+    permission_classes = []
+
+    def get(self, request, token):
+        share = get_object_or_404(
+            PlaceShare.objects.select_related("place"),
+            token=token,
+            is_active=True,
+        )
+        place = share.place
+        image_url = None
+        if place.cover_photo:
+            image_url = _make_signed_media_url(token, str(place.cover_photo))
+        return Response(
+            {
+                "name": place.name,
+                "category": place.category,
+                "address": place.address,
+                "status": place.status,
+                "instagram_url": place.instagram_url,
+                "maps_url": place.maps_url,
+                "latitude": place.latitude,
+                "longitude": place.longitude,
+                "cover_photo_url": image_url,
+            }
+        )
+
+
+class PlaceShareMediaView(APIView):
+    permission_classes = []
+
+    def get(self, request, token, path):
+        sig = request.query_params.get("sig", "")
+        try:
+            exp = int(request.query_params.get("exp", 0))
+        except (ValueError, TypeError):
+            return Response(status=404)
+        if time.time() > exp:
+            return Response(status=404)
+        expected = hmac.new(
+            settings.SECRET_KEY.encode(),
+            f"{token}:{path}:{exp}".encode(),
+            hashlib.sha256,
+        ).hexdigest()
+        if not hmac.compare_digest(sig, expected):
+            return Response(status=404)
+        share = get_object_or_404(
+            PlaceShare.objects.select_related("place", "owner"),
+            token=token,
+            is_active=True,
+        )
+        if str(share.place.cover_photo) != path:
+            return Response(status=404)
+        try:
+            raw = default_storage.open(share.place.cover_photo).read()
+            decrypted = ImageService.decrypt(raw, user_id=share.owner.pk)
+        except Exception:
+            return Response(status=404)
+        return HttpResponse(
+            decrypted, content_type=ImageService.detect_content_type(decrypted)
+        )
+
+
+class PlaceShareImportView(MutationMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        share = get_object_or_404(
+            PlaceShare.objects.select_related("place", "owner"),
+            token=token,
+            is_active=True,
+        )
+        if share.owner == request.user:
+            return Response({"detail": "Você já é dono deste lugar."}, status=400)
+
+        place = share.place
+
+        already_imported = Place.objects.filter(
+            user=request.user, name=place.name, address=place.address
+        ).exists()
+        if already_imported:
+            return Response(
+                {"detail": "Você já tem este lugar na sua lista."}, status=400
+            )
+
+        imported = Place.objects.create(
+            user=request.user,
+            name=place.name,
+            category=place.category,
+            address=place.address,
+            instagram_url=place.instagram_url,
+            maps_url=place.maps_url,
+            latitude=place.latitude,
+            longitude=place.longitude,
+            coords_status=place.coords_status,
+            status=PlaceStatus.WANT_TO_VISIT,
+            notes="",
+        )
+
+        if place.cover_photo and copy_shared_place_photo is not None:
+            copy_shared_place_photo.delay(
+                source_place_pk=place.pk,
+                source_owner_pk=share.owner.pk,
+                target_place_pk=imported.pk,
+                target_owner_pk=request.user.pk,
+            )
+
+        return Response({"public_id": str(imported.public_id)}, status=201)

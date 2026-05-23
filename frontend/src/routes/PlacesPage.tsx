@@ -253,7 +253,7 @@ export default function PlacesPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {slidePlaces
                       ? slidePlaces.map((place, idx) => (
-                          <PlaceCard key={place.public_id} place={place} index={idx} />
+                          <PlaceCard key={place.public_id} place={place} index={idx} onDeleted={() => setRefreshTick((t) => t + 1)} />
                         ))
                       : Array.from({ length: PAGE_SIZE }, (_, j) => (
                           <div
