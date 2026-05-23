@@ -74,3 +74,16 @@ test("shows notes when provided", () => {
   );
   expect(screen.getByText("Ótimo espresso")).toBeInTheDocument();
 });
+
+test("shows map link when place only has coordinates", () => {
+  render(
+    <MemoryRouter>
+      <PlaceCard place={{ ...place, maps_url: "", latitude: "-3.1", longitude: "-60" }} />
+    </MemoryRouter>
+  );
+
+  expect(screen.getByRole("link", { name: /maps/i })).toHaveAttribute(
+    "href",
+    "https://www.google.com/maps/search/?api=1&query=-3.1%2C-60",
+  );
+});

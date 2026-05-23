@@ -68,8 +68,8 @@ export const authService = {
   async acceptTerms() {
     await api.post("/auth/terms/accept/");
   },
-  async deleteAccount() {
-    await api.post("/auth/me/delete/");
+  async deleteAccount(data?: { password?: string }) {
+    await api.post("/auth/me/delete/", data ?? {});
   },
   async verifyEmail(token: string) {
     await api.post("/auth/verify-email/", { token });

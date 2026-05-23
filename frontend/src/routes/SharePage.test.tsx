@@ -78,6 +78,22 @@ describe("SharePage", () => {
     expect(screen.getByRole("link", { name: /instagram/i })).toBeInTheDocument();
   });
 
+  test("shows maps link from coordinates when shared place has no Maps URL", async () => {
+    (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...shareData,
+      maps_url: "",
+      latitude: -3.1,
+      longitude: -60,
+    });
+    renderShare();
+    await waitFor(() => expect(screen.getByText("Café Bonito")).toBeInTheDocument());
+
+    expect(screen.getByRole("link", { name: /view on maps/i })).toHaveAttribute(
+      "href",
+      "https://www.google.com/maps/search/?api=1&query=-3.1%2C-60",
+    );
+  });
+
   test("shows login CTA for unauthenticated user", async () => {
     mockUser = null;
     (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue(shareData);

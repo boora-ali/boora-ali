@@ -1,6 +1,7 @@
 import io
 
 import pytest
+from django.conf import settings
 from django.test import override_settings
 
 from core.image_service import ImageService
@@ -52,6 +53,32 @@ def test_different_users_cannot_cross_decrypt():
 
     with pytest.raises(InvalidToken):
         ImageService.decrypt(encrypted, user_id=2)
+
+
+@pytest.mark.django_db
+@override_settings(
+    SECRET_KEY="legacy-secret-key-long-enough-for-existing-media-1234",
+    MEDIA_ENCRYPTION_KEY="new-media-key-long-enough-for-new-media-1234",
+)
+def test_decrypt_keeps_secret_key_fallback_for_existing_media():
+    data = b"legacy encrypted image"
+    encrypted = ImageService._derive_key(7, settings.SECRET_KEY).encrypt(data)
+
+    assert ImageService.decrypt(encrypted, user_id=7) == data
+
+
+@pytest.mark.django_db
+def test_decrypt_does_not_mask_unexpected_failures(monkeypatch):
+    class BrokenFernet:
+        def decrypt(self, data):
+            raise RuntimeError("unexpected decrypt failure")
+
+    monkeypatch.setattr(
+        ImageService, "_media_key", staticmethod(lambda user_id: BrokenFernet())
+    )
+
+    with pytest.raises(RuntimeError, match="unexpected decrypt failure"):
+        ImageService.decrypt(b"encrypted", user_id=7)
 
 
 @pytest.mark.django_db

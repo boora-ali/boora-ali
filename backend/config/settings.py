@@ -111,6 +111,7 @@ if not MEDIA_ENCRYPTION_KEY and DEBUG:
     )
     MEDIA_ENCRYPTION_KEY = SECRET_KEY
 
+
 # Configurações de segurança HTTPS para produção.
 # Em desenvolvimento (DEBUG=True) são desativadas para não bloquear HTTP local.
 if not DEBUG:
@@ -538,6 +539,8 @@ REST_FRAMEWORK = {
         "anon": "100/hour",
         "user": "1000/hour",
         "auth": "30/minute",
+        "share_media": "60/minute",
+        "share_create": "20/minute",
     },
 }
 

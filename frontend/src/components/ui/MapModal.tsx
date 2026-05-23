@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { sanitizeUrl } from "../../utils/url";
+import { getMapsHref } from "../../utils/url";
 
 type Props = {
   open: boolean;
@@ -17,6 +17,7 @@ type Props = {
 
 export function MapModal({ open, onClose, name, latitude, longitude, mapsUrl }: Props) {
   const embedUrl = `https://www.google.com/maps?q=${latitude},${longitude}&z=16&output=embed`;
+  const mapsHref = getMapsHref({ mapsUrl, latitude, longitude });
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -36,9 +37,9 @@ export function MapModal({ open, onClose, name, latitude, longitude, mapsUrl }: 
               className="block"
             />
           </div>
-          {sanitizeUrl(mapsUrl) && (
+          {mapsHref && (
             <a
-              href={sanitizeUrl(mapsUrl)}
+              href={mapsHref}
               target="_blank"
               rel="noreferrer"
               className="flex items-center justify-center gap-1.5 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"

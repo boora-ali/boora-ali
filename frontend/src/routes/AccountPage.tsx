@@ -56,6 +56,7 @@ export default function AccountPage() {
   const [deleteError, setDeleteError] = useState("");
   const [deleteRequested, setDeleteRequested] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
 
   const profileForm = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileSchema),
@@ -169,9 +170,10 @@ export default function AccountPage() {
     setIsDeleting(true);
     setDeleteError("");
     try {
-      await authService.deleteAccount();
+      await authService.deleteAccount(user?.is_google_account ? undefined : { password: deletePassword });
       setDeleteRequested(true);
       setShowDeleteDialog(false);
+      setDeletePassword("");
     } catch {
       setDeleteError(t("account.delete.error"));
     } finally {
@@ -404,11 +406,26 @@ export default function AccountPage() {
             <DialogTitle>{t("account.delete.confirm.title")}</DialogTitle>
             <DialogDescription>{t("account.delete.confirm.description")}</DialogDescription>
           </DialogHeader>
+          {!user?.is_google_account && (
+            <div className="space-y-2">
+              <Label htmlFor="delete-account-password">{t("account.delete.confirm.password")}</Label>
+              <PasswordInput
+                id="delete-account-password"
+                value={deletePassword}
+                onChange={(event) => setDeletePassword(event.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+          )}
           <DialogFooter className="gap-2">
             <Button variant="secondary" disabled={isDeleting} onClick={() => setShowDeleteDialog(false)}>
               {t("common.cancel")}
             </Button>
-            <Button variant="destructive" disabled={isDeleting} onClick={onDeleteAccount}>
+            <Button
+              variant="destructive"
+              disabled={isDeleting || (!user?.is_google_account && !deletePassword)}
+              onClick={onDeleteAccount}
+            >
               {isDeleting ? t("account.delete.deleting") : t("account.delete.confirm.action")}
             </Button>
           </DialogFooter>

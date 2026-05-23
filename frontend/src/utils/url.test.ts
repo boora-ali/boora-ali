@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { extractGoogleMapsCoords, isGoogleMapsUrl, sanitizeUrl } from "./url";
+import { buildGoogleMapsSearchUrl, extractGoogleMapsCoords, getMapsHref, isGoogleMapsUrl, sanitizeUrl } from "./url";
 
 test("detects Google Maps URLs that the backend can resolve later", () => {
   expect(isGoogleMapsUrl("https://maps.app.goo.gl/KaeiRuA7EwybcJCu7")).toBe(true);
@@ -18,4 +18,20 @@ test("extracts coordinates only from full Maps URLs", () => {
 
 test("sanitizes unsafe urls", () => {
   expect(sanitizeUrl("javascript:alert(1)")).toBe("");
+});
+
+test("builds a Google Maps fallback URL from coordinates", () => {
+  expect(buildGoogleMapsSearchUrl("-3.1019444", "-60.0250000")).toBe(
+    "https://www.google.com/maps/search/?api=1&query=-3.1019444%2C-60.025",
+  );
+  expect(buildGoogleMapsSearchUrl(null, "-60.0250000")).toBe("");
+});
+
+test("prefers a safe Maps URL but falls back to coordinates", () => {
+  expect(getMapsHref({ mapsUrl: "https://maps.google.com/?q=Cafe", latitude: "-3.1", longitude: "-60" })).toBe(
+    "https://maps.google.com/?q=Cafe",
+  );
+  expect(getMapsHref({ mapsUrl: "", latitude: "-3.1", longitude: "-60" })).toBe(
+    "https://www.google.com/maps/search/?api=1&query=-3.1%2C-60",
+  );
 });

@@ -77,6 +77,7 @@ def test_serve_own_file_returns_200(auth_client, tmp_path, settings):
     assert resp.status_code == 200
     assert resp["X-Accel-Redirect"] == "/_r2_proxy/"
     assert path in resp["X-Accel-Target"]
+    assert resp["Cache-Control"] == "private, max-age=3600, must-revalidate"
 
 
 @pytest.mark.django_db
