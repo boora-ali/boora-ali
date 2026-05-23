@@ -96,9 +96,6 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
     if (coords) {
       setValue("latitude", coords.latitude);
       setValue("longitude", coords.longitude);
-    } else if (isGoogleMapsUrl(value)) {
-      setValue("latitude", undefined);
-      setValue("longitude", undefined);
     }
   };
 
@@ -110,12 +107,9 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
       setValue("longitude", coords.longitude);
       return;
     }
-    if (isGoogleMapsUrl(mapsUrl)) {
-      setValue("latitude", undefined);
-      setValue("longitude", undefined);
-      return;
+    if (!isGoogleMapsUrl(mapsUrl)) {
+      setError("maps_url", { message: t("placeForm.coordsNotFound") });
     }
-    setError("maps_url", { message: t("placeForm.coordsNotFound") });
   }, [mapsUrl, setValue, setError, t]);
 
   async function handleResolveMapsUrl() {

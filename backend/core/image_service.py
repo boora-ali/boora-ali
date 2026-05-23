@@ -5,7 +5,7 @@ import io
 import logging
 import secrets
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
@@ -52,7 +52,7 @@ class ImageService:
     def decrypt(data: bytes, user_id: int) -> bytes:
         try:
             return ImageService._media_key(user_id).decrypt(data)
-        except Exception:
+        except InvalidToken:
             # Fallback: imagens antigas criptografadas antes de MEDIA_ENCRYPTION_KEY existir
             legacy = ImageService._derive_key(user_id, settings.SECRET_KEY)
             return legacy.decrypt(data)

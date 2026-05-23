@@ -59,7 +59,19 @@ vi.mock("react-i18next", () => ({
         "account.password.confirm": "Confirmar senha",
         "account.password.save": "Salvar senha",
         "account.profile.removePhoto": "Remover foto",
+        "account.delete.title": "Zona de perigo",
+        "account.delete.description": "Descrição exclusão",
+        "account.delete.grace": "7 dias",
+        "account.delete.button": "Excluir minha conta",
+        "account.delete.deleting": "Excluindo",
+        "account.delete.error": "Erro exclusão",
+        "account.delete.scheduled": "Conta agendada",
+        "account.delete.confirm.title": "Excluir conta permanentemente?",
+        "account.delete.confirm.description": "Confirme a exclusão",
+        "account.delete.confirm.password": "Confirme com sua senha",
+        "account.delete.confirm.action": "Sim, excluir minha conta",
         "common.back": "Voltar",
+        "common.cancel": "Cancelar",
         "common.home": "Início",
         "common.photo": "Foto",
       };
@@ -180,6 +192,38 @@ describe("formulário de perfil", () => {
     renderPage();
 
     expect(screen.getByRole("img", { name: "Foto do perfil" })).toBeInTheDocument();
+  });
+});
+
+describe("exclusão de conta", () => {
+  test("envia senha ao solicitar exclusão de conta não-Google", async () => {
+    mockAuthService.deleteAccount.mockResolvedValueOnce(undefined);
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Excluir minha conta" }));
+    fireEvent.change(screen.getByLabelText("Confirme com sua senha"), {
+      target: { value: "senhaAtual1!" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Sim, excluir minha conta" }));
+
+    await waitFor(() =>
+      expect(mockAuthService.deleteAccount).toHaveBeenCalledWith({
+        password: "senhaAtual1!",
+      })
+    );
+    expect(screen.getByText("Conta agendada")).toBeInTheDocument();
+  });
+
+  test("conta Google solicita exclusão sem campo de senha", async () => {
+    isGoogleAccount = true;
+    mockAuthService.deleteAccount.mockResolvedValueOnce(undefined);
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Excluir minha conta" }));
+    expect(screen.queryByLabelText("Confirme com sua senha")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sim, excluir minha conta" }));
+
+    await waitFor(() => expect(mockAuthService.deleteAccount).toHaveBeenCalledWith(undefined));
   });
 });
 

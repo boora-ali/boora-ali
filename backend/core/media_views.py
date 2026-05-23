@@ -55,5 +55,5 @@ def serve_user_media(request, path):
     response = HttpResponse()
     response["X-Accel-Redirect"] = "/_r2_proxy/"
     response["X-Accel-Target"] = media_url
-    response["Cache-Control"] = "private, max-age=31536000, immutable"
+    response["Cache-Control"] = "private, max-age=3600, must-revalidate"
     return response

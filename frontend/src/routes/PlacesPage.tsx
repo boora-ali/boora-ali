@@ -49,6 +49,8 @@ export default function PlacesPage() {
   const debouncedSearch = useDebounce(search);
   const [status, setStatus] = useState<PlaceStatus | "">("");
   const [page, setPage] = useState(1);
+  const [loadedPage, setLoadedPage] = useState<number | null>(null);
+  const [loadedQueryKey, setLoadedQueryKey] = useState("");
   const [mapPlaces, setMapPlaces] = useState<Place[]>([]);
   const [refreshTick, setRefreshTick] = useState(0);
   const [showMap, setShowMap] = useState(false);
@@ -64,6 +66,7 @@ export default function PlacesPage() {
 
   // Reset cache and page when filters/search change (React docs pattern: storing prev render info)
   const advFiltersKey = JSON.stringify(advFilters);
+  const queryKey = `${debouncedSearch}\u0000${status}\u0000${advFiltersKey}\u0000${refreshTick}`;
   const [prevFilters, setPrevFilters] = useState({ debouncedSearch, status, refreshTick, advFiltersKey });
   if (
     prevFilters.debouncedSearch !== debouncedSearch ||
@@ -81,6 +84,8 @@ export default function PlacesPage() {
     if (cached) {
       startTransition(() => {
         setData(cached);
+        setLoadedPage(page);
+        setLoadedQueryKey(queryKey);
         setLoading(false);
       });
       return;
@@ -96,6 +101,8 @@ export default function PlacesPage() {
         if (cancelled) return;
         placePageCache.set(page, nextData, debouncedSearch, status, advFilters);
         setData(nextData);
+        setLoadedPage(page);
+        setLoadedQueryKey(queryKey);
         setError("");
       })
       .catch((err) => {
@@ -112,7 +119,7 @@ export default function PlacesPage() {
     return () => {
       cancelled = true;
     };
-  }, [navigate, debouncedSearch, status, page, t, refreshTick, advFilters]);
+  }, [navigate, debouncedSearch, status, page, t, refreshTick, advFilters, queryKey]);
 
   useEffect(() => {
     if (!showMap) return;
@@ -247,7 +254,7 @@ export default function PlacesPage() {
             {Array.from({ length: totalPages }, (_, i) => {
               const slidePage = i + 1;
               const cached = placePageCache.get(slidePage, debouncedSearch, status, advFilters)?.results;
-              const slidePlaces = cached ?? (slidePage === page ? data.results : undefined);
+              const slidePlaces = cached ?? (slidePage === loadedPage && loadedQueryKey === queryKey ? data.results : undefined);
               return (
                 <CarouselItem key={i}>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

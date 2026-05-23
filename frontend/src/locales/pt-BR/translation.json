@@ -159,6 +159,7 @@
       "confirm": {
         "title": "Excluir conta permanentemente?",
         "description": "Sua conta ficará agendada para exclusão em 7 dias. Se fizer login antes disso, ela será reativada automaticamente.",
+        "password": "Confirme com sua senha",
         "action": "Sim, excluir minha conta"
       }
     }

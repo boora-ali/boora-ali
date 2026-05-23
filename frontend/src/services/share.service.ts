@@ -4,7 +4,6 @@ export interface ShareDetail {
   name: string;
   category: string;
   address: string;
-  status: string;
   instagram_url: string | null;
   maps_url: string | null;
   latitude: number | null;
