@@ -135,6 +135,9 @@ def copy_shared_place_photo(self, source_place_pk, source_owner_pk, target_place
     except PlaceModel.DoesNotExist:
         return  # Place importado deletado — sem retry
 
+    if not source_place.cover_photo:
+        return
+
     try:
         raw = default_storage.open(source_place.cover_photo).read()
         decrypted = ImageService.decrypt(raw, user_id=source_owner_pk)
