@@ -1,5 +1,7 @@
 # Feat — Compartilhamento de Places entre usuários
 
+> **Status: implementado** (backend + frontend + context menu no PlaceCard)
+
 ## Problema
 
 Não há como compartilhar um place com outra pessoa. O app é 100% privado — um usuário não

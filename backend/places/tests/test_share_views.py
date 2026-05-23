@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.conf import settings
 from model_bakery import baker
-from rest_framework.test import APIClient
 
 from places.models import Place, PlaceShare
 
@@ -172,8 +171,10 @@ def test_share_media_valid_sig_returns_decrypted_content(api_client, user):
     mock_file = MagicMock()
     mock_file.read.return_value = fake_raw
 
-    with patch("places.views.default_storage") as mock_storage, \
-         patch("places.views.ImageService") as mock_is:
+    with (
+        patch("places.views.default_storage") as mock_storage,
+        patch("places.views.ImageService") as mock_is,
+    ):
         mock_storage.open.return_value = mock_file
         mock_is.decrypt.return_value = fake_decrypted
         mock_is.detect_content_type.return_value = "image/jpeg"
@@ -213,8 +214,12 @@ def test_share_media_storage_error_returns_404(api_client, user):
 
 def test_share_import_creates_place(auth_client, user, other_user):
     place = baker.make(
-        Place, user=other_user, name="Bar Y", address="Rua A, 1",
-        category="bar", cover_photo=None,
+        Place,
+        user=other_user,
+        name="Bar Y",
+        address="Rua A, 1",
+        category="bar",
+        cover_photo=None,
     )
     share = baker.make(PlaceShare, place=place, owner=other_user, is_active=True)
     r = auth_client.post(f"/api/share/{share.token}/import/")
@@ -247,7 +252,10 @@ def test_share_import_duplicate_returns_400(auth_client, user, other_user):
 
 def test_share_import_with_cover_photo_dispatches_task(auth_client, user, other_user):
     place = baker.make(
-        Place, user=other_user, name="Photo Place", address="Rua D, 4",
+        Place,
+        user=other_user,
+        name="Photo Place",
+        address="Rua D, 4",
         cover_photo="places/covers/photo",
     )
     share = baker.make(PlaceShare, place=place, owner=other_user, is_active=True)

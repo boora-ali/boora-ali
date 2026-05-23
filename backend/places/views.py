@@ -20,7 +20,16 @@ from core.views import MutationMixin
 from core.viewsets import ViewSetBase, WriteViewSetBase
 
 from .filters import PlaceFilter, VisitFilter, VisitItemFilter
-from .models import Collection, CollectionPlace, CoordsStatus, Place, PlaceShare, PlaceStatus, Visit, VisitItem
+from .models import (
+    Collection,
+    CollectionPlace,
+    CoordsStatus,
+    Place,
+    PlaceShare,
+    PlaceStatus,
+    Visit,
+    VisitItem,
+)
 from .params_serializers import PlaceVisitParamsSerializer, VisitItemParamsSerializer
 from .serializers import (
     CollectionDetailSerializer,
@@ -346,14 +355,22 @@ class PlaceShareCreateView(MutationMixin, APIView):
     def post(self, request, public_id):
         place = get_object_or_404(Place, public_id=public_id, user=request.user)
         share = PlaceShare.objects.create(place=place, owner=request.user)
-        return Response({"token": share.token, "url": f"{settings.PUBLIC_BASE_URL}/share/{share.token}"}, status=201)
+        return Response(
+            {
+                "token": share.token,
+                "url": f"{settings.PUBLIC_BASE_URL}/share/{share.token}",
+            },
+            status=201,
+        )
 
 
 class PlaceShareRevokeView(MutationMixin, APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, public_id, token):
-        share = get_object_or_404(PlaceShare, token=token, place__public_id=public_id, owner=request.user)
+        share = get_object_or_404(
+            PlaceShare, token=token, place__public_id=public_id, owner=request.user
+        )
         share.is_active = False
         share.save(update_fields=["is_active"])
         return Response(status=204)
@@ -372,17 +389,19 @@ class PlaceShareDetailView(APIView):
         image_url = None
         if place.cover_photo:
             image_url = _make_signed_media_url(token, str(place.cover_photo))
-        return Response({
-            "name": place.name,
-            "category": place.category,
-            "address": place.address,
-            "status": place.status,
-            "instagram_url": place.instagram_url,
-            "maps_url": place.maps_url,
-            "latitude": place.latitude,
-            "longitude": place.longitude,
-            "cover_photo_url": image_url,
-        })
+        return Response(
+            {
+                "name": place.name,
+                "category": place.category,
+                "address": place.address,
+                "status": place.status,
+                "instagram_url": place.instagram_url,
+                "maps_url": place.maps_url,
+                "latitude": place.latitude,
+                "longitude": place.longitude,
+                "cover_photo_url": image_url,
+            }
+        )
 
 
 class PlaceShareMediaView(APIView):
@@ -415,7 +434,9 @@ class PlaceShareMediaView(APIView):
             decrypted = ImageService.decrypt(raw, user_id=share.owner.pk)
         except Exception:
             return Response(status=404)
-        return HttpResponse(decrypted, content_type=ImageService.detect_content_type(decrypted))
+        return HttpResponse(
+            decrypted, content_type=ImageService.detect_content_type(decrypted)
+        )
 
 
 class PlaceShareImportView(MutationMixin, APIView):
@@ -436,7 +457,9 @@ class PlaceShareImportView(MutationMixin, APIView):
             user=request.user, name=place.name, address=place.address
         ).exists()
         if already_imported:
-            return Response({"detail": "Você já tem este lugar na sua lista."}, status=400)
+            return Response(
+                {"detail": "Você já tem este lugar na sua lista."}, status=400
+            )
 
         imported = Place.objects.create(
             user=request.user,

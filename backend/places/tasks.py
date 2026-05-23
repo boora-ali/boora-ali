@@ -119,11 +119,14 @@ def purge_expired_trash():
 
 
 @shared_task(bind=True, max_retries=3)
-def copy_shared_place_photo(self, source_place_pk, source_owner_pk, target_place_pk, target_owner_pk):
+def copy_shared_place_photo(
+    self, source_place_pk, source_owner_pk, target_place_pk, target_owner_pk
+):
     from django.core.files.base import ContentFile
     from django.core.files.storage import default_storage
-    from places.models import Place as PlaceModel
+
     from core.image_service import ImageService
+    from places.models import Place as PlaceModel
 
     try:
         source_place = PlaceModel.objects.get(pk=source_place_pk)
@@ -141,11 +144,13 @@ def copy_shared_place_photo(self, source_place_pk, source_owner_pk, target_place
     try:
         raw = default_storage.open(source_place.cover_photo).read()
         decrypted = ImageService.decrypt(raw, user_id=source_owner_pk)
-        path = ImageService.save(ContentFile(decrypted), user_id=target_owner_pk, category="places/covers")
+        path = ImageService.save(
+            ContentFile(decrypted), user_id=target_owner_pk, category="places/covers"
+        )
         target_place.cover_photo = path
         target_place.save(update_fields=["cover_photo"])
     except Exception as exc:
-        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+        raise self.retry(exc=exc, countdown=60 * (2**self.request.retries))
 
 
 @shared_task

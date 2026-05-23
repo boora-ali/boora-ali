@@ -338,12 +338,8 @@ class CollectionPlace(models.Model):
 class PlaceShare(models.Model):
     # IMPORTANTE: passar a função sem chamar — secrets.token_urlsafe(32) chamaria uma vez
     # e todos os registros teriam o mesmo token.
-    token = models.CharField(
-        max_length=64, unique=True, default=secrets.token_urlsafe
-    )
-    place = models.ForeignKey(
-        Place, on_delete=models.CASCADE, related_name="shares"
-    )
+    token = models.CharField(max_length=64, unique=True, default=secrets.token_urlsafe)
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="shares")
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="place_shares"
     )
