@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { shareService, type ShareDetail } from "../services/share.service";
 import { useAuth } from "../contexts/useAuth";
 import NotFoundPage from "./NotFoundPage";
+import { getApiErrorState } from "../services/api-errors";
 
 export default function SharePage() {
   const { token } = useParams<{ token: string }>();
@@ -56,8 +57,9 @@ export default function SharePage() {
     try {
       const result = await shareService.importShare(token);
       nav(`/places/${result.public_id}`);
-    } catch {
-      setImportError(t("share.import_error"));
+    } catch (err) {
+      const apiError = getApiErrorState(err, t("share.import_error"));
+      setImportError(apiError.message);
     } finally {
       setImporting(false);
     }
@@ -143,18 +145,23 @@ export default function SharePage() {
 
       {/* Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-lg mx-auto space-y-2">
           {importError && (
-            <p className="text-sm text-danger text-center mb-2">{importError}</p>
+            <p className="text-sm text-danger text-center">{importError}</p>
           )}
           {user ? (
-            <Button
-              className="w-full"
-              onClick={handleImport}
-              disabled={importing || isLoading || isError}
-            >
-              {importing ? t("share.importing") : t("share.import_button")}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-none" onClick={() => nav(-1)}>
+                {t("common.back")}
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleImport}
+                disabled={importing || isLoading || isError}
+              >
+                {importing ? t("share.importing") : t("share.import_button")}
+              </Button>
+            </div>
           ) : (
             <Link to={`/login?next=/share/${token}`} className="block">
               <Button className="w-full" variant="outline">
