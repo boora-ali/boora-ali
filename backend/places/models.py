@@ -1,3 +1,4 @@
+import secrets
 from decimal import Decimal
 
 from django.conf import settings
@@ -331,4 +332,22 @@ class CollectionPlace(models.Model):
             models.UniqueConstraint(
                 fields=["collection", "place"], name="collection_place_unique"
             )
+        ]
+
+
+class PlaceShare(models.Model):
+    # IMPORTANTE: passar a função sem chamar — secrets.token_urlsafe(32) chamaria uma vez
+    # e todos os registros teriam o mesmo token.
+    token = models.CharField(max_length=64, unique=True, default=secrets.token_urlsafe)
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="shares")
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="place_shares"
+    )
+    is_active = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "places_place_share"
+        indexes = [
+            models.Index(fields=["token", "is_active"], name="share_token_active_idx"),
         ]

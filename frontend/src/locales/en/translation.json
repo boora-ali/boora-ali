@@ -386,6 +386,17 @@
     "description_placeholder": "Description (optional)",
     "place_removed": "Place removed from collection"
   },
+  "share": {
+    "button": "Share",
+    "copy_link": "Copy link",
+    "copied": "Link copied!",
+    "import_button": "Add to my list",
+    "importing": "Adding...",
+    "login_to_import": "Sign in or register to add",
+    "import_error": "Could not add the place. Please try again.",
+    "view_maps": "View on Maps",
+    "view_instagram": "Instagram"
+  },
   "termsModal": {
     "title": "Terms of Use",
     "description": "To continue using Boora Ali, please read and accept our Terms of Use and Privacy Policy. You can open the documents below before accepting.",

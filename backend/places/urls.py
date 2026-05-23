@@ -4,6 +4,11 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     CollectionPlaceView,
     CollectionViewSet,
+    PlaceShareCreateView,
+    PlaceShareDetailView,
+    PlaceShareImportView,
+    PlaceShareMediaView,
+    PlaceShareRevokeView,
     PlaceViewSet,
     VisitItemViewSet,
     VisitViewSet,
@@ -21,4 +26,9 @@ urlpatterns = router.urls + [
         CollectionPlaceView.as_view(),
         name="collection-place",
     ),
+    path("places/<uuid:public_id>/share/", PlaceShareCreateView.as_view()),
+    path("places/<uuid:public_id>/share/<str:token>/", PlaceShareRevokeView.as_view()),
+    path("share/<str:token>/", PlaceShareDetailView.as_view()),
+    path("share/<str:token>/media/<path:path>", PlaceShareMediaView.as_view()),
+    path("share/<str:token>/import/", PlaceShareImportView.as_view()),
 ]
