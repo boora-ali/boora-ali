@@ -387,6 +387,16 @@
     "description_placeholder": "Descrição (opcional)",
     "place_removed": "Lugar removido da coleção"
   },
+  "share": {
+    "button": "Compartilhar",
+    "copy_link": "Copiar link",
+    "copied": "Link copiado!",
+    "import_button": "Adicionar à minha lista",
+    "importing": "Adicionando...",
+    "login_to_import": "Entre ou cadastre-se para adicionar",
+    "view_maps": "Ver no Maps",
+    "view_instagram": "Instagram"
+  },
   "termsModal": {
     "title": "Termos de Uso",
     "description": "Para continuar usando o Boora Ali, leia e aceite nossos Termos de Uso e Política de Privacidade. Você pode abrir os documentos abaixo antes de aceitar.",

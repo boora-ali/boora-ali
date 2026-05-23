@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Share2, MessageCircle, Link as LinkIcon, Check } from "lucide-react";
+
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { shareService } from "../services/share.service";
 import { placesService, type PlaceWithVisits } from "../services/places.service";
 import { visitsService } from "../services/visits.service";
 import { collectionsService, type Collection } from "../services/collections.service";
@@ -30,6 +34,68 @@ import { notifyPlacesChanged } from "../utils/places-state";
 import NotFoundPage from "./NotFoundPage";
 
 const COORDS_POLL_INTERVAL_MS = 1000;
+
+function ShareButton({ placePublicId, placeName }: { placePublicId: string; placeName: string }) {
+  const { t } = useTranslation();
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function getOrCreateUrl(): Promise<string> {
+    if (shareUrl) return shareUrl;
+    const result = await shareService.createShare(placePublicId);
+    setShareUrl(result.url);
+    return result.url;
+  }
+
+  async function handleShare() {
+    const url = await getOrCreateUrl();
+    if (navigator.share) {
+      await navigator.share({ title: placeName, url });
+      return;
+    }
+    setPopoverOpen(true);
+  }
+
+  async function handleCopy(url: string) {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+      setPopoverOpen(false);
+    }, 2000);
+  }
+
+  return (
+    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" onClick={handleShare}>
+          <Share2 className="w-4 h-4 mr-2" />
+          {t("share.button")}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-48 p-2 flex flex-col gap-1">
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(`${placeName}: ${shareUrl ?? ""}`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted"
+        >
+          <MessageCircle className="w-4 h-4 text-green-600" />
+          WhatsApp
+        </a>
+        <button
+          type="button"
+          onClick={() => shareUrl && handleCopy(shareUrl)}
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted text-left"
+        >
+          {copied ? <Check className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
+          {copied ? t("share.copied") : t("share.copy_link")}
+        </button>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export default function PlaceDetailPage() {
   const { t } = useTranslation();
@@ -194,6 +260,7 @@ export default function PlaceDetailPage() {
                 <Link to={`/places/${place.public_id}/visits/new`} className="w-full">
                   <Button size="sm" className="w-full">{t("placeDetail.visits.add")}</Button>
                 </Link>
+                <ShareButton placePublicId={place.public_id} placeName={place.name} />
                 <div className="flex gap-2">
                   <Button
                     size="sm"
