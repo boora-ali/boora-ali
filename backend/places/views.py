@@ -351,7 +351,7 @@ class PlaceShareCreateView(MutationMixin, APIView):
     def post(self, request, public_id):
         place = get_object_or_404(Place, public_id=public_id, user=request.user)
         share = PlaceShare.objects.create(place=place, owner=request.user)
-        return Response({"token": share.token, "url": f"{settings.PUBLIC_BASE_URL}/share/{share.token}"})
+        return Response({"token": share.token, "url": f"{settings.PUBLIC_BASE_URL}/share/{share.token}"}, status=201)
 
 
 class PlaceShareRevokeView(MutationMixin, APIView):
@@ -413,6 +413,8 @@ class PlaceShareMediaView(APIView):
             token=token,
             is_active=True,
         )
+        if str(share.place.cover_photo) != path:
+            return Response(status=404)
         try:
             raw = default_storage.open(share.place.cover_photo).read()
             decrypted = ImageService.decrypt(raw, user_id=share.owner.pk)
