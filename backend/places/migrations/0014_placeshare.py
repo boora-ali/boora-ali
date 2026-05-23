@@ -29,7 +29,6 @@ class Migration(migrations.Migration):
                 (
                     "token",
                     models.CharField(
-                        db_index=True,
                         default=secrets.token_urlsafe,
                         max_length=64,
                         unique=True,
