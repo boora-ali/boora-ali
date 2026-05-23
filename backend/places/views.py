@@ -353,6 +353,12 @@ def _make_signed_media_url(share_token: str, image_path: str, ttl: int = 3600) -
     return f"{settings.PUBLIC_BASE_URL}/api/share/{share_token}/media/{image_path}?sig={sig}&exp={exp}"
 
 
+def _decode_shared_media(raw: bytes, user_id: int) -> bytes:
+    if ImageService.detect_content_type(raw) != "application/octet-stream":
+        return raw
+    return ImageService.decrypt(raw, user_id=user_id)
+
+
 class PlaceShareCreateView(MutationMixin, APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [ScopedRateThrottle]
@@ -441,11 +447,11 @@ class PlaceShareMediaView(APIView):
             return Response(status=404)
         try:
             raw = default_storage.open(share.place.cover_photo).read()
-            decrypted = ImageService.decrypt(raw, user_id=share.owner.pk)
+            image_data = _decode_shared_media(raw, user_id=share.owner.pk)
         except Exception:
             return Response(status=404)
         return HttpResponse(
-            decrypted, content_type=ImageService.detect_content_type(decrypted)
+            image_data, content_type=ImageService.detect_content_type(image_data)
         )
 
 
