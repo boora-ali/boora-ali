@@ -33,7 +33,7 @@ def _make_signed_url_params(token: str, path: str, ttl: int = 3600):
 def test_share_create_returns_token_and_url(auth_client, user):
     place = baker.make(Place, user=user)
     r = auth_client.post(f"/api/places/{place.public_id}/share/")
-    assert r.status_code == 200
+    assert r.status_code == 201
     assert "token" in r.data
     assert "url" in r.data
     assert r.data["token"]
@@ -43,7 +43,7 @@ def test_share_create_returns_token_and_url(auth_client, user):
 def test_share_create_url_contains_token(auth_client, user):
     place = baker.make(Place, user=user)
     r = auth_client.post(f"/api/places/{place.public_id}/share/")
-    assert r.status_code == 200
+    assert r.status_code == 201
     assert r.data["token"] in r.data["url"]
 
 

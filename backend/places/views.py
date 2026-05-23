@@ -34,12 +34,7 @@ from .serializers import (
     VisitSummarySerializer,
     VisitWriteSerializer,
 )
-from .tasks import resolve_place_coords
-
-try:
-    from .tasks import copy_shared_place_photo
-except ImportError:  # pragma: no cover — added in Task 3
-    copy_shared_place_photo = None  # type: ignore[assignment]
+from .tasks import copy_shared_place_photo, resolve_place_coords
 
 
 def save_deleted_at_with_history(queryset, deleted_at):
