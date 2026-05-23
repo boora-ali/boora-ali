@@ -16,6 +16,7 @@ import {
 } from "../ui/context-menu";
 import { placesService } from "../../services/places.service";
 import { shareService } from "../../services/share.service";
+import { toast } from "sonner";
 
 interface PlaceCardProps {
   place: Place;
@@ -34,9 +35,14 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
     try {
       const { url } = await shareService.createShare(place.public_id);
       if (navigator.share) {
-        await navigator.share({ title: place.name, url }).catch(() => {});
+        await navigator.share({ title: place.name, url }).catch((err) => {
+          if (err instanceof DOMException && err.name === "AbortError") return;
+          navigator.clipboard.writeText(url).catch(() => {});
+          toast.success(t("share.copied"));
+        });
       } else {
         await navigator.clipboard.writeText(url).catch(() => {});
+        toast.success(t("share.copied"));
       }
     } finally {
       setSharing(false);

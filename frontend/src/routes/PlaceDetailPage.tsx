@@ -83,22 +83,27 @@ function ShareButton({ placePublicId, placeName }: { placePublicId: string; plac
           {t("share.button")}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-2 flex flex-col gap-1">
+      <PopoverContent className="w-52 p-1.5 flex flex-col gap-0.5 shadow-lg">
         <a
           href={`https://wa.me/?text=${encodeURIComponent(`${placeName}: ${shareUrl ?? ""}`)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-text/80 hover:bg-surface hover:text-text transition-colors"
         >
-          <MessageCircle className="w-4 h-4 text-green-600" />
+          <MessageCircle className="w-4 h-4 text-[#25D366] shrink-0" />
           WhatsApp
         </a>
+        <div className="h-px bg-border/50 mx-2" />
         <button
           type="button"
           onClick={() => shareUrl && handleCopy(shareUrl)}
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted text-left"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-text/80 hover:bg-surface hover:text-text transition-colors text-left"
         >
-          {copied ? <Check className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
+          <span className="w-4 h-4 shrink-0 flex items-center justify-center">
+            {copied
+              ? <Check className="w-4 h-4 text-primary" />
+              : <LinkIcon className="w-4 h-4" />}
+          </span>
           {copied ? t("share.copied") : t("share.copy_link")}
         </button>
       </PopoverContent>
