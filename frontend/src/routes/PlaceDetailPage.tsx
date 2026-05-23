@@ -49,21 +49,30 @@ function ShareButton({ placePublicId, placeName }: { placePublicId: string; plac
   }
 
   async function handleShare() {
-    const url = await getOrCreateUrl();
-    if (navigator.share) {
-      await navigator.share({ title: placeName, url });
-      return;
+    try {
+      const url = await getOrCreateUrl();
+      if (navigator.share) {
+        await navigator.share({ title: placeName, url });
+        return;
+      }
+      setPopoverOpen(true);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setPopoverOpen(true);
     }
-    setPopoverOpen(true);
   }
 
   async function handleCopy(url: string) {
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => {
-      setCopied(false);
-      setPopoverOpen(false);
-    }, 2000);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+        setPopoverOpen(false);
+      }, 2000);
+    } catch {
+      // clipboard unavailable — silently ignore
+    }
   }
 
   return (

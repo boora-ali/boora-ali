@@ -393,6 +393,7 @@
     "import_button": "Add to my list",
     "importing": "Adding...",
     "login_to_import": "Sign in or register to add",
+    "import_error": "Could not add the place. Please try again.",
     "view_maps": "View on Maps",
     "view_instagram": "Instagram"
   },

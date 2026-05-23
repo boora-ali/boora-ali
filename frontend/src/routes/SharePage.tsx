@@ -19,6 +19,7 @@ export default function SharePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -51,9 +52,12 @@ export default function SharePage() {
   async function handleImport() {
     if (!token) return;
     setImporting(true);
+    setImportError(null);
     try {
       const result = await shareService.importShare(token);
       nav(`/places/${result.public_id}`);
+    } catch {
+      setImportError(t("share.import_error"));
     } finally {
       setImporting(false);
     }
@@ -140,6 +144,9 @@ export default function SharePage() {
       {/* Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
         <div className="max-w-lg mx-auto">
+          {importError && (
+            <p className="text-sm text-danger text-center mb-2">{importError}</p>
+          )}
           {user ? (
             <Button
               className="w-full"
