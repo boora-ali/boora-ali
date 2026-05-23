@@ -159,6 +159,7 @@
       "confirm": {
         "title": "Delete account permanently?",
         "description": "Your account will be scheduled for deletion in 7 days. If you log in before then, it will be automatically reactivated.",
+        "password": "Confirm with your password",
         "action": "Yes, delete my account"
       }
     }

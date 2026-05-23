@@ -1,10 +1,11 @@
 import hashlib
 import hmac
+import json
 import time
 
 from django.conf import settings
 from django.core.files.storage import default_storage
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -13,6 +14,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from core.image_service import ImageService
@@ -344,17 +346,23 @@ class VisitItemViewSet(WriteViewSetBase):
 
 def _make_signed_media_url(share_token: str, image_path: str, ttl: int = 3600) -> str:
     exp = int(time.time()) + ttl
-    msg = f"{share_token}:{image_path}:{exp}".encode()
-    sig = hmac.new(settings.SECRET_KEY.encode(), msg, hashlib.sha256).hexdigest()
+    msg = json.dumps([share_token, image_path, exp], separators=(",", ":")).encode()
+    sig = hmac.new(
+        settings.MEDIA_ENCRYPTION_KEY.encode(), msg, hashlib.sha256
+    ).hexdigest()
     return f"{settings.PUBLIC_BASE_URL}/api/share/{share_token}/media/{image_path}?sig={sig}&exp={exp}"
 
 
 class PlaceShareCreateView(MutationMixin, APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "share_create"
 
     def post(self, request, public_id):
         place = get_object_or_404(Place, public_id=public_id, user=request.user)
-        share = PlaceShare.objects.create(place=place, owner=request.user)
+        share, _ = PlaceShare.objects.get_or_create(
+            place=place, owner=request.user, is_active=True
+        )
         return Response(
             {
                 "token": share.token,
@@ -394,7 +402,6 @@ class PlaceShareDetailView(APIView):
                 "name": place.name,
                 "category": place.category,
                 "address": place.address,
-                "status": place.status,
                 "instagram_url": place.instagram_url,
                 "maps_url": place.maps_url,
                 "latitude": place.latitude,
@@ -406,6 +413,8 @@ class PlaceShareDetailView(APIView):
 
 class PlaceShareMediaView(APIView):
     permission_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "share_media"
 
     def get(self, request, token, path):
         sig = request.query_params.get("sig", "")
@@ -415,9 +424,10 @@ class PlaceShareMediaView(APIView):
             return Response(status=404)
         if time.time() > exp:
             return Response(status=404)
+        msg = json.dumps([token, path, exp], separators=(",", ":")).encode()
         expected = hmac.new(
-            settings.SECRET_KEY.encode(),
-            f"{token}:{path}:{exp}".encode(),
+            settings.MEDIA_ENCRYPTION_KEY.encode(),
+            msg,
             hashlib.sha256,
         ).hexdigest()
         if not hmac.compare_digest(sig, expected):
@@ -453,27 +463,31 @@ class PlaceShareImportView(MutationMixin, APIView):
 
         place = share.place
 
-        already_imported = Place.objects.filter(
-            user=request.user, name=place.name, address=place.address
-        ).exists()
-        if already_imported:
+        try:
+            imported, created = Place.objects.get_or_create(
+                user=request.user,
+                name=place.name,
+                address=place.address,
+                defaults={
+                    "category": place.category,
+                    "instagram_url": place.instagram_url,
+                    "maps_url": place.maps_url,
+                    "latitude": place.latitude,
+                    "longitude": place.longitude,
+                    "coords_status": place.coords_status,
+                    "status": PlaceStatus.WANT_TO_VISIT,
+                    "notes": "",
+                },
+            )
+        except IntegrityError:
             return Response(
                 {"detail": "Você já tem este lugar na sua lista."}, status=400
             )
 
-        imported = Place.objects.create(
-            user=request.user,
-            name=place.name,
-            category=place.category,
-            address=place.address,
-            instagram_url=place.instagram_url,
-            maps_url=place.maps_url,
-            latitude=place.latitude,
-            longitude=place.longitude,
-            coords_status=place.coords_status,
-            status=PlaceStatus.WANT_TO_VISIT,
-            notes="",
-        )
+        if not created:
+            return Response(
+                {"detail": "Você já tem este lugar na sua lista."}, status=400
+            )
 
         if place.cover_photo and copy_shared_place_photo is not None:
             copy_shared_place_photo.delay(

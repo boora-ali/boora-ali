@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import json
 import time
 from unittest.mock import MagicMock, patch
 
@@ -19,8 +20,10 @@ pytestmark = pytest.mark.django_db
 
 def _make_signed_url_params(token: str, path: str, ttl: int = 3600):
     exp = int(time.time()) + ttl
-    msg = f"{token}:{path}:{exp}".encode()
-    sig = hmac.new(settings.SECRET_KEY.encode(), msg, hashlib.sha256).hexdigest()
+    msg = json.dumps([token, path, exp], separators=(",", ":")).encode()
+    sig = hmac.new(
+        settings.MEDIA_ENCRYPTION_KEY.encode(), msg, hashlib.sha256
+    ).hexdigest()
     return sig, exp
 
 
@@ -99,7 +102,7 @@ def test_share_detail_returns_place_data(api_client, user):
     assert r.data["name"] == "Café X"
     assert r.data["category"] == "cafe"
     assert "address" in r.data
-    assert "status" in r.data
+    assert "status" not in r.data
     assert "cover_photo_url" in r.data
 
 

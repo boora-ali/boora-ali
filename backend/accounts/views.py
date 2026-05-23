@@ -113,7 +113,8 @@ class ThrottledLoginView(
 
 class CookieTokenRefreshView(MutationMixin, RateLimitHeadersMixin, TokenRefreshView):
     serializer_class = SingleSessionTokenRefreshSerializer
-    throttle_classes = []  # refresh token is signed — brute force is infeasible
+    throttle_classes = [AuthRateThrottle]
+    throttle_scope = "auth"
 
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get(REFRESH_COOKIE_NAME)
@@ -174,8 +175,15 @@ class PasswordChangeView(MutationMixin, RateLimitHeadersMixin, generics.GenericA
 
 class DeleteAccountView(MutationMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AuthRateThrottle]
+    throttle_scope = "auth"
 
     def post(self, request):
+        if not hasattr(request.user, "google_identity"):
+            password = request.data.get("password", "")
+            if not password or not request.user.check_password(password):
+                return Response({"password": "Senha incorreta."}, status=400)
+
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         if profile.deletion_requested_at:
             return Response({"detail": "Exclusão já solicitada."}, status=400)
@@ -198,6 +206,8 @@ class DeleteAccountView(MutationMixin, APIView):
 
 class VerifyEmailView(MutationMixin, APIView):
     permission_classes = [permissions.AllowAny]  # token é o segredo
+    throttle_classes = [AuthRateThrottle]
+    throttle_scope = "auth"
 
     def post(self, request):
         token = request.data.get("token", "").strip()
@@ -223,11 +233,22 @@ class VerifyEmailView(MutationMixin, APIView):
 
 class ResendVerificationEmailView(MutationMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AuthRateThrottle]
+    throttle_scope = "auth"
 
     def post(self, request):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         if profile.email_verified:
             return Response({"detail": "Email já verificado."})
+        cooldown = timedelta(minutes=1)
+        if profile.email_verification_sent_at:
+            elapsed = timezone.now() - profile.email_verification_sent_at
+            if elapsed < cooldown:
+                wait = int((cooldown - elapsed).total_seconds())
+                return Response(
+                    {"detail": f"Aguarde {wait}s antes de solicitar novamente."},
+                    status=429,
+                )
         _send_verification_email(request.user, profile)
         return Response({"detail": "Email de verificação reenviado."})
 

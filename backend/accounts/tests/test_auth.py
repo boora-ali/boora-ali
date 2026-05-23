@@ -1,6 +1,12 @@
 import pytest
+from django.utils import timezone
 
 from accounts.models import GoogleIdentity
+from accounts.views import (
+    CookieTokenRefreshView,
+    ResendVerificationEmailView,
+    VerifyEmailView,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -105,6 +111,12 @@ def test_refresh(api_client, user):
     r = api_client.post("/api/auth/refresh/", format="json")
     assert r.status_code == 200
     assert "access" in r.data
+
+
+def test_auth_sensitive_views_use_auth_throttle():
+    assert CookieTokenRefreshView.throttle_scope == "auth"
+    assert VerifyEmailView.throttle_scope == "auth"
+    assert ResendVerificationEmailView.throttle_scope == "auth"
 
 
 def test_logout_blacklists(api_client, user):
@@ -229,3 +241,15 @@ def test_terms_accept_idempotent(auth_client, user):
     second = UserProfile.objects.get(user=user).terms_accepted_at
 
     assert second >= first
+
+
+def test_resend_verification_email_enforces_persistent_cooldown(auth_client, user):
+    profile = user.profile
+    profile.email_verified = False
+    profile.email_verification_sent_at = timezone.now()
+    profile.save(update_fields=["email_verified", "email_verification_sent_at"])
+
+    response = auth_client.post("/api/auth/resend-verification/")
+
+    assert response.status_code == 429
+    assert "Aguarde" in response.data["detail"]

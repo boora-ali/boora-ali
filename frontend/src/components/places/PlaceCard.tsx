@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ExternalLink, Share2, Trash2 } from "lucide-react";
 import type { Place } from "../../types/place";
 import { Badge } from "../ui/Badge";
-import { sanitizeUrl } from "../../utils/url";
+import { getMapsHref, sanitizeUrl } from "../../utils/url";
 import { AuthImage } from "../ui/AuthImage";
 import { UtensilsCrossed } from "lucide-react";
 import {
@@ -28,6 +28,11 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [sharing, setSharing] = useState(false);
+  const mapsHref = getMapsHref({
+    mapsUrl: place.maps_url,
+    latitude: place.latitude,
+    longitude: place.longitude,
+  });
 
   async function handleShare() {
     if (sharing) return;
@@ -119,9 +124,9 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
                 </a>
               )}
 
-              {sanitizeUrl(place.maps_url) && (
+              {mapsHref && (
                 <a
-                  href={sanitizeUrl(place.maps_url)}
+                  href={mapsHref}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-text transition hover:bg-surface"

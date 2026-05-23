@@ -8,6 +8,7 @@ from django.utils import timezone
 from model_bakery import baker
 from rest_framework.test import APIClient
 
+from accounts.models import GoogleIdentity
 from accounts.tasks import purge_deleted_accounts
 
 User = get_user_model()
@@ -35,7 +36,32 @@ def _mark_for_deletion(user, days_ago: int = 0):
 
 
 class TestDeleteAccountView:
-    def test_schedules_deletion(self, user):
+    def test_schedules_deletion_with_password(self, user):
+        client = _api_client(user)
+        response = client.post("/api/auth/me/delete/", {"password": "pw12345!"})
+        assert response.status_code == 200
+        user.profile.refresh_from_db()
+        assert user.profile.deletion_requested_at is not None
+
+    def test_password_account_requires_password(self, user):
+        client = _api_client(user)
+        response = client.post("/api/auth/me/delete/")
+        assert response.status_code == 400
+        assert "password" in response.data
+
+    def test_password_account_rejects_wrong_password(self, user):
+        client = _api_client(user)
+        response = client.post("/api/auth/me/delete/", {"password": "wrong"})
+        assert response.status_code == 400
+        assert "password" in response.data
+
+    def test_google_account_can_schedule_deletion_without_password(self, user):
+        GoogleIdentity.objects.create(
+            user=user,
+            google_sub="sub-delete",
+            email=user.email,
+            email_verified=True,
+        )
         client = _api_client(user)
         response = client.post("/api/auth/me/delete/")
         assert response.status_code == 200
@@ -45,7 +71,7 @@ class TestDeleteAccountView:
     def test_already_scheduled_returns_400(self, user):
         _mark_for_deletion(user)
         client = _api_client(user)
-        response = client.post("/api/auth/me/delete/")
+        response = client.post("/api/auth/me/delete/", {"password": "pw12345!"})
         assert response.status_code == 400
 
     def test_unauthenticated_returns_401(self):

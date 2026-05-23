@@ -59,6 +59,22 @@ export function sanitizeUrl(url: string | undefined | null): string {
   return parsed && SAFE_SCHEMES.has(parsed.protocol) ? url : "";
 }
 
+export function buildGoogleMapsSearchUrl(latitude: string | number | null | undefined, longitude: string | number | null | undefined): string {
+  if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) return "";
+  const lat = typeof latitude === "number" ? latitude : parseFloat(latitude);
+  const lng = typeof longitude === "number" ? longitude : parseFloat(longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return "";
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
+}
+
+export function getMapsHref(options: {
+  mapsUrl?: string | null;
+  latitude?: string | number | null;
+  longitude?: string | number | null;
+}): string {
+  return sanitizeUrl(options.mapsUrl) || buildGoogleMapsSearchUrl(options.latitude, options.longitude);
+}
+
 export function extractGoogleMapsCoords(url: string): { latitude: string; longitude: string } | null {
   for (const pattern of GOOGLE_MAPS_COORD_PATTERNS) {
     const match = url.match(pattern);

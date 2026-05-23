@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet-async";
 import { MapPin, ArrowLeft } from "lucide-react";
 import { shareService, type ShareDetail } from "../services/share.service";
 import { useAuth } from "../contexts/useAuth";
+import { getMapsHref, sanitizeUrl } from "../utils/url";
 import NotFoundPage from "./NotFoundPage";
 import { getApiErrorState } from "../services/api-errors";
 
@@ -45,6 +46,13 @@ export default function SharePage() {
   if (isError) return <NotFoundPage />;
 
   const title = data ? `${data.name} — Bora Ali` : "Bora Ali";
+  const mapsHref = data
+    ? getMapsHref({
+        mapsUrl: data.maps_url,
+        latitude: data.latitude,
+        longitude: data.longitude,
+      })
+    : "";
 
   async function handleImport() {
     if (!token) return;
@@ -123,11 +131,11 @@ export default function SharePage() {
               <div className="mt-5 border-t border-border/50" />
 
               {/* Links externos — texto limpo com ícone pequeno */}
-              {(data.maps_url || data.instagram_url) && (
+              {(mapsHref || data.instagram_url) && (
                 <div className="mt-4 flex flex-col gap-3">
-                  {data.maps_url && (
+                  {mapsHref && (
                     <a
-                      href={data.maps_url}
+                      href={mapsHref}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="group flex items-center gap-3 text-sm text-text/60 transition-colors hover:text-text"
@@ -138,9 +146,9 @@ export default function SharePage() {
                       {t("share.view_maps")}
                     </a>
                   )}
-                  {data.instagram_url && (
+                  {sanitizeUrl(data.instagram_url) && (
                     <a
-                      href={data.instagram_url}
+                      href={sanitizeUrl(data.instagram_url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="group flex items-center gap-3 text-sm text-text/60 transition-colors hover:text-text"

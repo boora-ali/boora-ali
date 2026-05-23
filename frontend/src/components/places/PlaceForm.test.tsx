@@ -24,7 +24,7 @@ test("shows backend character limits for place text fields", () => {
   expect(screen.getByText("0/5000")).toBeInTheDocument();
 });
 
-test("accepts short Google Maps URLs and clears manual coordinates", async () => {
+test("accepts short Google Maps URLs without clearing manual coordinates", async () => {
   const onSubmit = vi.fn().mockResolvedValue(undefined);
   const shortUrl = "https://maps.app.goo.gl/KaeiRuA7EwybcJCu7";
 
@@ -52,13 +52,13 @@ test("accepts short Google Maps URLs and clears manual coordinates", async () =>
   expect(onSubmit).toHaveBeenCalledWith(
     expect.objectContaining({
       maps_url: shortUrl,
-      latitude: undefined,
-      longitude: undefined,
+      latitude: "-3.10",
+      longitude: "-60.02",
     }),
   );
 });
 
-test("changing the maps url to a short Google Maps link clears old coordinates", async () => {
+test("changing the maps url to a short Google Maps link keeps the selected pin", async () => {
   const onSubmit = vi.fn().mockResolvedValue(undefined);
   const shortUrl = "https://maps.app.goo.gl/KaeiRuA7EwybcJCu7";
 
@@ -84,8 +84,8 @@ test("changing the maps url to a short Google Maps link clears old coordinates",
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
         maps_url: shortUrl,
-        latitude: undefined,
-        longitude: undefined,
+        latitude: "-3.10",
+        longitude: "-60.02",
       }),
     );
   });
