@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import io
 import json
 import time
 from unittest.mock import MagicMock, patch
@@ -7,7 +8,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.conf import settings
 from model_bakery import baker
+from PIL import Image
 
+from core.image_service import ImageService
 from places.models import Place, PlaceShare
 
 pytestmark = pytest.mark.django_db
@@ -25,6 +28,12 @@ def _make_signed_url_params(token: str, path: str, ttl: int = 3600):
         settings.MEDIA_ENCRYPTION_KEY.encode(), msg, hashlib.sha256
     ).hexdigest()
     return sig, exp
+
+
+def _make_jpeg_bytes():
+    buf = io.BytesIO()
+    Image.new("RGB", (8, 8), color=(0, 255, 0)).save(buf, format="JPEG")
+    return buf.getvalue()
 
 
 # ---------------------------------------------------------------------------
@@ -168,24 +177,38 @@ def test_share_media_valid_sig_returns_decrypted_content(api_client, user):
     path = str(place.cover_photo)
     sig, exp = _make_signed_url_params(share.token, path)
 
-    fake_raw = b"encrypted_bytes"
-    fake_decrypted = b"\xff\xd8\xff"  # JPEG magic bytes
+    fake_decrypted = _make_jpeg_bytes()
+    fake_raw = ImageService.encrypt(fake_decrypted, user_id=user.pk)
 
     mock_file = MagicMock()
     mock_file.read.return_value = fake_raw
 
-    with (
-        patch("places.views.default_storage") as mock_storage,
-        patch("places.views.ImageService") as mock_is,
-    ):
+    with patch("places.views.default_storage") as mock_storage:
         mock_storage.open.return_value = mock_file
-        mock_is.decrypt.return_value = fake_decrypted
-        mock_is.detect_content_type.return_value = "image/jpeg"
 
         r = api_client.get(f"/api/share/{share.token}/media/{path}?sig={sig}&exp={exp}")
 
     assert r.status_code == 200
     assert r.content == fake_decrypted
+
+
+def test_share_media_valid_sig_returns_plaintext_image(api_client, user):
+    place = baker.make(Place, user=user, cover_photo="places/covers/plain")
+    share = baker.make(PlaceShare, place=place, owner=user, is_active=True)
+    path = str(place.cover_photo)
+    sig, exp = _make_signed_url_params(share.token, path)
+
+    fake_plaintext = _make_jpeg_bytes()
+    mock_file = MagicMock()
+    mock_file.read.return_value = fake_plaintext
+
+    with patch("places.views.default_storage") as mock_storage:
+        mock_storage.open.return_value = mock_file
+
+        r = api_client.get(f"/api/share/{share.token}/media/{path}?sig={sig}&exp={exp}")
+
+    assert r.status_code == 200
+    assert r.content == fake_plaintext
 
 
 def test_share_media_inactive_token_returns_404(api_client, user):
