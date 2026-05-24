@@ -21,11 +21,10 @@ export default function SharePage() {
   const [isError, setIsError] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const hasToken = Boolean(token);
 
   useEffect(() => {
     if (!token) {
-      setIsError(true);
-      setIsLoading(false);
       return;
     }
     let cancelled = false;
@@ -80,7 +79,7 @@ export default function SharePage() {
       </Helmet>
 
       <PageState
-        loading={isLoading}
+        loading={hasToken && isLoading}
         loadingNode={(
           <div className="min-h-[100dvh] bg-background">
             <div className="relative h-[58dvh]">
@@ -97,7 +96,7 @@ export default function SharePage() {
             </div>
           </div>
         )}
-        error={isError ? " " : ""}
+        error={!hasToken || isError ? " " : ""}
         errorNode={<NotFoundPage />}
       >
         {data ? (
