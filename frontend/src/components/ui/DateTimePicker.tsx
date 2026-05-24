@@ -72,7 +72,7 @@ export function DateTimePicker({ label, value, onChange, error }: Props) {
           <button
             type="button"
             className={cn(
-              "flex h-11 w-full items-center gap-3 rounded-xl border border-input bg-background px-3.5 py-2.5 text-left text-base ring-offset-background transition-colors hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-sm",
+              "flex h-11 w-full items-center gap-3 rounded-xl border border-input bg-background px-3.5 py-2.5 text-left text-base transition-colors hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-sm",
               !selected && "text-muted-foreground",
               error && "border-destructive focus-visible:ring-destructive"
             )}

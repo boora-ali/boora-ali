@@ -1,4 +1,7 @@
+import hashlib
+import hmac
 import logging
+import time
 from functools import lru_cache
 from urllib.parse import urlparse
 
@@ -7,6 +10,43 @@ from botocore.client import Config
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+_MEDIA_URL_TTL = 3600  # 1 hora
+
+
+@lru_cache(maxsize=1)
+def _media_signing_key() -> bytes:
+    """
+    Deriva a chave HMAC a partir de MEDIA_ENCRYPTION_KEY (ou SECRET_KEY como fallback).
+    @lru_cache: calculado uma vez por processo — SHA256 não precisa repetir a cada request.
+    Em testes que precisem de chave diferente, chamar `_media_signing_key.cache_clear()`.
+    """
+    key = getattr(settings, "MEDIA_ENCRYPTION_KEY", None) or settings.SECRET_KEY
+    return hashlib.sha256(f"bora-ali-media-url-v1:{key}".encode()).digest()
+
+
+def sign_media_url(path: str, ttl: int = _MEDIA_URL_TTL) -> tuple[int, str]:
+    """
+    Retorna (exp, sig) onde:
+      exp = unix timestamp de expiração
+      sig = HMAC-SHA256 hex de '<path>:<exp>'
+    """
+    exp = int(time.time()) + ttl
+    message = f"{path}:{exp}".encode()
+    sig = hmac.new(_media_signing_key(), message, hashlib.sha256).hexdigest()
+    return exp, sig
+
+
+def verify_media_url(path: str, exp: int, sig: str) -> bool:
+    """
+    Valida assinatura e expiração. Retorna False se expirado ou sig inválida.
+    hmac.compare_digest: resistência a timing attacks.
+    """
+    if int(time.time()) >= exp:
+        return False
+    message = f"{path}:{exp}".encode()
+    expected = hmac.new(_media_signing_key(), message, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, sig)
 
 
 def build_public_media_url(file_field, request=None) -> str:
@@ -17,19 +57,16 @@ def build_public_media_url(file_field, request=None) -> str:
     if not name:
         return ""
 
-    # Production: return presigned URL directly so the browser fetches from R2
-    # without any auth proxy. <img src={url}> works because the browser does not
-    # send Origin on image requests, avoiding the withCredentials CORS issue.
-    if _use_s3_signing():
-        signed = _build_signed_url(name)
-        if signed:
-            return signed
+    # Sempre retornar URL same-origin com HMAC para evitar CORP cross-origin.
+    # Funciona em todos os browsers incluindo Safari/Edge iOS.
+    # <img src> não envia Bearer token — autenticação é via HMAC na query string.
+    exp, sig = sign_media_url(name)
+    path = f"/api/media/{name}"
+    signed = f"{path}?exp={exp}&sig={sig}"
 
-    # Dev/fallback (USE_VERSITYGW=False, local filesystem): serve through the
-    # authenticated Django view so images are still protected in development.
     if request:
-        return request.build_absolute_uri(f"/api/media/{name}")
-    return f"/api/media/{name}"
+        return request.build_absolute_uri(signed)
+    return signed
 
 
 def _use_s3_signing() -> bool:

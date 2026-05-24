@@ -9,6 +9,7 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.image_service import ImageService
+from core.storage_urls import sign_media_url
 
 User = get_user_model()
 
@@ -109,6 +110,27 @@ def test_serve_unauthenticated_returns_401(client, tmp_path, settings):
     settings.MEDIA_ROOT = str(tmp_path)
     resp = client.get("/api/media/users/1/places/covers/abc_def")
     assert resp.status_code == 401
+
+
+@pytest.mark.django_db
+@override_settings(
+    SECRET_KEY="test-secret-key-long-enough-for-hkdf-derivation-1234",
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
+    },
+)
+def test_serve_signed_url_without_bearer_returns_200(client, tmp_path, settings):
+    settings.MEDIA_ROOT = str(tmp_path)
+    path = "users/1/places/covers/signed_abc"
+    exp, sig = sign_media_url(path)
+
+    resp = client.get(f"/api/media/{path}?exp={exp}&sig={sig}")
+
+    assert resp.status_code == 200
+    assert resp["X-Accel-Redirect"] == "/_r2_proxy/"
 
 
 @pytest.mark.django_db

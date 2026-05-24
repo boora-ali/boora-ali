@@ -113,7 +113,11 @@ class PlaceViewSet(ViewSetBase):
 
         if self.action == "list":
             # order_by explícito: annotate() com Avg pode perder Meta.ordering em alguns DBs
-            return queryset.with_avg_rating().with_list_expansion(expand_param).order_by("-created_at")
+            return (
+                queryset.with_avg_rating()
+                .with_list_expansion(expand_param)
+                .order_by("-created_at")
+            )
 
         if self.action == "retrieve":
             return queryset.with_consumable_stats().with_detail_payload(

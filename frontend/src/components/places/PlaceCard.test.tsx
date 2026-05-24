@@ -46,6 +46,19 @@ test("navigates to place detail on click", () => {
   expect(navigateSpy).toHaveBeenCalledWith("/places/place-1");
 });
 
+test("prevents mobile text selection on context menu long press", () => {
+  render(
+    <MemoryRouter>
+      <PlaceCard place={place} />
+    </MemoryRouter>
+  );
+
+  const card = screen.getByRole("article");
+  expect(card).toHaveClass("select-none");
+  expect(card).toHaveClass("touch-manipulation");
+  expect(card).toHaveClass("[-webkit-touch-callout:none]");
+});
+
 test("renders cover photo via img when cover_photo is provided", () => {
   const placeWithPhoto: Place = { ...place, cover_photo: "https://example.com/photo.jpg" };
   render(
