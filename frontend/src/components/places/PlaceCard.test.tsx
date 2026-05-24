@@ -69,6 +69,19 @@ test("renders cover photo via img when cover_photo is provided", () => {
   expect(screen.getByRole("img", { name: "Café X" })).toBeInTheDocument();
 });
 
+test("shows image spinner until cover photo loads", () => {
+  const placeWithPhoto: Place = { ...place, cover_photo: "https://example.com/photo.jpg" };
+  render(
+    <MemoryRouter>
+      <PlaceCard place={placeWithPhoto} />
+    </MemoryRouter>
+  );
+
+  expect(screen.getByRole("status", { name: "Carregando imagem" })).toBeInTheDocument();
+  fireEvent.load(screen.getByRole("img", { name: "Café X" }));
+  expect(screen.queryByRole("status", { name: "Carregando imagem" })).not.toBeInTheDocument();
+});
+
 test("renders placeholder icon when no cover_photo", () => {
   render(
     <MemoryRouter>

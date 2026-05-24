@@ -26,7 +26,7 @@ import { LottieState } from "../components/ui/LottieState";
 import { VisitCard } from "../components/visits/VisitCard";
 import { BackButton } from "../components/ui/BackButton";
 import { MapModal } from "../components/ui/MapModal";
-import { AuthImage } from "../components/ui/AuthImage";
+import { ImageWithSpinner } from "../components/ui/ImageWithSpinner";
 import { ResponsiveCardCarousel } from "../components/ui/ResponsiveCardCarousel";
 import { fmtPrice, fmtRating } from "../utils/formatters";
 import { sanitizeUrl } from "../utils/url";
@@ -248,10 +248,11 @@ export default function PlaceDetailPage() {
                   className="w-full cursor-zoom-in"
                   onClick={() => setCoverLightboxOpen(true)}
                 >
-                  <AuthImage
+                  <ImageWithSpinner
                     src={place.cover_photo}
                     alt={place.name}
                     className="h-56 w-full object-cover sm:h-72"
+                    spinnerClassName="rounded-none"
                   />
                 </button>
               ) : (
@@ -501,7 +502,12 @@ export default function PlaceDetailPage() {
       <Dialog open={coverLightboxOpen} onOpenChange={setCoverLightboxOpen}>
         <DialogContent className="max-w-screen-md p-0 overflow-hidden" aria-describedby={undefined}>
           {place.cover_photo && (
-            <AuthImage src={place.cover_photo} alt={place.name} className="w-full h-auto max-h-[90vh] object-contain" />
+            <ImageWithSpinner
+              src={place.cover_photo}
+              alt={place.name}
+              className="w-full h-auto max-h-[90vh] object-contain"
+              spinnerClassName="rounded-none"
+            />
           )}
         </DialogContent>
       </Dialog>

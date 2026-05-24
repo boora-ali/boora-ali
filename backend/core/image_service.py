@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from PIL import Image
+from PIL import Image, ImageOps
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +73,7 @@ class ImageService:
     def _compress(data: bytes, max_dimension: int = 1920, quality: int = 82) -> bytes:
         try:
             img = Image.open(io.BytesIO(data))
+            img = ImageOps.exif_transpose(img)
             fmt = img.format or "JPEG"
             if img.width > max_dimension or img.height > max_dimension:
                 img.thumbnail((max_dimension, max_dimension), Image.LANCZOS)
