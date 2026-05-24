@@ -8,6 +8,7 @@ Não existe conceito de "usuário com perfil público" ou "curador de lugares".
 
 ---
 
+
 ## Objetivo
 
 1. Usuário define um `username` único (slug) e pode tornar o perfil público
