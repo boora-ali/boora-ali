@@ -77,6 +77,16 @@ Task: `bind=True`, `max_retries=3`, retry exponencial (60s, 120s, 240s).
 `Place.coords_status`: `pending → resolved | failed`.
 Broker/backend Valkey (DB 2). Config em `config/celery.py`.
 
+## Celery Beat Schedules
+
+Schedules do projeto devem ser mantidos em helpers por app e sincronizados por `python manage.py sync_beat_tasks`.
+As migrations de beat só fazem bootstrap inicial/rollback do registro no banco; para reaplicar ou reparar ambientes já existentes, use o comando de sync em vez de criar nova migration.
+
+Schedules hoje registrados nesse fluxo:
+- `places.tasks.compress_recent_media`
+- `accounts.tasks.flush_expired_blacklisted_tokens`
+- `accounts.tasks.purge_deleted_accounts`
+
 ## Storage
 
 `USE_VERSITYGW=True` (default) → S3Boto3 → VersityGW. `False` = filesystem local.

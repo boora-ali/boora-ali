@@ -1,37 +1,15 @@
 from django.db import migrations
 
-TASK_NAME = "Comprimir mídias recentes"
-TASK_PATH = "places.tasks.compress_recent_media"
-
-
 def create_media_compression_schedule(apps, _schema_editor):
-    crontab_schedule = apps.get_model("django_celery_beat", "CrontabSchedule")
-    periodic_task = apps.get_model("django_celery_beat", "PeriodicTask")
+    from places.beat import ensure_media_compression_schedule
 
-    crontab, _created = crontab_schedule.objects.get_or_create(
-        minute="0",
-        hour="2",
-        day_of_week="*",
-        day_of_month="*",
-        month_of_year="*",
-    )
-    periodic_task.objects.update_or_create(
-        name=TASK_NAME,
-        defaults={
-            "task": TASK_PATH,
-            "crontab": crontab,
-            "enabled": True,
-            "description": (
-                "Comprime em background as mídias alteradas nas últimas 24h, "
-                "fora do caminho síncrono de upload."
-            ),
-        },
-    )
+    ensure_media_compression_schedule(apps)
 
 
 def remove_media_compression_schedule(apps, _schema_editor):
-    periodic_task = apps.get_model("django_celery_beat", "PeriodicTask")
-    periodic_task.objects.filter(name=TASK_NAME, task=TASK_PATH).delete()
+    from places.beat import remove_media_compression_schedule as _remove_media_compression_schedule
+
+    _remove_media_compression_schedule(apps)
 
 
 class Migration(migrations.Migration):
