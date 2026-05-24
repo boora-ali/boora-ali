@@ -164,14 +164,13 @@ class UserSerializer(serializers.ModelSerializer):
 
         photo_file = profile_data["profile_photo"]
         if photo_file is not serializers.empty:
-            old_path = profile.profile_photo.name if profile.profile_photo else None
-            if old_path:
-                ImageService.delete(old_path)
-            if photo_file is None:
-                profile.profile_photo = None
-            else:
-                path = ImageService.save(photo_file, instance.id, "profiles")
-                profile.profile_photo = path
+            ImageService.replace_media_field(
+                profile,
+                "profile_photo",
+                photo_file,
+                instance.id,
+                "profiles",
+            )
 
         profile.save()
         return instance

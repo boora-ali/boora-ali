@@ -2,18 +2,104 @@ from __future__ import annotations
 
 import logging
 import urllib.request
+from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
 from urllib.parse import urlparse
 
 from celery import shared_task
 from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.db.models import Q
 from django.utils import timezone
 
+from accounts.models import UserProfile
+from core.image_service import ImageService
+
 from .maps import extract_coords
-from .models import CoordsStatus, Place
+from .models import CoordsStatus, Place, Visit, VisitItem
+from .services import PlaceShareService
 
 _log = logging.getLogger("places.tasks")
+_MEDIA_COMPRESSION_WINDOW_DAYS = 1
+
+
+@dataclass(frozen=True)
+class MediaTarget:
+    label: str
+    user_id: int
+    path: str
+
+
+def _read_media_bytes(path: str) -> bytes:
+    if hasattr(default_storage, "bucket"):
+        return default_storage.bucket.Object(path).get()["Body"].read()
+    with default_storage.open(path, "rb") as handle:
+        return handle.read()
+
+
+def _write_media_bytes(path: str, data: bytes, content_type: str) -> None:
+    if hasattr(default_storage, "bucket"):
+        default_storage.bucket.Object(path).put(Body=data, ContentType=content_type)
+        return
+
+    default_storage.delete(path)
+    default_storage.save(path, ContentFile(data))
+
+
+def _iter_recent_media_targets(cutoff):
+    for user_id, path in UserProfile.history.filter(
+        history_date__gte=cutoff
+    ).values_list("user_id", "profile_photo"):
+        if path:
+            yield MediaTarget("accounts.UserProfile.profile_photo", user_id, str(path))
+
+    recent_places = Place.objects.filter(
+        Q(created_at__gte=cutoff) | Q(updated_at__gte=cutoff),
+        cover_photo__isnull=False,
+    ).values_list("user_id", "cover_photo")
+    for user_id, path in recent_places:
+        if path:
+            yield MediaTarget("places.Place.cover_photo", user_id, str(path))
+
+    recent_visits = Visit.objects.filter(
+        Q(created_at__gte=cutoff) | Q(updated_at__gte=cutoff),
+        photo__isnull=False,
+    ).values_list("place__user_id", "photo", "photo_path")
+    for user_id, path, path_fallback in recent_visits:
+        resolved_path = path_fallback or path
+        if resolved_path:
+            yield MediaTarget("places.Visit.photo", user_id, str(resolved_path))
+
+    recent_items = VisitItem.objects.filter(
+        Q(created_at__gte=cutoff) | Q(updated_at__gte=cutoff),
+        photo__isnull=False,
+    ).values_list("visit__place__user_id", "photo", "photo_path")
+    for user_id, path, path_fallback in recent_items:
+        resolved_path = path_fallback or path
+        if resolved_path:
+            yield MediaTarget("places.VisitItem.photo", user_id, str(resolved_path))
+
+
+def _compress_media_target(target: MediaTarget) -> bool:
+    raw = _read_media_bytes(target.path)
+    optimized = ImageService.optimize_bytes(raw)
+    if optimized == raw:
+        return False
+
+    content_type = ImageService.detect_content_type(optimized)
+    _write_media_bytes(target.path, optimized, content_type)
+    _log.info(
+        "compress_recent_media: rewrote %s user=%s path=%s size=%d->%d",
+        target.label,
+        target.user_id,
+        target.path,
+        len(raw),
+        len(optimized),
+    )
+    return True
+
 
 _ALLOWED_MAPS_HOSTS = {
     "maps.google.com",
@@ -118,37 +204,65 @@ def purge_expired_trash():
     return {"deleted": deleted_count}
 
 
+@shared_task
+def compress_recent_media():
+    """Comprime mídias alteradas nas últimas 24h em lote, fora do request."""
+    cutoff = timezone.now() - timedelta(days=_MEDIA_COMPRESSION_WINDOW_DAYS)
+
+    stats = {
+        "scanned": 0,
+        "compressed": 0,
+        "skipped_unchanged": 0,
+        "skipped_missing": 0,
+        "skipped_invalid": 0,
+    }
+    seen_paths: set[str] = set()
+
+    for target in _iter_recent_media_targets(cutoff):
+        if target.path in seen_paths:
+            continue
+        seen_paths.add(target.path)
+        stats["scanned"] += 1
+
+        try:
+            changed = _compress_media_target(target)
+        except FileNotFoundError:
+            stats["skipped_missing"] += 1
+            continue
+        except Exception as exc:
+            _log.warning(
+                "compress_recent_media: skipped %s user=%s path=%s err=%s",
+                target.label,
+                target.user_id,
+                target.path,
+                exc,
+                exc_info=True,
+            )
+            stats["skipped_invalid"] += 1
+            continue
+
+        if changed:
+            stats["compressed"] += 1
+        else:
+            stats["skipped_unchanged"] += 1
+
+    _log.info("compress_recent_media: %s", stats)
+    return stats
+
+
 @shared_task(bind=True, max_retries=3)
 def copy_shared_place_photo(
     self, source_place_pk, source_owner_pk, target_place_pk, target_owner_pk
 ):
-    from django.core.files.base import ContentFile
-    from django.core.files.storage import default_storage
-
-    from core.image_service import ImageService
-    from places.models import Place as PlaceModel
-
     try:
-        source_place = PlaceModel.objects.get(pk=source_place_pk)
-    except PlaceModel.DoesNotExist:
-        return  # Place original removido — sem retry
-
-    try:
-        target_place = PlaceModel.objects.get(pk=target_place_pk)
-    except PlaceModel.DoesNotExist:
-        return  # Place importado deletado — sem retry
-
-    if not source_place.cover_photo:
-        return
-
-    try:
-        raw = default_storage.open(source_place.cover_photo).read()
-        decrypted = ImageService.decrypt(raw, user_id=source_owner_pk)
-        path = ImageService.save(
-            ContentFile(decrypted), user_id=target_owner_pk, category="places/covers"
+        changed = PlaceShareService.import_shared_place_photo(
+            source_place_pk=source_place_pk,
+            source_owner_pk=source_owner_pk,
+            target_place_pk=target_place_pk,
+            target_owner_pk=target_owner_pk,
         )
-        target_place.cover_photo = path
-        target_place.save(update_fields=["cover_photo"])
+        if not changed:
+            return
     except Exception as exc:
         raise self.retry(exc=exc, countdown=60 * (2**self.request.retries))
 

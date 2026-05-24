@@ -3,9 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { collectionsService, type CollectionDetail } from "../services/collections.service";
 import type { Place } from "../types/place";
-import { LoadingState } from "../components/ui/LoadingState";
 import { BackButton } from "../components/ui/BackButton";
-import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { PlaceCard } from "../components/places/PlaceCard";
 import { PlacesMap } from "../components/places/PlacesMap";
 import { Button } from "@/components/ui/button";
@@ -20,6 +18,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { PageState } from "../components/ui/PageState";
 
 export default function CollectionDetailPage() {
   const { t } = useTranslation();
@@ -77,55 +76,64 @@ export default function CollectionDetailPage() {
   }
 
   if (notFound) return <NotFoundPage />;
-  if (state.status === "loading") return <LoadingState variant="detail" />;
-  if (state.status === "error")
+  const collection = state.data;
+
+  if (!collection) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-6">
-        <ErrorMessage message={t("common.loading")} />
+        <PageState
+          loading={state.status === "loading"}
+          error={state.status === "error" ? t("common.error") : ""}
+        >
+          {null}
+        </PageState>
       </div>
     );
-
-  const collection = state.data;
-  if (!collection) return null;
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-      <BackButton />
-      <div className="flex items-start justify-between gap-3 pb-2 border-b border-border">
-        <div className="flex items-center gap-4">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-surface border border-border text-3xl shadow-sm">
-            {collection.emoji}
-          </span>
-          <div>
-            <h1 className="font-fraunces text-2xl font-bold text-text leading-tight">{collection.name}</h1>
-            <p className="mt-0.5 text-sm text-muted">
-              {collection.description
-                ? `${collection.description} · `
-                : ""}
-              {collection.place_count} {t("collections.places_count")}
-            </p>
+      <PageState
+        loading={state.status === "loading"}
+        error={state.status === "error" ? t("common.error") : ""}
+        empty={collection.places.length === 0}
+        emptyNode={(
+          <div className="flex flex-col items-center gap-3 py-16 text-center animate-fade-in">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface border border-border">
+              <FolderOpen className="h-7 w-7 text-muted" />
+            </div>
+            <p className="font-fraunces text-lg font-semibold text-text">{t("collections.empty_places")}</p>
           </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowDeleteDialog(true)}
-          disabled={deleting}
-          title={t("collections.delete")}
-          className="shrink-0 p-2 rounded-lg text-muted hover:text-destructive hover:bg-surface border border-transparent hover:border-border transition-colors"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
-
-      {collection.places.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center animate-fade-in">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface border border-border">
-            <FolderOpen className="h-7 w-7 text-muted" />
-          </div>
-          <p className="font-fraunces text-lg font-semibold text-text">{t("collections.empty_places")}</p>
-        </div>
-      ) : (
+        )}
+      >
         <>
+          <BackButton />
+          <div className="flex items-start justify-between gap-3 pb-2 border-b border-border">
+            <div className="flex items-center gap-4">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-surface border border-border text-3xl shadow-sm">
+                {collection.emoji}
+              </span>
+              <div>
+                <h1 className="font-fraunces text-2xl font-bold text-text leading-tight">{collection.name}</h1>
+                <p className="mt-0.5 text-sm text-muted">
+                  {collection.description
+                    ? `${collection.description} · `
+                    : ""}
+                  {collection.place_count} {t("collections.places_count")}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={deleting}
+              title={t("collections.delete")}
+              className="shrink-0 p-2 rounded-lg text-muted hover:text-destructive hover:bg-surface border border-transparent hover:border-border transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {collection.places.map((place, idx) => (
               <div key={place.public_id} className="relative group">
@@ -154,7 +162,7 @@ export default function CollectionDetailPage() {
 
           {showMap && <PlacesMap places={collection.places} />}
         </>
-      )}
+      </PageState>
       <Dialog open={showDeleteDialog} onOpenChange={(open) => { if (!open) setShowDeleteDialog(false); }}>
         <DialogContent>
           <DialogHeader>

@@ -1,12 +1,4 @@
-import hashlib
-import hmac
-import json
-import time
-
-from django.conf import settings
-from django.core.files.storage import default_storage
-from django.db import IntegrityError, transaction
-from django.db.models import Count, Prefetch
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -17,7 +9,6 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from core.image_service import ImageService
 from core.views import MutationMixin
 from core.viewsets import ViewSetBase, WriteViewSetBase
 
@@ -28,7 +19,6 @@ from .models import (
     CoordsStatus,
     Place,
     PlaceShare,
-    PlaceStatus,
     Visit,
     VisitItem,
 )
@@ -45,37 +35,8 @@ from .serializers import (
     VisitSummarySerializer,
     VisitWriteSerializer,
 )
-from .tasks import copy_shared_place_photo, resolve_place_coords
-
-
-def save_deleted_at_with_history(queryset, deleted_at):
-    model = queryset.model
-    HistoricalRecord = model.history.model
-
-    instances = list(queryset.select_for_update())
-    if not instances:
-        return
-
-    queryset.update(deleted_at=deleted_at)
-
-    now = timezone.now()
-    history_records = []
-    for instance in instances:
-        fields = {
-            field.attname: getattr(instance, field.attname)
-            for field in model._meta.concrete_fields
-        }
-        fields["deleted_at"] = deleted_at
-        history_records.append(
-            HistoricalRecord(
-                **fields,
-                history_date=now,
-                history_type="~",
-                history_user=None,
-                history_change_reason=None,
-            )
-        )
-    HistoricalRecord.objects.bulk_create(history_records)
+from .services import PlaceLifecycleService, PlaceShareImportStatus, PlaceShareService
+from .tasks import resolve_place_coords
 
 
 class PlaceViewSet(ViewSetBase):
@@ -92,7 +53,7 @@ class PlaceViewSet(ViewSetBase):
         "retrieve": PlaceDetailSerializer,
     }
     action_param_serializers = {
-        "visits": PlaceVisitParamsSerializer,
+        "create_visit": PlaceVisitParamsSerializer,
     }
 
     def _queue_coord_resolution(self, instance):
@@ -127,20 +88,7 @@ class PlaceViewSet(ViewSetBase):
         return queryset
 
     def perform_destroy(self, instance):
-        now = timezone.now()
-        with transaction.atomic():
-            save_deleted_at_with_history(
-                VisitItem.objects.filter(
-                    visit__place=instance, deleted_at__isnull=True
-                ),
-                now,
-            )
-            save_deleted_at_with_history(
-                Visit.objects.filter(place=instance, deleted_at__isnull=True),
-                now,
-            )
-            instance.deleted_at = now
-            instance.save(update_fields=["deleted_at"])
+        PlaceLifecycleService.soft_delete_place(instance)
 
     @action(detail=True, methods=["post"], url_path="retry-coords")
     def retry_coords(self, request, public_id=None):
@@ -156,20 +104,18 @@ class PlaceViewSet(ViewSetBase):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        place.coords_status = CoordsStatus.PENDING
-        place.save(update_fields=["coords_status"])
-        transaction.on_commit(lambda: resolve_place_coords.delay(place.pk))
+        PlaceLifecycleService.retry_coords_resolution(place)
         return Response({"detail": "Resolução de coordenadas enfileirada."})
 
     @action(detail=False, methods=["get"], url_path="trash")
     def trash(self, request):
         qs = Place.objects.filter(user=request.user).deleted().order_by("-deleted_at")
         page = self.paginate_queryset(qs)
-        ser = PlaceListSerializer(page if page is not None else qs, many=True)
+        serializer = PlaceListSerializer(page if page is not None else qs, many=True)
         return (
-            self.get_paginated_response(ser.data)
+            self.get_paginated_response(serializer.data)
             if page is not None
-            else Response(ser.data)
+            else Response(serializer.data)
         )
 
     @action(detail=True, methods=["post"], url_path="restore")
@@ -177,13 +123,7 @@ class PlaceViewSet(ViewSetBase):
         place = get_object_or_404(
             Place, public_id=public_id, user=request.user, deleted_at__isnull=False
         )
-        with transaction.atomic():
-            place.deleted_at = None
-            place.save(update_fields=["deleted_at"])
-            save_deleted_at_with_history(Visit.objects.filter(place=place), None)
-            save_deleted_at_with_history(
-                VisitItem.objects.filter(visit__place=place), None
-            )
+        PlaceLifecycleService.restore_place(place)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["delete"], url_path="permanent")
@@ -194,24 +134,27 @@ class PlaceViewSet(ViewSetBase):
         place.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=["get", "post"], url_path="visits")
-    def visits(self, request, public_id=None):
+    @action(detail=True, methods=["get"], url_path="visits")
+    def list_visits(self, request, public_id=None):
         place = self.get_object()
+        queryset = (
+            Visit.objects.for_user(request.user)
+            .filter(place=place)
+            .select_related("place")
+        )
+        page = self.paginate_queryset(queryset)
+        serializer = VisitSummarySerializer(
+            page if page is not None else queryset, many=True
+        )
+        return (
+            self.get_paginated_response(serializer.data)
+            if page is not None
+            else Response(serializer.data)
+        )
 
-        if request.method == "GET":
-            qs = (
-                Visit.objects.for_user(request.user)
-                .filter(place=place)
-                .select_related("place")
-            )
-            page = self.paginate_queryset(qs)
-            ser = VisitSummarySerializer(page if page is not None else qs, many=True)
-            return (
-                self.get_paginated_response(ser.data)
-                if page is not None
-                else Response(ser.data)
-            )
-
+    @action(detail=True, methods=["post"], url_path="visits")
+    def create_visit(self, request, public_id=None):
+        place = self.get_object()
         serializer = self.get_action_serializer_class()(
             data=request.data,
             context=self.get_serializer_context(),
@@ -252,14 +195,7 @@ class VisitViewSet(WriteViewSetBase):
         return super().get_serializer_class()
 
     def perform_destroy(self, instance):
-        now = timezone.now()
-        with transaction.atomic():
-            save_deleted_at_with_history(
-                VisitItem.objects.filter(visit=instance, deleted_at__isnull=True),
-                now,
-            )
-            instance.deleted_at = now
-            instance.save(update_fields=["deleted_at"])
+        PlaceLifecycleService.soft_delete_visit(instance)
 
     @action(detail=True, methods=["post"], url_path="items")
     def add_item(self, request, public_id=None):
@@ -278,16 +214,10 @@ class CollectionViewSet(ViewSetBase):
     queryset = Collection.objects.all()
 
     def get_queryset(self):
-        qs = Collection.objects.filter(user=self.request.user)
-        place_prefetch = Prefetch(
-            "collection_places",
-            queryset=CollectionPlace.objects.select_related("place").order_by(
-                "-added_at"
-            ),
-        )
         return (
-            qs.annotate(place_count=Count("collection_places"))
-            .prefetch_related(place_prefetch)
+            Collection.objects.for_user(self.request.user)
+            .with_place_count()
+            .with_places_prefetch()
             .order_by("-updated_at")
         )
 
@@ -345,25 +275,6 @@ class VisitItemViewSet(WriteViewSetBase):
 
 
 # ---------------------------------------------------------------------------
-# Share views
-# ---------------------------------------------------------------------------
-
-
-def _make_signed_media_url(share_token: str, image_path: str, ttl: int = 3600) -> str:
-    exp = int(time.time()) + ttl
-    msg = json.dumps([share_token, image_path, exp], separators=(",", ":")).encode()
-    sig = hmac.new(
-        settings.MEDIA_ENCRYPTION_KEY.encode(), msg, hashlib.sha256
-    ).hexdigest()
-    return f"{settings.PUBLIC_BASE_URL}/api/share/{share_token}/media/{image_path}?sig={sig}&exp={exp}"
-
-
-def _decode_shared_media(raw: bytes, user_id: int) -> bytes:
-    if ImageService.detect_content_type(raw) != "application/octet-stream":
-        return raw
-    return ImageService.decrypt(raw, user_id=user_id)
-
-
 class PlaceShareCreateView(MutationMixin, APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [ScopedRateThrottle]
@@ -371,13 +282,11 @@ class PlaceShareCreateView(MutationMixin, APIView):
 
     def post(self, request, public_id):
         place = get_object_or_404(Place, public_id=public_id, user=request.user)
-        share, _ = PlaceShare.objects.get_or_create(
-            place=place, owner=request.user, is_active=True
-        )
+        share, _ = PlaceShareService.get_or_create_share(place, request.user)
         return Response(
             {
                 "token": share.token,
-                "url": f"{settings.PUBLIC_BASE_URL}/share/{share.token}",
+                "url": PlaceShareService.build_share_url(share.token),
             },
             status=201,
         )
@@ -390,8 +299,7 @@ class PlaceShareRevokeView(MutationMixin, APIView):
         share = get_object_or_404(
             PlaceShare, token=token, place__public_id=public_id, owner=request.user
         )
-        share.is_active = False
-        share.save(update_fields=["is_active"])
+        PlaceShareService.revoke_share(share)
         return Response(status=204)
 
 
@@ -399,27 +307,7 @@ class PlaceShareDetailView(APIView):
     permission_classes = []
 
     def get(self, request, token):
-        share = get_object_or_404(
-            PlaceShare.objects.select_related("place"),
-            token=token,
-            is_active=True,
-        )
-        place = share.place
-        image_url = None
-        if place.cover_photo:
-            image_url = _make_signed_media_url(token, str(place.cover_photo))
-        return Response(
-            {
-                "name": place.name,
-                "category": place.category,
-                "address": place.address,
-                "instagram_url": place.instagram_url,
-                "maps_url": place.maps_url,
-                "latitude": place.latitude,
-                "longitude": place.longitude,
-                "cover_photo_url": image_url,
-            }
-        )
+        return Response(PlaceShareService.get_share_detail(token))
 
 
 class PlaceShareMediaView(APIView):
@@ -433,30 +321,12 @@ class PlaceShareMediaView(APIView):
             exp = int(request.query_params.get("exp", 0))
         except (ValueError, TypeError):
             return Response(status=404)
-        if time.time() > exp:
-            return Response(status=404)
-        msg = json.dumps([token, path, exp], separators=(",", ":")).encode()
-        expected = hmac.new(
-            settings.MEDIA_ENCRYPTION_KEY.encode(),
-            msg,
-            hashlib.sha256,
-        ).hexdigest()
-        if not hmac.compare_digest(sig, expected):
-            return Response(status=404)
-        share = get_object_or_404(
-            PlaceShare.objects.select_related("place", "owner"),
-            token=token,
-            is_active=True,
-        )
-        if str(share.place.cover_photo) != path:
-            return Response(status=404)
         try:
-            raw = default_storage.open(share.place.cover_photo).read()
-            image_data = _decode_shared_media(raw, user_id=share.owner.pk)
+            image_data = PlaceShareService.get_share_media_bytes(token, path, sig, exp)
         except Exception:
             return Response(status=404)
         return HttpResponse(
-            image_data, content_type=ImageService.detect_content_type(image_data)
+            image_data, content_type=PlaceShareService.detect_content_type(image_data)
         )
 
 
@@ -464,48 +334,13 @@ class PlaceShareImportView(MutationMixin, APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, token):
-        share = get_object_or_404(
-            PlaceShare.objects.select_related("place", "owner"),
-            token=token,
-            is_active=True,
-        )
-        if share.owner == request.user:
+        outcome = PlaceShareService.import_shared_place(token, request.user)
+        if outcome.status == PlaceShareImportStatus.OWNER:
             return Response({"detail": "Você já é dono deste lugar."}, status=400)
-
-        place = share.place
-
-        try:
-            imported, created = Place.objects.get_or_create(
-                user=request.user,
-                name=place.name,
-                address=place.address,
-                defaults={
-                    "category": place.category,
-                    "instagram_url": place.instagram_url,
-                    "maps_url": place.maps_url,
-                    "latitude": place.latitude,
-                    "longitude": place.longitude,
-                    "coords_status": place.coords_status,
-                    "status": PlaceStatus.WANT_TO_VISIT,
-                    "notes": "",
-                },
-            )
-        except IntegrityError:
+        if outcome.status == PlaceShareImportStatus.DUPLICATE:
             return Response(
                 {"detail": "Você já tem este lugar na sua lista."}, status=400
             )
-
-        if not created:
-            return Response(
-                {"detail": "Você já tem este lugar na sua lista."}, status=400
-            )
-
-        if place.cover_photo and copy_shared_place_photo is not None:
-            copy_shared_place_photo.delay(
-                source_place_pk=place.pk,
-                source_owner_pk=share.owner.pk,
-                target_place_pk=imported.pk,
-                target_owner_pk=request.user.pk,
-            )
-
-        return Response({"public_id": str(imported.public_id)}, status=201)
+        return Response(
+            {"public_id": str(outcome.imported_place.public_id)}, status=201
+        )

@@ -37,41 +37,41 @@ export function AccountMenu() {
         aria-label={t("account.menu.open")}
         aria-expanded={open}
       >
-        {user?.profile_photo_url ? (
-          <ImageWithSpinner
-            src={user.profile_photo_url}
-            alt={t("account.photoAlt")}
-            className="h-8 w-8 rounded-lg object-cover"
-            spinnerClassName="rounded-lg"
-          />
-        ) : (
-          <img
-            src="/bora-ali-mark.svg"
-            alt="Bora Ali"
-            className="h-8 w-8 select-none object-contain"
-            draggable={false}
-          />
-        )}
+        <ImageWithSpinner
+          src={user?.profile_photo_url || undefined}
+          alt={t("account.photoAlt")}
+          wrapperClassName="h-8 w-8"
+          className="h-8 w-8 rounded-lg object-cover"
+          spinnerClassName="rounded-lg"
+          fallback={
+            <img
+              src="/bora-ali-mark.svg"
+              alt="Bora Ali"
+              className="h-8 w-8 select-none object-contain"
+              draggable={false}
+            />
+          }
+        />
       </button>
 
       {open && (
         <div className="mt-2 w-72 rounded-2xl border border-border bg-surface p-3 shadow-lg">
           <div className="flex items-center gap-3 border-b border-border pb-3">
-            {user?.profile_photo_url ? (
-              <ImageWithSpinner
-                src={user.profile_photo_url}
-                alt={t("account.photoAlt")}
-                className="h-11 w-11 rounded-xl object-cover"
-                spinnerClassName="rounded-xl"
-              />
-            ) : (
-              <img
-                src="/bora-ali-mark.svg"
-                alt="Bora Ali"
-                className="h-11 w-11 select-none object-contain"
-                draggable={false}
-              />
-            )}
+            <ImageWithSpinner
+              src={user?.profile_photo_url || undefined}
+              alt={t("account.photoAlt")}
+              wrapperClassName="h-11 w-11"
+              className="h-11 w-11 rounded-xl object-cover"
+              spinnerClassName="rounded-xl"
+              fallback={
+                <img
+                  src="/bora-ali-mark.svg"
+                  alt="Bora Ali"
+                  className="h-11 w-11 select-none object-contain"
+                  draggable={false}
+                />
+              }
+            />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-text">{displayName}</p>
               <p className="truncate text-xs text-muted">{user?.email}</p>

@@ -8,24 +8,14 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
-from core.models import PublicIdModel
+from core.models import BaseModel
 
-from .managers import PlaceQuerySet, VisitItemQuerySet, VisitQuerySet
-
-
-class TimeStampedModel(models.Model):
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="created at",
-        db_column="created_at",
-        db_index=True,
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True, verbose_name="updated at", db_column="updated_at"
-    )
-
-    class Meta:
-        abstract = True
+from .managers import (
+    CollectionQuerySet,
+    PlaceQuerySet,
+    VisitItemQuerySet,
+    VisitQuerySet,
+)
 
 
 class PlaceStatus(models.TextChoices):
@@ -51,7 +41,7 @@ class VisitItemType(models.TextChoices):
     OTHER = "other", _("Other")
 
 
-class Place(PublicIdModel, TimeStampedModel):
+class Place(BaseModel):
     objects = PlaceQuerySet.as_manager()
     history = HistoricalRecords()
 
@@ -147,7 +137,7 @@ class Place(PublicIdModel, TimeStampedModel):
         return self.name
 
 
-class Visit(PublicIdModel, TimeStampedModel):
+class Visit(BaseModel):
     objects = VisitQuerySet.as_manager()
     history = HistoricalRecords()
 
@@ -229,7 +219,7 @@ class Visit(PublicIdModel, TimeStampedModel):
         return f"{self.place.name} @ {self.visited_at:%Y-%m-%d}"
 
 
-class VisitItem(PublicIdModel, TimeStampedModel):
+class VisitItem(BaseModel):
     objects = VisitItemQuerySet.as_manager()
     history = HistoricalRecords()
 
@@ -301,15 +291,15 @@ class VisitItem(PublicIdModel, TimeStampedModel):
         return self.name
 
 
-class Collection(PublicIdModel):
+class Collection(BaseModel):
+    objects = CollectionQuerySet.as_manager()
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="collections"
     )
     name = models.CharField(max_length=100)
     emoji = models.CharField(max_length=8, blank=True, default="📍")
     description = models.TextField(blank=True, default="")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "places_collection"

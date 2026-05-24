@@ -5,9 +5,8 @@ import { visitsService } from "../services/visits.service";
 import { visitItemsService } from "../services/visit-items.service";
 import { VisitForm } from "../components/visits/VisitForm";
 import { BackButton } from "../components/ui/BackButton";
-import { LoadingState } from "../components/ui/LoadingState";
-import { ErrorMessage } from "../components/ui/ErrorMessage";
 import type { Visit } from "../types/visit";
+import { PageState } from "../components/ui/PageState";
 type LocationState = { visit?: Visit };
 
 export default function EditVisitPage() {
@@ -57,34 +56,29 @@ export default function EditVisitPage() {
     };
   }, [id, state.visit, t]);
 
-  if (loading || !visit) {
-    return (
-      <div className="max-w-xl mx-auto p-4 space-y-4">
-        <BackButton />
-        {loadError ? <ErrorMessage message={loadError} /> : <LoadingState />}
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-xl mx-auto p-4">
       <BackButton />
-      <h1 className="text-2xl font-bold mb-4">{t("visitForm.editTitle")}</h1>
-      <VisitForm
-        initial={visit}
-        initialItems={visit?.items ?? []}
-        onItemSave={async (itemData, currentItem) => {
-          if (currentItem?.public_id) {
-            return visitItemsService.update(currentItem.public_id, itemData);
-          }
+      <PageState loading={loading} error={loadError}>
+        <>
+          <h1 className="text-2xl font-bold mb-4">{t("visitForm.editTitle")}</h1>
+          <VisitForm
+            initial={visit ?? undefined}
+            initialItems={visit?.items ?? []}
+            onItemSave={async (itemData, currentItem) => {
+              if (currentItem?.public_id) {
+                return visitItemsService.update(currentItem.public_id, itemData);
+              }
 
-          return visitItemsService.create(id!, itemData);
-        }}
-        onSubmit={async (visitData) => {
-          await visitsService.update(id!, visitData);
-          nav(-1);
-        }}
-      />
+              return visitItemsService.create(id!, itemData);
+            }}
+            onSubmit={async (visitData) => {
+              await visitsService.update(id!, visitData);
+              nav(-1);
+            }}
+          />
+        </>
+      </PageState>
     </div>
   );
 }

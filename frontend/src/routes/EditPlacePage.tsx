@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next";
 import { placesService } from "../services/places.service";
 import type { Place, PlaceCoordsStatus } from "../types/place";
 import { PlaceForm } from "../components/places/PlaceForm";
-import { LoadingState } from "../components/ui/LoadingState";
 import { BackButton } from "../components/ui/BackButton";
 import { notifyPlacesChanged } from "../utils/places-state";
+import { PageState } from "../components/ui/PageState";
 
 const COORDS_POLL_INTERVAL_MS = 1000;
 
@@ -45,13 +45,21 @@ export default function EditPlacePage() {
     return () => window.clearInterval(interval);
   }, [id, nav, place?.coords_status, waitingForCoords]);
 
-  if (!place) return <LoadingState />;
+  const currentPlace = place;
+  if (!currentPlace) {
+    return (
+      <div className="max-w-xl mx-auto p-4">
+        <PageState loading />
+      </div>
+    );
+  }
 
-  const activeCoordsStatus = coordsStatus ?? place.coords_status ?? null;
+  const activeCoordsStatus = coordsStatus ?? currentPlace.coords_status ?? null;
+  const backFallback = `/places/${currentPlace.public_id}`;
 
   return (
     <div className="max-w-xl mx-auto p-4">
-      <BackButton fallbackTo={`/places/${place.public_id}`} />
+      <BackButton fallbackTo={backFallback} />
       <h1 className="font-fraunces text-2xl font-bold mb-4 text-text">{t("editPlace.title")}</h1>
       {(waitingForCoords || activeCoordsStatus === "pending" || activeCoordsStatus === "failed") && (
         <div
@@ -75,10 +83,10 @@ export default function EditPlacePage() {
         </div>
       )}
       <PlaceForm
-        key={`${place.public_id}:${place.coords_status ?? ""}:${place.latitude ?? ""}:${place.longitude ?? ""}:${place.maps_url ?? ""}:${place.updated_at ?? ""}`}
-        initial={place}
+        key={`${currentPlace.public_id}:${currentPlace.coords_status ?? ""}:${currentPlace.latitude ?? ""}:${currentPlace.longitude ?? ""}:${currentPlace.maps_url ?? ""}:${currentPlace.updated_at ?? ""}`}
+        initial={currentPlace}
         onSubmit={async (d) => {
-          const updatedPlace = await placesService.update(place.public_id, d);
+          const updatedPlace = await placesService.update(currentPlace.public_id, d);
           setPlace(updatedPlace);
           setCoordsStatus(updatedPlace.coords_status ?? null);
           notifyPlacesChanged();
@@ -91,7 +99,7 @@ export default function EditPlacePage() {
           nav(`/places/${updatedPlace.public_id}`);
         }}
         onResolveMapsUrl={async (d) => {
-          const updatedPlace = await placesService.update(place.public_id, d);
+          const updatedPlace = await placesService.update(currentPlace.public_id, d);
           setPlace(updatedPlace);
           setCoordsStatus(updatedPlace.coords_status ?? null);
           notifyPlacesChanged();

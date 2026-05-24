@@ -21,8 +21,8 @@ import { LanguageToggle } from "../components/ui/LanguageToggle";
 import { GoogleSignInButton } from "../components/auth/GoogleSignInButton";
 import { TurnstileWidget } from "../components/auth/TurnstileWidget";
 import { LottieState } from "../components/ui/LottieState";
-import { getApiErrorState } from "../services/api-errors";
-import { applyApiErrors } from "../utils/form-errors";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { reportApiError } from "../utils/form-api-error";
 import { SESSION_INVALIDATED_KEY } from "../utils/constants";
 import { Footer } from "../components/layout/Footer";
 import { loginSchema, type LoginFormValues } from "../schemas/auth";
@@ -70,13 +70,15 @@ export default function LoginPage() {
       await login(data.username, data.password, turnstileToken || undefined);
       nav("/places");
     } catch (error) {
-      const apiError = getApiErrorState(error, t("auth.login.error"));
-      const message = apiError.code === "email_not_verified"
-        ? t("auth.login.emailNotVerified")
-        : apiError.message;
-      toast.error(message);
-      form.setError("root", { message });
-      applyApiErrors(form.setError, apiError.fieldErrors);
+      reportApiError({
+        setError: form.setError,
+        error,
+        fallbackMessage: t("auth.login.error"),
+        mapMessage: (apiError) =>
+          apiError.code === "email_not_verified"
+            ? t("auth.login.emailNotVerified")
+            : apiError.message,
+      });
       setTurnstileReset((n) => n + 1);
       setTurnstileToken("");
     }
@@ -159,10 +161,7 @@ export default function LoginPage() {
             )}
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting && (
-                <svg className="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+                <LoadingSpinner className="mr-2 h-4 w-4" />
               )}
               {t("auth.login.submit")}
             </Button>
@@ -173,10 +172,11 @@ export default function LoginPage() {
                   await googleLogin(idToken);
                   nav("/places");
                 } catch (error) {
-                  const apiError = getApiErrorState(error, t("auth.login.error"));
-                  toast.error(apiError.message);
-                  form.setError("root", { message: apiError.message });
-                  applyApiErrors(form.setError, apiError.fieldErrors);
+                  reportApiError({
+                    setError: form.setError,
+                    error,
+                    fallbackMessage: t("auth.login.error"),
+                  });
                 }
               }}
             />

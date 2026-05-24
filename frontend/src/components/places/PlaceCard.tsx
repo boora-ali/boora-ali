@@ -69,27 +69,22 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
           style={{ animationDelay: `${index * 55}ms` }}
         >
           <div className="relative overflow-hidden">
-            {place.cover_photo ? (
-              <>
-                <ImageWithSpinner
-                  src={place.cover_photo}
-                  alt={place.name}
-                  className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500"
-                  spinnerClassName="rounded-none"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                <div className="absolute bottom-2.5 left-3">
-                  <Badge status={place.status} />
+            <ImageWithSpinner
+              src={place.cover_photo || undefined}
+              alt={place.name}
+              wrapperClassName="w-full h-44"
+              className="h-44 w-full object-cover group-hover:scale-105 transition-transform duration-500"
+              spinnerClassName="rounded-none"
+              fallback={
+                <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-background to-border/60">
+                  <UtensilsCrossed className="h-10 w-10 text-muted opacity-25" />
                 </div>
-              </>
-            ) : (
-              <div className="w-full h-44 bg-gradient-to-br from-background to-border/60 flex items-center justify-center">
-                <UtensilsCrossed className="h-10 w-10 text-muted opacity-25" />
-                <div className="absolute bottom-2.5 left-3">
-                  <Badge status={place.status} />
-                </div>
-              </div>
-            )}
+              }
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            <div className="absolute bottom-2.5 left-3">
+              <Badge status={place.status} />
+            </div>
           </div>
 
           <div className="space-y-3 p-4">
