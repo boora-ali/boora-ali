@@ -5,8 +5,8 @@ import { ExternalLink, Share2, Trash2 } from "lucide-react";
 import type { Place } from "../../types/place";
 import { Badge } from "../ui/Badge";
 import { getMapsHref, sanitizeUrl } from "../../utils/url";
-import { AuthImage } from "../ui/AuthImage";
 import { UtensilsCrossed } from "lucide-react";
+import { ImageWithSpinner } from "../ui/ImageWithSpinner";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -71,10 +71,11 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
           <div className="relative overflow-hidden">
             {place.cover_photo ? (
               <>
-                <AuthImage
+                <ImageWithSpinner
                   src={place.cover_photo}
                   alt={place.name}
                   className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500"
+                  spinnerClassName="rounded-none"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                 <div className="absolute bottom-2.5 left-3">

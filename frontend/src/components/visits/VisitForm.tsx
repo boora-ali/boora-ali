@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { AuthImage } from "../ui/AuthImage";
+import { ImageWithSpinner } from "../ui/ImageWithSpinner";
 import { CharacterCount } from "../ui/CharacterCount";
 import { FormSection } from "../ui/FormSection";
 import { ResponsiveCardCarousel } from "../ui/ResponsiveCardCarousel";
@@ -74,11 +74,25 @@ function VisitItemPhoto({ photo, alt, fallbackText }: { photo?: string | File; a
   }, [previewUrl]);
 
   if (typeof photo === "string") {
-    return <AuthImage src={photo} alt={alt} className="h-24 w-full object-cover" />;
+    return (
+      <ImageWithSpinner
+        src={photo}
+        alt={alt}
+        className="h-24 w-full object-cover"
+        spinnerClassName="rounded-none"
+      />
+    );
   }
 
   if (previewUrl) {
-    return <img src={previewUrl} alt={alt} className="h-24 w-full object-cover" />;
+    return (
+      <ImageWithSpinner
+        src={previewUrl}
+        alt={alt}
+        className="h-24 w-full object-cover"
+        spinnerClassName="rounded-none"
+      />
+    );
   }
 
   return (
@@ -321,7 +335,12 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
           >
             {preview ? (
               <>
-                <AuthImage src={preview} alt={t("visitForm.visitPhotoAlt")} className="h-full w-full object-cover" />
+                <ImageWithSpinner
+                  src={preview}
+                  alt={t("visitForm.visitPhotoAlt")}
+                  className="h-full w-full object-cover"
+                  spinnerClassName="rounded-none"
+                />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
                   <span className="text-xs font-medium text-white">{t("placeForm.changePhoto")}</span>
                 </div>

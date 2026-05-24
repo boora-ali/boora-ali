@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { PasswordInput } from "../components/ui/PasswordInput";
-import { AuthImage } from "../components/ui/AuthImage";
+import { ImageWithSpinner } from "../components/ui/ImageWithSpinner";
 import { CharacterCount } from "../components/ui/CharacterCount";
 import { Label } from "@/components/ui/label";
 import { PwaInstallButton } from "../components/layout/PwaInstallButton";
@@ -205,10 +205,11 @@ export default function AccountPage() {
                 <Label className="group relative flex h-44 w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-background text-muted-foreground transition hover:border-primary/40 hover:text-primary sm:h-56">
                   {photoPreview ? (
                     <>
-                      <AuthImage
+                      <ImageWithSpinner
                         src={photoPreview}
                         alt={t("account.photoAlt")}
                         className="h-full w-full object-cover"
+                        spinnerClassName="rounded-none"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
                         <span className="rounded-xl border border-white/30 bg-black/50 px-4 py-2 text-sm font-medium text-white">
