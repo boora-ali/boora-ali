@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { within } from "@testing-library/react";
@@ -164,7 +164,6 @@ test("confirming delete calls remove and onDeleted", async () => {
   const dialog = await screen.findByRole("dialog");
   fireEvent.click(within(dialog).getByRole("button", { name: /delete/i }));
 
-  await screen.findByRole("dialog", { hidden: true }).catch(() => {});
   await waitFor(() => expect(placesService.remove).toHaveBeenCalledWith("place-1"));
   await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));
 });
