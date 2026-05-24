@@ -70,6 +70,11 @@ export default function AccountPage() {
 
   const passwordForm = useForm<ChangePasswordFormValues>({
     resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      current_password: "",
+      new_password: "",
+      confirm_password: "",
+    },
   });
 
   useEffect(() => {
