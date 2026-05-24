@@ -60,6 +60,14 @@ class MediaWriteSerializerMixin:
             self._persist_media(instance, media_file)
         return instance
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data[self.media_field_name] = build_public_media_url(
+            getattr(instance, self.media_field_name, None),
+            self.context.get("request"),
+        )
+        return data
+
 
 class VisitItemSerializer(FlexFieldsModelSerializer):
     photo = serializers.SerializerMethodField()

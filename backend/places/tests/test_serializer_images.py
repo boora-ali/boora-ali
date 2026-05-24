@@ -200,6 +200,7 @@ def test_place_cover_photo_saved_on_create(tmp_path, settings, django_user_model
     place = s.save()
 
     assert place.cover_photo.name.startswith(f"users/{user.id}/places/covers/")
+    assert s.data["cover_photo"].startswith("http://testserver/api/media/users/")
 
 
 @pytest.mark.django_db
@@ -243,4 +244,5 @@ def test_place_old_cover_photo_deleted_on_update(tmp_path, settings, django_user
     )
     assert s2.is_valid()
     s2.save()
+    assert s2.data["cover_photo"].startswith("http://testserver/api/media/users/")
     assert not default_storage.exists(old_path)
