@@ -25,6 +25,7 @@ export default function TrashPage() {
   const [restoring, setRestoring] = useState<string | null>(null);
   const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<Place | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const pageData = data ?? { count: 0, next: null, previous: null, results: [] };
 
   useEffect(() => {
     startTransition(() => { setLoading(true); });
@@ -79,12 +80,12 @@ export default function TrashPage() {
       <PageState
         loading={loading}
         error={!loading ? error : ""}
-        empty={!loading && !error && data?.count === 0}
+        empty={!loading && !error && pageData.count === 0}
         emptyTitle={t("trash.empty.title")}
         emptyDescription={t("trash.empty.description")}
       >
         <div className="space-y-3">
-          {data!.results.map((place) => (
+          {pageData.results.map((place) => (
             <div
               key={place.public_id}
               className="flex flex-col gap-3 rounded-xl border border-border bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
