@@ -15,6 +15,8 @@ User = get_user_model()
 
 CURRENT_TERMS_VERSION = "1.0"
 
+_PROFILE_FIELDS = ("nickname",)
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
@@ -148,10 +150,11 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         from core.image_service import ImageService
 
-        profile_data = {
-            "nickname": validated_data.pop("nickname", serializers.empty),
-            "profile_photo": validated_data.pop("profile_photo", serializers.empty),
+        profile_fields = {
+            field: validated_data.pop(field, serializers.empty)
+            for field in _PROFILE_FIELDS
         }
+        photo_file = validated_data.pop("profile_photo", serializers.empty)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -159,17 +162,13 @@ class UserSerializer(serializers.ModelSerializer):
 
         profile = self._get_profile(instance)
 
-        if profile_data["nickname"] is not serializers.empty:
-            profile.nickname = profile_data["nickname"]
+        for field, value in profile_fields.items():
+            if value is not serializers.empty:
+                setattr(profile, field, value)
 
-        photo_file = profile_data["profile_photo"]
         if photo_file is not serializers.empty:
             ImageService.replace_media_field(
-                profile,
-                "profile_photo",
-                photo_file,
-                instance.id,
-                "profiles",
+                profile, "profile_photo", photo_file, instance.id, "profiles"
             )
 
         profile.save()
@@ -200,9 +199,6 @@ class PasswordChangeSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {"confirm_password": str(messages.PASSWORDS_DO_NOT_MATCH)}
             )
-        user = self.context["request"].user
-        if self._is_google_account(user):
-            raise GoogleIdentityPasswordChangeNotAllowedException
         return attrs
 
     def save(self, **kwargs):
