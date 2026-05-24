@@ -256,7 +256,6 @@ test("renders cover photo via AuthImage", async () => {
 });
 
 test("refreshes the imported place until cover photo arrives", async () => {
-  vi.useFakeTimers();
   (placesService.get as ReturnType<typeof vi.fn>)
     .mockResolvedValueOnce({
       ...basePlace,
@@ -290,7 +289,7 @@ test("refreshes the imported place until cover photo arrives", async () => {
     expect(screen.getByText("Café X")).toBeInTheDocument(),
   );
 
-  await vi.advanceTimersByTimeAsync(500);
+  await new Promise((resolve) => setTimeout(resolve, 650));
 
   await waitFor(() =>
     expect(screen.getByRole("img", { name: "Café X" })).toBeInTheDocument(),
