@@ -6,7 +6,20 @@ import { cn } from "@/lib/utils"
 
 const ContextMenu = ContextMenuPrimitive.Root
 
-const ContextMenuTrigger = ContextMenuPrimitive.Trigger
+const ContextMenuTrigger = React.forwardRef<
+  React.ElementRef<typeof ContextMenuPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+  <ContextMenuPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none]",
+      className
+    )}
+    {...props}
+  />
+))
+ContextMenuTrigger.displayName = ContextMenuPrimitive.Trigger.displayName
 
 const ContextMenuGroup = ContextMenuPrimitive.Group
 
