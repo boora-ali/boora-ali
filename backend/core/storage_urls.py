@@ -19,6 +19,7 @@ def _media_signing_key() -> bytes:
     """
     Deriva a chave HMAC a partir de MEDIA_ENCRYPTION_KEY (ou SECRET_KEY como fallback).
     @lru_cache: calculado uma vez por processo — SHA256 não precisa repetir a cada request.
+    Em testes que precisem de chave diferente, chamar `_media_signing_key.cache_clear()`.
     """
     key = getattr(settings, "MEDIA_ENCRYPTION_KEY", None) or settings.SECRET_KEY
     return hashlib.sha256(f"bora-ali-media-url-v1:{key}".encode()).digest()
@@ -41,7 +42,7 @@ def verify_media_url(path: str, exp: int, sig: str) -> bool:
     Valida assinatura e expiração. Retorna False se expirado ou sig inválida.
     hmac.compare_digest: resistência a timing attacks.
     """
-    if int(time.time()) > exp:
+    if int(time.time()) >= exp:
         return False
     message = f"{path}:{exp}".encode()
     expected = hmac.new(_media_signing_key(), message, hashlib.sha256).hexdigest()
