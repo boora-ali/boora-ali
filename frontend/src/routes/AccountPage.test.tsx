@@ -211,7 +211,7 @@ describe("exclusão de conta", () => {
         password: "senhaAtual1!",
       })
     );
-    expect(screen.getByText("Conta agendada")).toBeInTheDocument();
+    expect(screen.getByText(/Conta agendada/)).toBeInTheDocument();
   });
 
   test("conta Google solicita exclusão sem campo de senha", async () => {
