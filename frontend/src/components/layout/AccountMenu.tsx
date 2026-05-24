@@ -79,15 +79,13 @@ export function AccountMenu() {
           </div>
 
           <div className="space-y-2 py-3">
-            {pathname !== "/account" && (
-              <Link
-                to="/account"
-                onClick={() => setOpen(false)}
-                className="block rounded-xl px-3 py-2 text-sm font-medium text-text transition hover:bg-background"
-              >
-                {t("account.menu.account")}
-              </Link>
-            )}
+            <Link
+              to="/account"
+              onClick={() => setOpen(false)}
+              className="block rounded-xl px-3 py-2 text-sm font-medium text-text transition hover:bg-background"
+            >
+              {t("account.menu.account")}
+            </Link>
             {pathname !== "/places/trash" && (
               <Link
                 to="/places/trash"

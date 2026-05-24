@@ -30,12 +30,10 @@ export default function EditPlacePage() {
           setPlace(loadedPlace);
           setCoordsStatus(loadedPlace.coords_status ?? null);
 
-        if (loadedPlace.coords_status === "resolved") {
-          setWaitingForCoords(false);
-          notifyPlacesChanged();
-        }
-
-        if (loadedPlace.coords_status === "failed") {
+        if (
+          loadedPlace.coords_status === "resolved" ||
+          loadedPlace.coords_status === "failed"
+        ) {
           setWaitingForCoords(false);
           notifyPlacesChanged();
         }
@@ -45,8 +43,7 @@ export default function EditPlacePage() {
     return () => window.clearInterval(interval);
   }, [id, nav, place?.coords_status, waitingForCoords]);
 
-  const currentPlace = place;
-  if (!currentPlace) {
+  if (!place) {
     return (
       <div className="max-w-xl mx-auto p-4">
         <PageState loading />
@@ -54,8 +51,8 @@ export default function EditPlacePage() {
     );
   }
 
-  const activeCoordsStatus = coordsStatus ?? currentPlace.coords_status ?? null;
-  const backFallback = `/places/${currentPlace.public_id}`;
+  const activeCoordsStatus = coordsStatus ?? place.coords_status ?? null;
+  const backFallback = `/places/${place.public_id}`;
 
   return (
     <div className="max-w-xl mx-auto p-4">
@@ -83,10 +80,10 @@ export default function EditPlacePage() {
         </div>
       )}
       <PlaceForm
-        key={`${currentPlace.public_id}:${currentPlace.coords_status ?? ""}:${currentPlace.latitude ?? ""}:${currentPlace.longitude ?? ""}:${currentPlace.maps_url ?? ""}:${currentPlace.updated_at ?? ""}`}
-        initial={currentPlace}
+        key={`${place.public_id}:${place.coords_status ?? ""}:${place.latitude ?? ""}:${place.longitude ?? ""}:${place.maps_url ?? ""}:${place.updated_at ?? ""}`}
+        initial={place}
         onSubmit={async (d) => {
-          const updatedPlace = await placesService.update(currentPlace.public_id, d);
+          const updatedPlace = await placesService.update(place.public_id, d);
           setPlace(updatedPlace);
           setCoordsStatus(updatedPlace.coords_status ?? null);
           notifyPlacesChanged();
@@ -99,7 +96,7 @@ export default function EditPlacePage() {
           nav(`/places/${updatedPlace.public_id}`);
         }}
         onResolveMapsUrl={async (d) => {
-          const updatedPlace = await placesService.update(currentPlace.public_id, d);
+          const updatedPlace = await placesService.update(place.public_id, d);
           setPlace(updatedPlace);
           setCoordsStatus(updatedPlace.coords_status ?? null);
           notifyPlacesChanged();

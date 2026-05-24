@@ -88,14 +88,14 @@ def _normalize_code(exc: Exception) -> str:
     return str(getattr(exc, "default_code", "api_error"))
 
 
-def _message_from_mapping_with_detail(exc, data) -> str | None:
+def _message_from_mapping_with_detail(data) -> str | None:
     if "detail" not in data:
         return None
     detail = _stringify_detail(data["detail"])
     return str(detail[0]) if isinstance(detail, list) else str(detail)
 
 
-def _message_from_mapping(exc, data) -> str:
+def _message_from_mapping(data) -> str:
     field_errors = _flatten_field_errors(data)
     if field_errors:
         first_field = next(iter(field_errors.values()))
@@ -104,18 +104,14 @@ def _message_from_mapping(exc, data) -> str:
     return str(messages.VALIDATION_ERROR)
 
 
-def _message_from_sequence(exc, data) -> str:
-    return str(_stringify_detail(data[0]))
-
-
 def _pick_message(exc: Exception, data) -> str:
     if isinstance(exc, ValidationError):
         return str(messages.VALIDATION_ERROR)
     if isinstance(data, Mapping):
-        msg = _message_from_mapping_with_detail(exc, data)
-        return msg if msg is not None else _message_from_mapping(exc, data)
+        msg = _message_from_mapping_with_detail(data)
+        return msg if msg is not None else _message_from_mapping(data)
     if isinstance(data, Sequence) and data and not isinstance(data, (str, bytes)):
-        return _message_from_sequence(exc, data)
+        return str(_stringify_detail(data[0]))
     return str(_stringify_detail(data))
 
 

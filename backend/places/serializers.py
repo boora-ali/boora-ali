@@ -16,11 +16,6 @@ def _get_owner_id(context) -> int:
     return context["request"].user.id
 
 
-def _extract_coords(url: str) -> tuple[float, float] | tuple[None, None]:
-    """Extract (lat, lng) from a Google Maps URL, or return (None, None)."""
-    return extract_coords(url)
-
-
 class MediaWriteSerializerMixin:
     media_field_name: str
     media_storage_category: str
@@ -324,7 +319,7 @@ class PlaceWriteSerializer(MediaWriteSerializerMixin, FlexFieldsModelSerializer)
 
         maps_url = validated_data.get("maps_url", "")
         if maps_url:
-            lat, lng = _extract_coords(maps_url)
+            lat, lng = extract_coords(maps_url)
             if lat is not None and lng is not None:
                 validated_data["latitude"] = lat
                 validated_data["longitude"] = lng
