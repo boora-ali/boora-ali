@@ -2,6 +2,7 @@
 
 > ✅ **IMPLEMENTADO**
 
+
 ## Problema
 
 O PR #217 (dependabot) bumpa `tailwindcss` de `3.4.19` para `4.3.0`. A v4 é uma
