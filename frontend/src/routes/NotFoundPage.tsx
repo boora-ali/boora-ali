@@ -12,7 +12,7 @@ export default function NotFoundPage() {
           Página não encontrada
         </h2>
         <p className="text-gray-500 mb-6 max-w-md">
-          O recurso que você está procurando não existe ou você não tem permissão para acessá-lo.
+          O recurso que você está procurando não existe.
         </p>
         <div className="flex gap-3 justify-center">
           <Button variant="secondary" onClick={() => navigate(-1)}>

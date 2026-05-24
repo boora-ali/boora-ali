@@ -89,7 +89,7 @@ export default function LoginPage() {
       <Helmet>
         <title>Bora Ali — Entre na sua conta</title>
         <meta name="description" content="Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou." />
-        <link rel="canonical" href="https://booraali.com.br/" />
+        <link rel="canonical" href="https://booraali.com.br/login" />
       </Helmet>
       <div className="flex-1 mx-auto w-full mt-12 max-w-sm space-y-5 px-6 py-8 pb-0">
         <div className="flex flex-col items-center gap-4">
