@@ -192,7 +192,7 @@ class PlaceShareService:
         if str(share.place.cover_photo) != path:
             raise LookupError("path mismatch")
 
-        raw = default_storage.open(share.place.cover_photo).read()
+        raw = default_storage.open(str(share.place.cover_photo)).read()
         if PlaceShareService.detect_content_type(raw) == "application/octet-stream":
             return ImageService.decrypt(raw, user_id=share.owner.pk)
         return raw
@@ -212,7 +212,7 @@ class PlaceShareService:
         if not target_place:
             return False
 
-        raw = default_storage.open(source_place.cover_photo).read()
+        raw = default_storage.open(str(source_place.cover_photo)).read()
         decrypted = ImageService.decrypt(raw, user_id=source_owner_pk)
         path = ImageService.save(
             ContentFile(decrypted), user_id=target_owner_pk, category="places/covers"
