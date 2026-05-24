@@ -14,8 +14,11 @@ logger = logging.getLogger(__name__)
 
 _STRINGIFY_DISPATCH: list[tuple] = [
     (ErrorDetail, str),
-    (Mapping,     lambda mapping: {key: _stringify_detail(item) for key, item in mapping.items()}),
-    (Sequence,    lambda seq: [str(item) for item in seq]),
+    (
+        Mapping,
+        lambda mapping: {key: _stringify_detail(item) for key, item in mapping.items()},
+    ),
+    (Sequence, lambda seq: [str(item) for item in seq]),
 ]
 
 
@@ -68,9 +71,9 @@ def _first_code_from_mapping(codes) -> str | None:
 
 
 _CODES_TYPE_DISPATCH: list[tuple] = [
-    (str,      lambda code: code),
+    (str, lambda code: code),
     (Sequence, _first_code_from_sequence),
-    (Mapping,  _first_code_from_mapping),
+    (Mapping, _first_code_from_mapping),
 ]
 
 
