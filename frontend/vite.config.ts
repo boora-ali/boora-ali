@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
 import { loadEnv } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { aeoVitePlugin } from "aeo.js/vite";
 import path from "path";
@@ -30,6 +31,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
+      tailwindcss(),
       react(),
       ...(!isProd ? [aeoVitePlugin({
         title: "Bora Ali",

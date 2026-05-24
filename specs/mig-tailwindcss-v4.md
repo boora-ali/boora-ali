@@ -1,6 +1,7 @@
 # Mig — Tailwind CSS v3 → v4
 
-> ⏳ **PENDENTE** — PR #217 não mergeado. Migração deve ser feita em branch separada.
+> ✅ **IMPLEMENTADO**
+
 
 ## Problema
 

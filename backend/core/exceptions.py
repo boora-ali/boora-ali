@@ -47,6 +47,12 @@ class InvalidTokenException(AuthenticationFailed):
     default_code = "invalid_token"
 
 
+class AuthenticationRequiredException(APIException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    default_detail = messages.INVALID_TOKEN
+    default_code = "invalid_token"
+
+
 class SessionExpiredException(AuthenticationFailed):
     default_detail = messages.SESSION_EXPIRED
     default_code = "session_expired"

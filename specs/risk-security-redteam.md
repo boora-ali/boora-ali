@@ -1,4 +1,4 @@
-# Risk — Security Red Team: Endpoints
+# Risk — Security Red Team: Endpoints  IMPLEMENTADO
 
 ## Contexto
 
