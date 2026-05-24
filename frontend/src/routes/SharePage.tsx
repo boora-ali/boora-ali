@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
 import { MapPin, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 import { shareService, type ShareDetail } from "../services/share.service";
 import { useAuth } from "../contexts/useAuth";
 import { getMapsHref, sanitizeUrl } from "../utils/url";
@@ -20,7 +21,6 @@ export default function SharePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [importError, setImportError] = useState<string | null>(null);
   const hasToken = Boolean(token);
 
   useEffect(() => {
@@ -59,13 +59,12 @@ export default function SharePage() {
   async function handleImport() {
     if (!token) return;
     setImporting(true);
-    setImportError(null);
     try {
       const result = await shareService.importShare(token);
       nav(`/places/${result.public_id}`);
     } catch (err) {
       const apiError = getApiErrorState(err, t("share.import_error"));
-      setImportError(apiError.message);
+      toast.error(apiError.message);
     } finally {
       setImporting(false);
     }
@@ -194,10 +193,6 @@ export default function SharePage() {
       {/* CTA fixo — painel com glass */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-7 pt-4 bg-background/85 backdrop-blur-md border-t border-border/40">
         <div className="max-w-lg mx-auto space-y-2.5">
-          {importError && (
-            <p className="text-center text-xs text-danger">{importError}</p>
-          )}
-
           {user ? (
             <div className="flex gap-2.5">
               <button

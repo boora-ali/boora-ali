@@ -99,6 +99,39 @@ def test_import_shared_place_photo_copies_cover_photo(user, other_user):
     assert target_place.cover_photo
 
 
+def test_import_shared_place_photo_copies_plaintext_cover_photo(user, other_user):
+    source_place = baker.make(
+        Place,
+        user=other_user,
+        cover_photo="places/covers/source.jpg",
+    )
+    target_place = baker.make(
+        Place,
+        user=user,
+        cover_photo=None,
+    )
+
+    raw = _make_jpeg_bytes()
+    mock_file = MagicMock()
+    mock_file.read.return_value = raw
+
+    with (
+        patch("places.services.default_storage") as mock_storage,
+        patch("core.image_service.default_storage"),
+    ):
+        mock_storage.open.return_value = mock_file
+        changed = PlaceShareService.import_shared_place_photo(
+            source_place_pk=source_place.pk,
+            source_owner_pk=other_user.pk,
+            target_place_pk=target_place.pk,
+            target_owner_pk=user.pk,
+        )
+
+    target_place.refresh_from_db()
+    assert changed is True
+    assert target_place.cover_photo
+
+
 def test_import_shared_place_returns_created_outcome_and_dispatches_copy_task(
     user, other_user
 ):

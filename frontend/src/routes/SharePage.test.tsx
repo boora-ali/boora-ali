@@ -3,10 +3,16 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { HelmetProvider } from "react-helmet-async";
+import { toast } from "sonner";
 import { shareService } from "../services/share.service";
 import SharePage from "./SharePage";
 
 vi.mock("../services/share.service");
+vi.mock("sonner", () => ({
+  toast: {
+    error: vi.fn(),
+  },
+}));
 vi.mock("./NotFoundPage", () => ({
   default: () => <div>NOT FOUND</div>,
 }));
@@ -120,6 +126,19 @@ describe("SharePage", () => {
     await waitFor(() => expect(screen.getByText("Café Bonito")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: /add to my list/i }));
     await waitFor(() => expect(navigate).toHaveBeenCalledWith("/places/place-xyz"));
+  });
+
+  test("shows toast when import fails", async () => {
+    mockUser = { username: "smovisk" };
+    (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue(shareData);
+    (shareService.importShare as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("duplicate"),
+    );
+    renderShare();
+    await waitFor(() => expect(screen.getByText("Café Bonito")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /add to my list/i }));
+    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    expect(screen.queryByText(/você já tem este lugar na sua lista/i)).not.toBeInTheDocument();
   });
 
   test("shows cover photo when available", async () => {

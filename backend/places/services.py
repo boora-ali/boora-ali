@@ -213,9 +213,10 @@ class PlaceShareService:
             return False
 
         raw = default_storage.open(str(source_place.cover_photo)).read()
-        decrypted = ImageService.decrypt(raw, user_id=source_owner_pk)
+        if PlaceShareService.detect_content_type(raw) == "application/octet-stream":
+            raw = ImageService.decrypt(raw, user_id=source_owner_pk)
         path = ImageService.save(
-            ContentFile(decrypted), user_id=target_owner_pk, category="places/covers"
+            ContentFile(raw), user_id=target_owner_pk, category="places/covers"
         )
         target_place.cover_photo = path
         target_place.save(update_fields=["cover_photo"])
