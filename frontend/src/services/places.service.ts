@@ -15,19 +15,30 @@ export interface PlaceFilters {
 
 type CacheKey = string;
 
+// 20 min — metade da expiração das presigned URLs do R2 (1h)
+// Garante que URLs em cache nunca estejam próximas de expirar ao ser usadas.
+const CACHE_TTL_MS = 20 * 60 * 1000;
+
 class PlacePageCache {
-  private store: Map<CacheKey, Page<Place>> = new Map();
+  private store: Map<CacheKey, { data: Page<Place>; ts: number }> = new Map();
 
   private key(page: number, search?: string, status?: string, filters?: PlaceFilters): CacheKey {
     return `${page}|${search ?? ""}|${status ?? ""}|${JSON.stringify(filters ?? {})}`;
   }
 
   get(page: number, search?: string, status?: string, filters?: PlaceFilters): Page<Place> | undefined {
-    return this.store.get(this.key(page, search, status, filters));
+    const k = this.key(page, search, status, filters);
+    const entry = this.store.get(k);
+    if (!entry) return undefined;
+    if (Date.now() - entry.ts > CACHE_TTL_MS) {
+      this.store.delete(k);
+      return undefined;
+    }
+    return entry.data;
   }
 
   set(page: number, data: Page<Place>, search?: string, status?: string, filters?: PlaceFilters): void {
-    this.store.set(this.key(page, search, status, filters), data);
+    this.store.set(this.key(page, search, status, filters), { data, ts: Date.now() });
   }
 
   invalidate(): void {
