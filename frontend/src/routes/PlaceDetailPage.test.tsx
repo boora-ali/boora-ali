@@ -255,6 +255,49 @@ test("renders cover photo via AuthImage", async () => {
   );
 });
 
+test("refreshes the imported place until cover photo arrives", async () => {
+  vi.useFakeTimers();
+  (placesService.get as ReturnType<typeof vi.fn>)
+    .mockResolvedValueOnce({
+      ...basePlace,
+      coords_status: "resolved",
+      cover_photo: "",
+    })
+    .mockResolvedValueOnce({
+      ...basePlace,
+      coords_status: "resolved",
+      cover_photo: "https://example.com/photo.jpg",
+    });
+
+  render(
+    <MemoryRouter
+      initialEntries={[
+        {
+          pathname: "/places/place-1",
+          state: { refreshAfterImport: true },
+        },
+      ]}
+    >
+      <Routes>
+        <Route path="/places/:id" element={<PlaceDetailPage />} />
+        <Route path="/places/:id/edit" element={<div>EDIT PAGE</div>} />
+        <Route path="/places" element={<div>PLACES PAGE</div>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+
+  await waitFor(() =>
+    expect(screen.getByText("Café X")).toBeInTheDocument(),
+  );
+
+  await vi.advanceTimersByTimeAsync(500);
+
+  await waitFor(() =>
+    expect(screen.getByRole("img", { name: "Café X" })).toBeInTheDocument(),
+  );
+  expect(placesService.get).toHaveBeenCalledTimes(2);
+});
+
 test("edit link navigates to edit page", async () => {
   (placesService.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
     ...basePlace,

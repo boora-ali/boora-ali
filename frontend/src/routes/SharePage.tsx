@@ -61,7 +61,7 @@ export default function SharePage() {
     setImporting(true);
     try {
       const result = await shareService.importShare(token);
-      nav(`/places/${result.public_id}`);
+      nav(`/places/${result.public_id}`, { state: { refreshAfterImport: true } });
     } catch (err) {
       const apiError = getApiErrorState(err, t("share.import_error"));
       toast.error(apiError.message);

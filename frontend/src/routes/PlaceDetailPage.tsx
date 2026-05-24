@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Share2, MessageCircle, Link as LinkIcon, Check } from "lucide-react";
 
@@ -35,6 +35,12 @@ import { notifyPlacesChanged } from "../utils/places-state";
 import NotFoundPage from "./NotFoundPage";
 
 const COORDS_POLL_INTERVAL_MS = 1000;
+const IMPORTED_COVER_POLL_INTERVAL_MS = 500;
+const IMPORTED_COVER_POLL_TIMEOUT_MS = 15000;
+
+type LocationState = {
+  refreshAfterImport?: boolean;
+};
 
 function ShareButton({ placePublicId, placeName }: { placePublicId: string; placeName: string }) {
   const { t } = useTranslation();
@@ -116,6 +122,8 @@ export default function PlaceDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams();
   const nav = useNavigate();
+  const location = useLocation();
+  const refreshAfterImport = (location.state as LocationState | null)?.refreshAfterImport === true;
   const [place, setPlace] = useState<PlaceWithVisits | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
@@ -166,6 +174,44 @@ export default function PlaceDetailPage() {
 
     return () => window.clearInterval(interval);
   }, [id, place?.coords_status]);
+
+  useEffect(() => {
+    if (!id || !refreshAfterImport || place?.cover_photo) return;
+
+    let cancelled = false;
+    let attempt = 0;
+
+    const interval = window.setInterval(async () => {
+      attempt += 1;
+
+      try {
+        const loadedPlace = await placesService.get(id);
+        if (cancelled) return;
+
+        setPlace(loadedPlace);
+        if (loadedPlace.cover_photo) {
+          notifyPlacesChanged();
+          window.clearInterval(interval);
+          return;
+        }
+      } catch (error) {
+        if (!cancelled && (error as { isNotFound?: boolean }).isNotFound) {
+          setNotFound(true);
+          window.clearInterval(interval);
+          return;
+        }
+      }
+
+      if (attempt * IMPORTED_COVER_POLL_INTERVAL_MS >= IMPORTED_COVER_POLL_TIMEOUT_MS) {
+        window.clearInterval(interval);
+      }
+    }, IMPORTED_COVER_POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [id, place?.cover_photo, refreshAfterImport]);
 
   useEffect(() => {
     if (!place) return;

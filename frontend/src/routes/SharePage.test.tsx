@@ -125,7 +125,11 @@ describe("SharePage", () => {
     renderShare();
     await waitFor(() => expect(screen.getByText("Café Bonito")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: /add to my list/i }));
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/places/place-xyz"));
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith("/places/place-xyz", {
+        state: { refreshAfterImport: true },
+      }),
+    );
   });
 
   test("shows toast when import fails", async () => {
