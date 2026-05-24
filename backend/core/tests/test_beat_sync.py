@@ -11,6 +11,7 @@ def test_sync_beat_tasks_command_recreates_all_project_schedules():
     PeriodicTask.objects.filter(
         name__in=[
             "Comprimir mídias recentes",
+            "Limpar histórico antigo",
             "Limpar tokens bloqueados expirados",
             "Apagar contas agendadas",
         ]
@@ -21,6 +22,10 @@ def test_sync_beat_tasks_command_recreates_all_project_schedules():
     assert PeriodicTask.objects.filter(
         name="Comprimir mídias recentes",
         task="places.tasks.compress_recent_media",
+    ).exists()
+    assert PeriodicTask.objects.filter(
+        name="Limpar histórico antigo",
+        task="places.tasks.cleanup_old_history",
     ).exists()
     assert PeriodicTask.objects.filter(
         name="Limpar tokens bloqueados expirados",

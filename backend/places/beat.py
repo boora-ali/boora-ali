@@ -10,6 +10,16 @@ MEDIA_COMPRESSION_CRONTAB = {
     "month_of_year": "*",
 }
 
+HISTORY_CLEANUP_TASK_NAME = "Limpar histórico antigo"
+HISTORY_CLEANUP_TASK_PATH = "places.tasks.cleanup_old_history"
+HISTORY_CLEANUP_CRONTAB = {
+    "minute": "0",
+    "hour": "3",
+    "day_of_week": "*",
+    "day_of_month": "*",
+    "month_of_year": "*",
+}
+
 
 def _beat_models(apps=None):
     if apps is None:
@@ -44,10 +54,40 @@ def ensure_media_compression_schedule(apps=None):
     )
 
 
+def ensure_history_cleanup_schedule(apps=None):
+    """Cria ou atualiza o beat de limpeza do histórico antigo."""
+
+    crontab_schedule, periodic_task = _beat_models(apps)
+    crontab, _created = crontab_schedule.objects.get_or_create(
+        **HISTORY_CLEANUP_CRONTAB
+    )
+    return periodic_task.objects.update_or_create(
+        name=HISTORY_CLEANUP_TASK_NAME,
+        defaults={
+            "task": HISTORY_CLEANUP_TASK_PATH,
+            "crontab": crontab,
+            "enabled": True,
+            "description": (
+                "Remove entradas históricas antigas de Place, Visit e VisitItem "
+                "fora do caminho síncrono."
+            ),
+        },
+    )
+
+
 def remove_media_compression_schedule(apps=None):
     _, periodic_task = _beat_models(apps)
     deleted, _details = periodic_task.objects.filter(
         name=MEDIA_COMPRESSION_TASK_NAME,
         task=MEDIA_COMPRESSION_TASK_PATH,
+    ).delete()
+    return deleted
+
+
+def remove_history_cleanup_schedule(apps=None):
+    _, periodic_task = _beat_models(apps)
+    deleted, _details = periodic_task.objects.filter(
+        name=HISTORY_CLEANUP_TASK_NAME,
+        task=HISTORY_CLEANUP_TASK_PATH,
     ).delete()
     return deleted
