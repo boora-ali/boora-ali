@@ -10,6 +10,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.permissions import AllowAny
 
+from core.exceptions import AuthenticationRequiredException
 from core.storage_urls import _build_signed_url, _use_s3_signing, verify_media_url
 
 logger = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ def serve_user_media(request, path):
 
         # result é None quando não há header Authorization (sem tentar auth)
         if result is None:
-            raise Http404
+            raise AuthenticationRequiredException
 
         user, _ = result
         # Verificar que user_id no path pertence ao usuário autenticado

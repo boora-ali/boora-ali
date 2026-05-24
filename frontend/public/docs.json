@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-05-24T13:35:57.029Z",
+  "generated": "2026-05-24T14:12:27.023Z",
   "site": {
     "title": "Bora Ali",
     "description": "Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar",
@@ -34,4 +34,3 @@
     "generatorUrl": "https://aeojs.org"
   }
 }
-
