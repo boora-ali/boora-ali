@@ -64,6 +64,18 @@ export default function PlacesPage() {
     return () => window.removeEventListener(PLACES_CHANGED_EVENT, handlePlacesChanged);
   }, []);
 
+  // No mobile, ao voltar ao app depois de ficar em background, as presigned URLs
+  // do R2 podem ter expirado. visibilitychange invalida o cache e força novo fetch.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        setRefreshTick((t) => t + 1);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
+
   // Reset cache and page when filters/search change (React docs pattern: storing prev render info)
   const advFiltersKey = JSON.stringify(advFilters);
   const queryKey = `${debouncedSearch}\u0000${status}\u0000${advFiltersKey}\u0000${refreshTick}`;
