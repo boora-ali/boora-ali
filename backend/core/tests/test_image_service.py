@@ -17,6 +17,19 @@ def fake_image_bytes():
     return buf.read()
 
 
+@pytest.fixture
+def exif_rotated_jpeg_bytes():
+    from PIL import Image
+
+    buf = io.BytesIO()
+    image = Image.new("RGB", (40, 20), color=(0, 128, 255))
+    exif = image.getexif()
+    exif[274] = 6  # Rotate 90 degrees clockwise when decoded respecting EXIF.
+    image.save(buf, format="JPEG", exif=exif)
+    buf.seek(0)
+    return buf.read()
+
+
 @pytest.mark.django_db
 def test_make_path_format():
     path = ImageService.make_path(42, "places/covers", b"some-data")
@@ -97,6 +110,35 @@ def test_save_returns_valid_path(tmp_path, settings, fake_image_bytes):
     f.name = "photo.jpg"
     path = ImageService.save(f, user_id=5, category="places/covers")
     assert path.startswith("users/5/places/covers/")
+
+
+@pytest.mark.django_db
+@override_settings(
+    SECRET_KEY="test-secret-key-long-enough-for-hkdf-derivation-1234",
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
+    },
+)
+def test_save_applies_exif_orientation(tmp_path, settings, exif_rotated_jpeg_bytes):
+    settings.MEDIA_ROOT = str(tmp_path)
+    f = io.BytesIO(exif_rotated_jpeg_bytes)
+    f.name = "rotated.jpg"
+
+    path = ImageService.save(f, user_id=5, category="places/covers")
+
+    from django.core.files.storage import default_storage
+
+    with default_storage.open(path, "rb") as stored_file:
+        stored = stored_file.read()
+
+    from PIL import Image
+
+    with Image.open(io.BytesIO(stored)) as image:
+        assert image.size == (20, 40)
+        assert image.getexif().get(274) in (None, 1)
 
 
 @pytest.mark.django_db

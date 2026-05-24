@@ -33,7 +33,7 @@ import { RatingInput } from "../ui/RatingInput";
 import { CharacterCount } from "../ui/CharacterCount";
 import { Switch } from "@/components/ui/switch";
 import { validateImageFile, ALLOWED_IMAGE_ACCEPT } from "../../utils/url";
-import { AuthImage } from "../ui/AuthImage";
+import { ImageWithSpinner } from "../ui/ImageWithSpinner";
 import { visitItemSchema, type VisitItemFormValues } from "../../schemas/visit";
 
 type VisitItemPayload = Partial<Omit<VisitItem, "photo" | "price">> & { photo?: string | File; price?: number | string | null };
@@ -112,7 +112,12 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
           >
             {preview ? (
               <>
-                <AuthImage src={preview} alt={t("visitItemForm.itemPhotoAlt")} className="h-full w-full object-cover" />
+                <ImageWithSpinner
+                  src={preview}
+                  alt={t("visitItemForm.itemPhotoAlt")}
+                  className="h-full w-full object-cover"
+                  spinnerClassName="rounded-none"
+                />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
                   <span className="text-xs font-medium text-white">{t("placeForm.changePhoto")}</span>
                 </div>

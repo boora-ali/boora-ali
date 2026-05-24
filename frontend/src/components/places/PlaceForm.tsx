@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LocationPicker } from "../ui/LocationPicker";
-import { AuthImage } from "../ui/AuthImage";
+import { ImageWithSpinner } from "../ui/ImageWithSpinner";
 import { CharacterCount } from "../ui/CharacterCount";
 import { FormSection } from "../ui/FormSection";
 import { LottieState } from "../ui/LottieState";
@@ -369,7 +369,12 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
           >
             {preview ? (
               <>
-                <AuthImage src={preview} alt={t("placeForm.coverPreviewAlt")} className="h-full w-full object-cover" />
+                <ImageWithSpinner
+                  src={preview}
+                  alt={t("placeForm.coverPreviewAlt")}
+                  className="h-full w-full object-cover"
+                  spinnerClassName="rounded-none"
+                />
                 {coverFile && (
                   <div className="absolute right-2 top-2 flex h-16 w-16 items-center justify-center rounded-xl border border-white/70 bg-background/90 shadow-sm">
                     <LottieState

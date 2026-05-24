@@ -119,7 +119,6 @@ class PlaceViewSet(ViewSetBase):
                 .order_by("-created_at")
             )
 
-
         if self.action == "retrieve":
             return queryset.with_consumable_stats().with_detail_payload(
                 self.request.query_params.get("expand")

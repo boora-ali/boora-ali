@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { fmtDate, fmtRating, fmtPrice } from "../../utils/formatters";
-import { AuthImage } from "../ui/AuthImage";
+import { ImageWithSpinner } from "../ui/ImageWithSpinner";
 import { visitsService } from "../../services/visits.service";
 import { ResponsiveCardCarousel } from "../ui/ResponsiveCardCarousel";
 
@@ -122,10 +122,11 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
                     className="w-full cursor-zoom-in"
                     onClick={() => setLightboxSrc(it.photo!)}
                   >
-                    <AuthImage
+                    <ImageWithSpinner
                       src={it.photo}
                       alt={it.name}
                       className="h-24 w-full object-cover"
+                      spinnerClassName="rounded-none"
                     />
                   </button>
                 ) : (
@@ -150,7 +151,12 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
       <Dialog open={Boolean(lightboxSrc)} onOpenChange={(o) => { if (!o) setLightboxSrc(null); }}>
         <DialogContent className="max-w-screen-sm p-0 overflow-hidden" aria-describedby={undefined}>
           {lightboxSrc && (
-            <AuthImage src={lightboxSrc} alt="" className="w-full h-auto max-h-[90vh] object-contain" />
+            <ImageWithSpinner
+              src={lightboxSrc}
+              alt=""
+              className="w-full h-auto max-h-[90vh] object-contain"
+              spinnerClassName="rounded-none"
+            />
           )}
         </DialogContent>
       </Dialog>
