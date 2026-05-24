@@ -255,6 +255,28 @@ test("renders cover photo via AuthImage", async () => {
   );
 });
 
+test("renders common xss payloads as plain text and keeps links safe", async () => {
+  (placesService.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    ...basePlace,
+    name: `<svg onload=alert(1)>`,
+    category: `<script>alert(1)</script>`,
+    address: `"><img src=x onerror=alert(1)>`,
+    instagram_url: "javascript:alert(1)",
+    maps_url: "javascript:alert(1)",
+    coords_status: "resolved",
+    latitude: "-3.10",
+    longitude: "-60.02",
+  });
+
+  renderDetail();
+
+  expect(await screen.findByText(`<svg onload=alert(1)>`)).toBeInTheDocument();
+  expect(screen.getByText(`<script>alert(1)</script>`)).toBeInTheDocument();
+  expect(screen.getByText(`"><img src=x onerror=alert(1)>`)).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /instagram/i })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /view on maps/i })).toBeInTheDocument();
+});
+
 test("refreshes the imported place until cover photo arrives", async () => {
   (placesService.get as ReturnType<typeof vi.fn>)
     .mockResolvedValueOnce({

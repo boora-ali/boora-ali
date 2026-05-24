@@ -10,6 +10,7 @@ import { getMapsHref, sanitizeUrl } from "../utils/url";
 import NotFoundPage from "./NotFoundPage";
 import { getApiErrorState } from "../services/api-errors";
 import { PageState } from "../components/ui/PageState";
+import { ImageWithSpinner } from "../components/ui/ImageWithSpinner";
 
 export default function SharePage() {
   const { token } = useParams<{ token: string }>();
@@ -103,10 +104,12 @@ export default function SharePage() {
             {/* Hero — foto que dissolve no creme */}
             <div className="relative h-[58dvh]">
               {data.cover_photo_url ? (
-                <img
+                <ImageWithSpinner
                   src={data.cover_photo_url}
                   alt={data.name}
-                  className="absolute inset-0 h-full w-full object-cover"
+                  wrapperClassName="absolute inset-0 overflow-hidden bg-gradient-to-br from-border/20 to-border/50"
+                  className="h-full w-full object-cover"
+                  spinnerClassName="bg-black/10"
                 />
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-border/20 to-border/50 flex items-center justify-center">

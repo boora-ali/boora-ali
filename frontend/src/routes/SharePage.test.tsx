@@ -149,5 +149,28 @@ describe("SharePage", () => {
     (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue(shareData);
     renderShare();
     await waitFor(() => expect(screen.getByAltText("Café Bonito")).toBeInTheDocument());
+    expect(screen.getByRole("status", { name: "Carregando imagem" })).toBeInTheDocument();
+  });
+
+  test("renders common xss payloads as plain text and keeps links safe", async () => {
+    (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...shareData,
+      name: `<img src=x onerror=alert(1)>`,
+      category: `<script>alert(1)</script>`,
+      address: `"><svg onload=alert(1)>`,
+      instagram_url: "javascript:alert(1)",
+      maps_url: "data:text/html,<script>alert(1)</script>",
+    });
+
+    renderShare();
+
+    expect(await screen.findByText(`<img src=x onerror=alert(1)>`)).toBeInTheDocument();
+    expect(screen.getByText(`<script>alert(1)</script>`)).toBeInTheDocument();
+    expect(screen.getByText(`"><svg onload=alert(1)>`)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /instagram/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view on maps/i })).toHaveAttribute(
+      "href",
+      "https://www.google.com/maps/search/?api=1&query=-3.1%2C-60",
+    );
   });
 });
