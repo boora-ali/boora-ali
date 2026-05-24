@@ -35,6 +35,17 @@ def serve_user_media(request, path):
     exp_str = request.GET.get("exp", "")
     sig = request.GET.get("sig", "")
 
+    # Se apenas um dos parâmetros HMAC está presente, a URL está malformada.
+    # Retornar 404 imediatamente com log para facilitar debug.
+    if bool(exp_str) != bool(sig):
+        logger.warning(
+            "Partial HMAC params in media request: exp=%s sig_present=%s path=%s",
+            exp_str or "(missing)",
+            bool(sig),
+            path,
+        )
+        raise Http404
+
     if exp_str and sig:
         # Caminho principal: <img src="/api/media/...?exp=&sig=">
         try:
