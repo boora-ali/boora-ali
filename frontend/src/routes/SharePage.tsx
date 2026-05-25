@@ -108,7 +108,7 @@ export default function SharePage() {
         errorNode={<NotFoundPage />}
       >
         {data ? (
-          <div className="min-h-[100dvh] bg-background px-5 py-6">
+          <div className="min-h-[100dvh] bg-background px-5 py-6 pb-32 sm:pb-28">
             <div className="mx-auto max-w-5xl space-y-8">
               <header className="space-y-3">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-muted/70">
@@ -122,11 +122,7 @@ export default function SharePage() {
                     <h1 className="font-fraunces text-3xl font-bold text-text sm:text-4xl">
                       {data.name}
                     </h1>
-                    <p className="text-sm text-muted">
-                      {data.category}
-                      {" · "}
-                      {data.status}
-                    </p>
+                    <p className="text-sm text-muted">{data.category}</p>
                   </div>
                 </div>
               </header>
@@ -200,17 +196,6 @@ export default function SharePage() {
                       )}
                     </div>
                   )}
-
-                  <div className="rounded-2xl border border-border/70 bg-background px-4 py-3">
-                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-muted/70">
-                      {t("share.location_hint")}
-                    </p>
-                    <p className="mt-1 text-sm text-muted">
-                      {data.latitude !== null && data.longitude !== null
-                        ? `${data.latitude}, ${data.longitude}`
-                        : t("share.no_coordinates")}
-                    </p>
-                  </div>
                 </aside>
               </div>
             </div>
