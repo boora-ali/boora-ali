@@ -2,7 +2,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,19 +12,22 @@ from rest_framework.views import APIView
 from core.views import MutationMixin
 from core.viewsets import ViewSetBase, WriteViewSetBase
 
-from .filters import PlaceFilter, VisitFilter, VisitItemFilter
+from .filters import CategoryFilter, PlaceFilter, VisitFilter, VisitItemFilter
 from .models import (
+    Category,
     Collection,
     CollectionPlace,
     CollectionShare,
     CoordsStatus,
     Place,
+    PlaceCategory,
     PlaceShare,
     Visit,
     VisitItem,
 )
 from .params_serializers import PlaceVisitParamsSerializer, VisitItemParamsSerializer
 from .serializers import (
+    CategorySerializer,
     CollectionDetailSerializer,
     CollectionSerializer,
     PlaceDetailSerializer,
@@ -84,12 +87,15 @@ class PlaceViewSet(ViewSetBase):
             return (
                 queryset.with_avg_rating()
                 .with_list_expansion(expand_param)
+                .prefetch_related("categories")
                 .order_by("-created_at")
             )
 
         if self.action == "retrieve":
-            return queryset.with_consumable_stats().with_detail_payload(
-                self.request.query_params.get("expand")
+            return (
+                queryset.with_consumable_stats()
+                .with_detail_payload(self.request.query_params.get("expand"))
+                .prefetch_related("categories")
             )
 
         return queryset
@@ -279,6 +285,40 @@ class VisitItemViewSet(WriteViewSetBase):
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
         instance.save(update_fields=["deleted_at"])
+
+
+class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Category.objects.all()
+    lookup_field = "public_id"
+    serializer_class = CategorySerializer
+    filterset_class = CategoryFilter
+    search_fields = ("name",)
+    ordering_fields = ("name", "created_at")
+    ordering = ("name",)
+
+
+class PlaceCategoryView(MutationMixin, APIView):
+    """POST /places/{place_public_id}/categories/{category_public_id}/ — associa
+    DELETE /places/{place_public_id}/categories/{category_public_id}/ — remove"""
+
+    def _get_place_and_category(self, request, place_public_id, category_public_id):
+        place = get_object_or_404(Place, public_id=place_public_id, user=request.user)
+        category = get_object_or_404(Category, public_id=category_public_id)
+        return place, category
+
+    def post(self, request, place_public_id, category_public_id):
+        place, category = self._get_place_and_category(
+            request, place_public_id, category_public_id
+        )
+        _, created = PlaceCategory.objects.get_or_create(place=place, category=category)
+        return Response(status=201 if created else 200)
+
+    def delete(self, request, place_public_id, category_public_id):
+        place, category = self._get_place_and_category(
+            request, place_public_id, category_public_id
+        )
+        PlaceCategory.objects.filter(place=place, category=category).delete()
+        return Response(status=204)
 
 
 # ---------------------------------------------------------------------------

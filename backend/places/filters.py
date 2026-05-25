@@ -1,6 +1,14 @@
 import django_filters
 
-from .models import Place, Visit, VisitItem
+from .models import Category, Place, Visit, VisitItem
+
+
+class CategoryFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(lookup_expr="icontains")
+
+    class Meta:
+        model = Category
+        fields = ("name",)
 
 
 class PlaceFilter(django_filters.FilterSet):
@@ -9,6 +17,9 @@ class PlaceFilter(django_filters.FilterSet):
     max_rating = django_filters.NumberFilter(method="filter_max_rating")
     date_from = django_filters.DateFilter(method="filter_date_from")
     date_to = django_filters.DateFilter(method="filter_date_to")
+    category = django_filters.UUIDFilter(
+        field_name="categories__public_id", label="category"
+    )
 
     def filter_has_coords(self, queryset, name, value):
         if value:
@@ -29,7 +40,7 @@ class PlaceFilter(django_filters.FilterSet):
 
     class Meta:
         model = Place
-        fields = {"status": ["exact"], "category": ["exact", "icontains"]}
+        fields = {"status": ["exact"]}
 
 
 class VisitFilter(django_filters.FilterSet):

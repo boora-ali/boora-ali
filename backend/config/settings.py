@@ -192,6 +192,13 @@ UNFOLD = {
                         "link": reverse_lazy("boraali_admin:index"),
                     },
                     {
+                        "title": _("Categorias"),
+                        "icon": "label",
+                        "link": reverse_lazy(
+                            "boraali_admin:places_category_changelist"
+                        ),
+                    },
+                    {
                         "title": _("Lugares"),
                         "icon": "location_on",
                         "link": reverse_lazy("boraali_admin:places_place_changelist"),
@@ -344,14 +351,20 @@ UNFOLD = {
     "TABS": [
         {
             "models": [
+                "places.category",
                 "places.place",
                 "places.visit",
                 "places.visititem",
+                {"name": "places.category", "detail": True},
                 {"name": "places.place", "detail": True},
                 {"name": "places.visit", "detail": True},
                 {"name": "places.visititem", "detail": True},
             ],
             "items": [
+                {
+                    "title": _("Categorias"),
+                    "link": reverse_lazy("boraali_admin:places_category_changelist"),
+                },
                 {
                     "title": _("Lugares"),
                     "link": reverse_lazy("boraali_admin:places_place_changelist"),

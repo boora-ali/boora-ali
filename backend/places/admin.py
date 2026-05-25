@@ -13,12 +13,14 @@ from unfold.contrib.filters.admin import (
 from config.admin_site import site as admin_site
 
 from .models import (
+    Category,
     Collection,
     CollectionPlace,
     CollectionShare,
     CollectionSharePlaceSnapshot,
     CoordsStatus,
     Place,
+    PlaceCategory,
     PlaceShare,
     Visit,
     VisitItem,
@@ -295,12 +297,51 @@ class CollectionSharePlaceSnapshotAdmin(SimpleHistoryAdmin, ModelAdmin):
     )
 
 
+@admin.register(Category, site=admin_site)
+class CategoryAdmin(ModelAdmin):
+    list_display = ("name", "place_count", "created_at")
+    search_fields = ("name", )
+    readonly_fields = ("public_id", "created_at", "updated_at")
+    list_per_page = ADMIN_LIST_PER_PAGE
+    list_fullwidth = True
+    compressed_fields = True
+    warn_unsaved_form = True
+    fieldsets = (
+        (
+            "Categoria",
+            {
+                "classes": ("tab",),
+                "fields": ("name", ),
+            },
+        ),
+        (
+            "Sistema",
+            {
+                "classes": ("tab",),
+                "fields": ("public_id", "created_at", "updated_at"),
+            },
+        ),
+    )
+
+    @admin.display(description="Places")
+    def place_count(self, obj):
+        return obj.place_set.count()
+
+
+class PlaceCategoryInline(TabularInline):
+    model = PlaceCategory
+    extra = 1
+    autocomplete_fields = ("category",)
+    fields = ("category",)
+    verbose_name = "categoria"
+    verbose_name_plural = "categorias"
+
+
 @admin.register(Place, site=admin_site)
 class PlaceAdmin(SimpleHistoryAdmin, ModelAdmin):
     actions = [retry_failed_coords]
     list_display = (
         "name",
-        "category",
         "status",
         "coords_status",
         "user",
@@ -311,15 +352,14 @@ class PlaceAdmin(SimpleHistoryAdmin, ModelAdmin):
     list_filter = (
         ("status", ChoicesDropdownFilter),
         ("coords_status", ChoicesDropdownFilter),
-        "category",
         ("created_at", RangeDateTimeFilter),
     )
     list_filter_submit = True
-    search_fields = ("name", "category", "address", "user__username", "user__email")
+    search_fields = ("name", "address", "user__username", "user__email")
     list_select_related = ("user",)
     autocomplete_fields = ("user",)
     readonly_fields = ("public_id", "cover_preview", "created_at", "updated_at")
-    inlines = (PlaceShareInline,)
+    inlines = (PlaceCategoryInline, PlaceShareInline)
     list_per_page = ADMIN_LIST_PER_PAGE
     list_fullwidth = True
     compressed_fields = True
@@ -329,7 +369,13 @@ class PlaceAdmin(SimpleHistoryAdmin, ModelAdmin):
             "Lugar",
             {
                 "classes": ("tab",),
-                "fields": ("user", "name", "category", "address", "status", "notes"),
+                "fields": (
+                    "user",
+                    "name",
+                    "address",
+                    "status",
+                    "notes",
+                ),
             },
         ),
         (
@@ -415,7 +461,7 @@ class VisitAdmin(SimpleHistoryAdmin, ModelAdmin):
         ("overall_rating", RangeNumericFilter),
     )
     list_filter_submit = True
-    search_fields = ("place__name", "place__category", "place__user__username")
+    search_fields = ("place__name", "place__user__username")
     list_select_related = ("place", "place__user")
     autocomplete_fields = ("place",)
     readonly_fields = (
@@ -503,7 +549,7 @@ class VisitItemAdmin(SimpleHistoryAdmin, ModelAdmin):
         ("price", RangeNumericFilter),
     )
     list_filter_submit = True
-    search_fields = ("name", "visit__place__name", "visit__place__category")
+    search_fields = ("name", "visit__place__name")
     list_select_related = ("visit", "visit__place", "visit__place__user")
     autocomplete_fields = ("visit",)
     readonly_fields = (
