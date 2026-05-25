@@ -69,6 +69,10 @@ class TestNotifyService:
         notify(user, NotificationType.ACCOUNT_DELETION, "T2", "B2")
         assert Notification.objects.filter(user=user).count() == 2
 
+    def test_str_shows_user_title_and_state(self, user):
+        n = _notif(user, read=True)
+        assert str(n) == f"{user.username} — {n.title} (read)"
+
 
 # ---------- GET /api/notifications/ ----------
 
