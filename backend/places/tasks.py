@@ -2,18 +2,104 @@ from __future__ import annotations
 
 import logging
 import urllib.request
+from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
 from urllib.parse import urlparse
 
 from celery import shared_task
 from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.db.models import Q
 from django.utils import timezone
 
+from accounts.models import UserProfile
+from core.image_service import ImageService
+
 from .maps import extract_coords
-from .models import CoordsStatus, Place
+from .models import CollectionShare, CoordsStatus, Place, Visit, VisitItem
+from .services import CollectionShareService, PlaceShareService
 
 _log = logging.getLogger("places.tasks")
+_MEDIA_COMPRESSION_WINDOW_DAYS = 1
+
+
+@dataclass(frozen=True)
+class MediaTarget:
+    label: str
+    user_id: int
+    path: str
+
+
+def _read_media_bytes(path: str) -> bytes:
+    if hasattr(default_storage, "bucket"):
+        return default_storage.bucket.Object(path).get()["Body"].read()
+    with default_storage.open(path, "rb") as handle:
+        return handle.read()
+
+
+def _write_media_bytes(path: str, data: bytes, content_type: str) -> None:
+    if hasattr(default_storage, "bucket"):
+        default_storage.bucket.Object(path).put(Body=data, ContentType=content_type)
+        return
+
+    default_storage.delete(path)
+    default_storage.save(path, ContentFile(data))
+
+
+def _iter_recent_media_targets(cutoff):
+    for user_id, path in UserProfile.history.filter(
+        history_date__gte=cutoff
+    ).values_list("user_id", "profile_photo"):
+        if path:
+            yield MediaTarget("accounts.UserProfile.profile_photo", user_id, str(path))
+
+    recent_places = Place.objects.filter(
+        Q(created_at__gte=cutoff) | Q(updated_at__gte=cutoff),
+        cover_photo__isnull=False,
+    ).values_list("user_id", "cover_photo")
+    for user_id, path in recent_places:
+        if path:
+            yield MediaTarget("places.Place.cover_photo", user_id, str(path))
+
+    recent_visits = Visit.objects.filter(
+        Q(created_at__gte=cutoff) | Q(updated_at__gte=cutoff),
+        photo__isnull=False,
+    ).values_list("place__user_id", "photo", "photo_path")
+    for user_id, path, path_fallback in recent_visits:
+        resolved_path = path_fallback or path
+        if resolved_path:
+            yield MediaTarget("places.Visit.photo", user_id, str(resolved_path))
+
+    recent_items = VisitItem.objects.filter(
+        Q(created_at__gte=cutoff) | Q(updated_at__gte=cutoff),
+        photo__isnull=False,
+    ).values_list("visit__place__user_id", "photo", "photo_path")
+    for user_id, path, path_fallback in recent_items:
+        resolved_path = path_fallback or path
+        if resolved_path:
+            yield MediaTarget("places.VisitItem.photo", user_id, str(resolved_path))
+
+
+def _compress_media_target(target: MediaTarget) -> bool:
+    raw = _read_media_bytes(target.path)
+    optimized = ImageService.optimize_bytes(raw)
+    if optimized == raw:
+        return False
+
+    content_type = ImageService.detect_content_type(optimized)
+    _write_media_bytes(target.path, optimized, content_type)
+    _log.info(
+        "compress_recent_media: rewrote %s user=%s path=%s size=%d->%d",
+        target.label,
+        target.user_id,
+        target.path,
+        len(raw),
+        len(optimized),
+    )
+    return True
+
 
 _ALLOWED_MAPS_HOSTS = {
     "maps.google.com",
@@ -22,6 +108,12 @@ _ALLOWED_MAPS_HOSTS = {
     "www.google.com",
     "maps.googleapis.com",
 }
+
+
+_BROWSER_UA = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+)
 
 
 def _safe_maps_urlopen(url: str, timeout: int = 5):
@@ -34,7 +126,8 @@ def _safe_maps_urlopen(url: str, timeout: int = 5):
         for allowed in _ALLOWED_MAPS_HOSTS
     ):
         raise ValueError(f"Host não permitido para resolução de Maps: {host!r}")
-    return urllib.request.urlopen(url, timeout=timeout)  # nosec B310
+    req = urllib.request.Request(url, headers={"User-Agent": _BROWSER_UA})  # nosec B310
+    return urllib.request.urlopen(req, timeout=timeout)  # nosec B310
 
 
 def _resolve_place_coords(self, place_pk: int):
@@ -45,7 +138,25 @@ def _resolve_place_coords(self, place_pk: int):
     try:
         response = _safe_maps_urlopen(place.maps_url)
         lat, lng = extract_coords(response.url)
+
         if lat is None or lng is None:
+            # GPS-shared URLs (entry=gps) resolve to a place-card URL without
+            # embedded coordinates. Google only delivers coords via JavaScript
+            # — not in the HTTP redirect chain or initial HTML. Retrying will not
+            # help; fail fast so we don't burn 3 retry slots unnecessarily.
+            # Future fix: use extract_place_cid() + Google Places API.
+            if "entry=gps" in response.url:
+                _log.warning(
+                    "resolve_place_coords: GPS-shared URL sem coords embutidas "
+                    "(entry=gps). Integre Google Places API para suporte completo. "
+                    "place_pk=%s maps_url=%r",
+                    place_pk,
+                    place.maps_url,
+                )
+                place.coords_status = CoordsStatus.FAILED
+                place.save(update_fields=["coords_status"])
+                return
+
             raise ValueError("Coordenadas não encontradas na URL do Maps")
     except Exception as exc:  # pragma: no cover - covered through retry tests
         if self.request.retries >= self.max_retries:
@@ -118,38 +229,117 @@ def purge_expired_trash():
     return {"deleted": deleted_count}
 
 
+@shared_task
+def compress_recent_media():
+    """Comprime mídias alteradas nas últimas 24h em lote, fora do request."""
+    cutoff = timezone.now() - timedelta(days=_MEDIA_COMPRESSION_WINDOW_DAYS)
+
+    stats = {
+        "scanned": 0,
+        "compressed": 0,
+        "skipped_unchanged": 0,
+        "skipped_missing": 0,
+        "skipped_invalid": 0,
+    }
+    seen_paths: set[str] = set()
+
+    for target in _iter_recent_media_targets(cutoff):
+        if target.path in seen_paths:
+            continue
+        seen_paths.add(target.path)
+        stats["scanned"] += 1
+
+        try:
+            changed = _compress_media_target(target)
+        except FileNotFoundError:
+            stats["skipped_missing"] += 1
+            continue
+        except Exception as exc:
+            _log.warning(
+                "compress_recent_media: skipped %s user=%s path=%s err=%s",
+                target.label,
+                target.user_id,
+                target.path,
+                exc,
+                exc_info=True,
+            )
+            stats["skipped_invalid"] += 1
+            continue
+
+        if changed:
+            stats["compressed"] += 1
+        else:
+            stats["skipped_unchanged"] += 1
+
+    _log.info("compress_recent_media: %s", stats)
+    return stats
+
+
 @shared_task(bind=True, max_retries=3)
 def copy_shared_place_photo(
     self, source_place_pk, source_owner_pk, target_place_pk, target_owner_pk
 ):
-    from django.core.files.base import ContentFile
-    from django.core.files.storage import default_storage
-
-    from core.image_service import ImageService
-    from places.models import Place as PlaceModel
-
     try:
-        source_place = PlaceModel.objects.get(pk=source_place_pk)
-    except PlaceModel.DoesNotExist:
-        return  # Place original removido — sem retry
+        changed = PlaceShareService.import_shared_place_photo(
+            source_place_pk=source_place_pk,
+            source_owner_pk=source_owner_pk,
+            target_place_pk=target_place_pk,
+            target_owner_pk=target_owner_pk,
+        )
+        if not changed:
+            return
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=60 * (2**self.request.retries))
 
-    try:
-        target_place = PlaceModel.objects.get(pk=target_place_pk)
-    except PlaceModel.DoesNotExist:
-        return  # Place importado deletado — sem retry
 
-    if not source_place.cover_photo:
+@shared_task(bind=True, max_retries=3)
+def finalize_collection_share(self, share_pk: int):
+    share = (
+        CollectionShare.objects.select_related("owner")
+        .prefetch_related("place_snapshots")
+        .filter(pk=share_pk)
+        .first()
+    )
+    if share is None or share.is_active:
         return
 
+    written_paths: list[str] = []
     try:
-        raw = default_storage.open(source_place.cover_photo).read()
-        decrypted = ImageService.decrypt(raw, user_id=source_owner_pk)
-        path = ImageService.save(
-            ContentFile(decrypted), user_id=target_owner_pk, category="places/covers"
-        )
-        target_place.cover_photo = path
-        target_place.save(update_fields=["cover_photo"])
+        snapshots = list(share.place_snapshots.all().order_by("order_index"))
+        for snapshot in snapshots:
+            if not snapshot.source_cover_photo_path:
+                continue
+
+            raw = _read_media_bytes(snapshot.source_cover_photo_path)
+            if (
+                CollectionShareService.detect_content_type(raw)
+                == "application/octet-stream"
+            ):
+                raw = ImageService.decrypt(raw, user_id=share.owner.pk)
+
+            path = ImageService.save(
+                ContentFile(raw),
+                user_id=share.owner.pk,
+                category=f"collection_shares/{share.token}/places/{snapshot.source_place_public_id}/covers",
+            )
+            snapshot.cover_photo_path = path
+            snapshot.save(update_fields=["cover_photo_path"])
+            written_paths.append(path)
+
+        share.is_active = True
+        share.save(update_fields=["is_active"])
     except Exception as exc:
+        if self.request.retries >= self.max_retries:
+            for path in written_paths:
+                ImageService.delete(path)
+            share.delete()
+            _log.error(
+                "finalize_collection_share failed permanently: share_pk=%s exc=%s",
+                share_pk,
+                exc,
+                exc_info=True,
+            )
+            return
         raise self.retry(exc=exc, countdown=60 * (2**self.request.retries))
 
 

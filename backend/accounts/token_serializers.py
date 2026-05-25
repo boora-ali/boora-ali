@@ -15,6 +15,7 @@ from core.exceptions import (
 from .authentication import invalidate_session_cache
 from .exceptions import EmailNotVerifiedException
 from .models import GoogleIdentity, UserSession
+from .services import AccountLifecycleService
 
 User = get_user_model()
 
@@ -63,9 +64,7 @@ class SingleSessionTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         data = build_token_pair_for_user(user)
 
-        if profile is not None and profile.deletion_requested_at is not None:
-            profile.deletion_requested_at = None
-            profile.save(update_fields=["deletion_requested_at"])
+        if AccountLifecycleService.reactivate_account_if_pending(user):
             data["account_reactivated"] = True
 
         return data

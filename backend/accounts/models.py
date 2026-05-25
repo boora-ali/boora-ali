@@ -5,6 +5,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
+from core.models import TimeStampedModel
+
 
 class UserSession(models.Model):
     history = HistoricalRecords()
@@ -92,7 +94,7 @@ class UserProfile(models.Model):
         return self.user.username
 
 
-class GoogleIdentity(models.Model):
+class GoogleIdentity(TimeStampedModel):
     history = HistoricalRecords()
 
     user = models.OneToOneField(
@@ -112,8 +114,6 @@ class GoogleIdentity(models.Model):
         default=False,
         verbose_name=_("email verified"),
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "accounts_google_identity"

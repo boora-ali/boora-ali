@@ -7,6 +7,8 @@ import { Badge } from "../ui/Badge";
 import { getMapsHref, sanitizeUrl } from "../../utils/url";
 import { UtensilsCrossed } from "lucide-react";
 import { ImageWithSpinner } from "../ui/ImageWithSpinner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -28,6 +30,7 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [sharing, setSharing] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const mapsHref = getMapsHref({
     mapsUrl: place.maps_url,
     latitude: place.latitude,
@@ -55,8 +58,8 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
   }
 
   async function handleDelete() {
-    if (!window.confirm(t("placeDetail.deleteConfirmMessage"))) return;
     await placesService.remove(place.public_id);
+    setDeleteConfirmOpen(false);
     onDeleted?.();
   }
 
@@ -65,31 +68,26 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
       <ContextMenuTrigger asChild>
         <article
           onClick={() => navigate(`/places/${place.public_id}`)}
-          className="bg-surface rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden group animate-fade-slide-up cursor-pointer"
+          className="bg-surface rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden group animate-fade-slide-up cursor-pointer select-none touch-manipulation [-webkit-touch-callout:none]"
           style={{ animationDelay: `${index * 55}ms` }}
         >
           <div className="relative overflow-hidden">
-            {place.cover_photo ? (
-              <>
-                <ImageWithSpinner
-                  src={place.cover_photo}
-                  alt={place.name}
-                  className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500"
-                  spinnerClassName="rounded-none"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                <div className="absolute bottom-2.5 left-3">
-                  <Badge status={place.status} />
+            <ImageWithSpinner
+              src={place.cover_photo || undefined}
+              alt={place.name}
+              wrapperClassName="w-full h-44"
+              className="h-44 w-full object-cover group-hover:scale-105 transition-transform duration-500"
+              spinnerClassName="rounded-none"
+              fallback={
+                <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-background to-border/60">
+                  <UtensilsCrossed className="h-10 w-10 text-muted opacity-25" />
                 </div>
-              </>
-            ) : (
-              <div className="w-full h-44 bg-gradient-to-br from-background to-border/60 flex items-center justify-center">
-                <UtensilsCrossed className="h-10 w-10 text-muted opacity-25" />
-                <div className="absolute bottom-2.5 left-3">
-                  <Badge status={place.status} />
-                </div>
-              </div>
-            )}
+              }
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            <div className="absolute bottom-2.5 left-3">
+              <Badge status={place.status} />
+            </div>
           </div>
 
           <div className="space-y-3 p-4">
@@ -146,7 +144,7 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
         </article>
       </ContextMenuTrigger>
 
-      <ContextMenuContent>
+        <ContextMenuContent>
         <ContextMenuItem onClick={() => navigate(`/places/${place.public_id}`)}>
           <ExternalLink className="mr-2 h-4 w-4" />
           {t("common.open")}
@@ -157,13 +155,40 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem
-          onClick={handleDelete}
+          onClick={() => setDeleteConfirmOpen(true)}
           className="text-danger focus:text-danger"
         >
           <Trash2 className="mr-2 h-4 w-4" />
           {t("common.delete")}
         </ContextMenuItem>
       </ContextMenuContent>
+
+      <Dialog open={deleteConfirmOpen} onOpenChange={(open) => setDeleteConfirmOpen(open)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("placeDetail.deleteConfirmTitle")}</DialogTitle>
+            <DialogDescription>{t("placeDetail.deleteConfirmMessage")}</DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 pt-1">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={() => setDeleteConfirmOpen(false)}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="flex-1"
+              onClick={handleDelete}
+            >
+              {t("common.delete")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </ContextMenu>
   );
 }

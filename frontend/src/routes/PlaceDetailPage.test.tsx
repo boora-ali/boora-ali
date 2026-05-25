@@ -255,6 +255,70 @@ test("renders cover photo via AuthImage", async () => {
   );
 });
 
+test("renders common xss payloads as plain text and keeps links safe", async () => {
+  (placesService.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    ...basePlace,
+    name: `<svg onload=alert(1)>`,
+    category: `<script>alert(1)</script>`,
+    address: `"><img src=x onerror=alert(1)>`,
+    instagram_url: "javascript:alert(1)",
+    maps_url: "javascript:alert(1)",
+    coords_status: "resolved",
+    latitude: "-3.10",
+    longitude: "-60.02",
+  });
+
+  renderDetail();
+
+  expect(await screen.findByText(`<svg onload=alert(1)>`)).toBeInTheDocument();
+  expect(screen.getByText(`<script>alert(1)</script>`)).toBeInTheDocument();
+  expect(screen.getByText(`"><img src=x onerror=alert(1)>`)).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /instagram/i })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /view on maps/i })).toBeInTheDocument();
+});
+
+test("refreshes the imported place until cover photo arrives", async () => {
+  (placesService.get as ReturnType<typeof vi.fn>)
+    .mockResolvedValueOnce({
+      ...basePlace,
+      coords_status: "resolved",
+      cover_photo: "",
+    })
+    .mockResolvedValueOnce({
+      ...basePlace,
+      coords_status: "resolved",
+      cover_photo: "https://example.com/photo.jpg",
+    });
+
+  render(
+    <MemoryRouter
+      initialEntries={[
+        {
+          pathname: "/places/place-1",
+          state: { refreshAfterImport: true },
+        },
+      ]}
+    >
+      <Routes>
+        <Route path="/places/:id" element={<PlaceDetailPage />} />
+        <Route path="/places/:id/edit" element={<div>EDIT PAGE</div>} />
+        <Route path="/places" element={<div>PLACES PAGE</div>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+
+  await waitFor(() =>
+    expect(screen.getByText("Café X")).toBeInTheDocument(),
+  );
+
+  await new Promise((resolve) => setTimeout(resolve, 650));
+
+  await waitFor(() =>
+    expect(screen.getByRole("img", { name: "Café X" })).toBeInTheDocument(),
+  );
+  expect(placesService.get).toHaveBeenCalledTimes(2);
+});
+
 test("edit link navigates to edit page", async () => {
   (placesService.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
     ...basePlace,

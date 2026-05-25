@@ -1,9 +1,10 @@
-import { useState, type ImgHTMLAttributes } from "react";
+import { useState, type ImgHTMLAttributes, type ReactNode } from "react";
 import { AuthImage } from "./AuthImage";
 
 type Props = ImgHTMLAttributes<HTMLImageElement> & {
   wrapperClassName?: string;
   spinnerClassName?: string;
+  fallback?: ReactNode;
 };
 
 export function ImageWithSpinner({
@@ -12,13 +13,16 @@ export function ImageWithSpinner({
   loading = "eager",
   wrapperClassName = "relative block overflow-hidden",
   spinnerClassName = "",
+  fallback = null,
   onLoad,
   onError,
   ...props
 }: Props) {
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
 
-  if (!src) return null;
+  if (!src) {
+    return fallback ? <div className={wrapperClassName}>{fallback}</div> : null;
+  }
   const loaded = loadedSrc === src;
 
   return (

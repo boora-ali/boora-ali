@@ -34,8 +34,9 @@ import { ImageWithSpinner } from "../ui/ImageWithSpinner";
 import { CharacterCount } from "../ui/CharacterCount";
 import { FormSection } from "../ui/FormSection";
 import { LottieState } from "../ui/LottieState";
-import { getApiErrorState } from "../../services/api-errors";
-import { applyApiErrors } from "../../utils/form-errors";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { useImagePreview } from "../../hooks/useImagePreview";
+import { reportApiError } from "../../utils/form-api-error";
 import { Link2, MapPin, Map } from "lucide-react";
 import {
   ALLOWED_IMAGE_ACCEPT,
@@ -58,7 +59,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
   const { t } = useTranslation();
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [removedCover, setRemovedCover] = useState(false);
-  const [preview, setPreview] = useState<string | null>(initial.cover_photo ?? null);
+  const { preview, setPreview, setPreviewFromFile, clearPreview } = useImagePreview(initial.cover_photo ?? null);
   const [coverPhotoError, setCoverPhotoError] = useState("");
   const [geocoding, setGeocoding] = useState(false);
   const [resolvingMapsUrl, setResolvingMapsUrl] = useState(false);
@@ -154,7 +155,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
     if (err === "size") { toast.error(t("upload.tooLarge")); setCoverPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
     setCoverPhotoError("");
     setCoverFile(file);
-    setPreview(URL.createObjectURL(file));
+    setPreviewFromFile(file);
   }
 
   const onFormSubmit = async (data: PlaceFormValues) => {
@@ -164,10 +165,11 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
         ...(coverFile ? { cover_photo: coverFile } : removedCover ? { cover_photo: "" } : {}),
       });
     } catch (error) {
-      const apiError = getApiErrorState(error, t("placeForm.saveError"));
-      toast.error(apiError.message);
-      setError("root", { message: apiError.message });
-      applyApiErrors(setError, apiError.fieldErrors);
+      reportApiError({
+        setError,
+        error,
+        fallbackMessage: t("placeForm.saveError"),
+      });
     }
   };
 
@@ -299,10 +301,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition hover:border-primary/40 hover:text-primary disabled:opacity-50"
             >
               {resolvingMapsUrl ? (
-                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" className="opacity-25" stroke="currentColor" strokeWidth="2" />
-                  <path d="M21 12a9 9 0 0 1-9 9" className="opacity-75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
+                <LoadingSpinner className="h-4 w-4" />
               ) : (
                 <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -399,7 +398,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
           {preview && (
             <button
               type="button"
-              onClick={() => { setCoverFile(null); setRemovedCover(true); setPreview(null); }}
+              onClick={() => { setCoverFile(null); setRemovedCover(true); clearPreview(); }}
               className="text-xs text-muted-foreground transition hover:text-destructive"
             >
               {t("placeForm.removePhoto")}
@@ -412,10 +411,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
         {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting && (
-            <svg className="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <LoadingSpinner className="mr-2 h-4 w-4" />
           )}
           {t("placeForm.save")}
         </Button>

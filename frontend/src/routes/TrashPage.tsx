@@ -5,10 +5,8 @@ import type { Place } from "../types/place";
 import { BackButton } from "../components/ui/BackButton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EmptyState } from "../components/ui/EmptyState";
-import { LoadingState } from "../components/ui/LoadingState";
-import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { notifyPlacesChanged } from "../utils/places-state";
+import { PageState } from "../components/ui/PageState";
 
 function fmtDeletedAt(iso: string, locale: string) {
   return new Date(iso).toLocaleDateString(locale === "pt-BR" ? "pt-BR" : "en-US", {
@@ -27,6 +25,7 @@ export default function TrashPage() {
   const [restoring, setRestoring] = useState<string | null>(null);
   const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<Place | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const pageData = data ?? { count: 0, next: null, previous: null, results: [] };
 
   useEffect(() => {
     startTransition(() => { setLoading(true); });
@@ -78,15 +77,15 @@ export default function TrashPage() {
         <p className="text-muted text-sm mt-1">{t("trash.subtitle")}</p>
       </div>
 
-      {loading && <LoadingState />}
-      {!loading && error && <ErrorMessage message={error} />}
-      {!loading && !error && data?.count === 0 && (
-        <EmptyState title={t("trash.empty.title")} description={t("trash.empty.description")} />
-      )}
-
-      {!loading && !error && data && data.count > 0 && (
+      <PageState
+        loading={loading}
+        error={!loading ? error : ""}
+        empty={!loading && !error && pageData.count === 0}
+        emptyTitle={t("trash.empty.title")}
+        emptyDescription={t("trash.empty.description")}
+      >
         <div className="space-y-3">
-          {data.results.map((place) => (
+          {pageData.results.map((place) => (
             <div
               key={place.public_id}
               className="flex flex-col gap-3 rounded-xl border border-border bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
@@ -123,7 +122,7 @@ export default function TrashPage() {
             </div>
           ))}
         </div>
-      )}
+      </PageState>
 
       {data && (data.next || data.previous) && (
         <div className="flex items-center justify-between gap-3 pt-2">

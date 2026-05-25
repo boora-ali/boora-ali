@@ -1,12 +1,10 @@
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { authService } from "../services/auth.service";
-import { getApiErrorState } from "../services/api-errors";
-import { applyApiErrors } from "../utils/form-errors";
 import { validateImageFile, ALLOWED_IMAGE_ACCEPT } from "../utils/url";
 import { useAuth } from "../contexts/useAuth";
 import { BackButton } from "../components/ui/BackButton";
@@ -23,9 +21,12 @@ import {
 } from "@/components/ui/form";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { ImageWithSpinner } from "../components/ui/ImageWithSpinner";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { CharacterCount } from "../components/ui/CharacterCount";
 import { Label } from "@/components/ui/label";
 import { PwaInstallButton } from "../components/layout/PwaInstallButton";
+import { useImagePreview } from "../hooks/useImagePreview";
+import { reportApiError } from "../utils/form-api-error";
 import {
   Dialog,
   DialogContent,
@@ -45,9 +46,8 @@ export default function AccountPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuth();
-  const [photoObjectUrl, setPhotoObjectUrl] = useState<string | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState(user?.profile_photo_url ?? "");
+  const { preview: photoPreview, setPreview: setPhotoPreview, setPreviewFromFile, clearPreview } = useImagePreview(user?.profile_photo_url ?? "");
   const [removedPhoto, setRemovedPhoto] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
   const [profilePhotoError, setProfilePhotoError] = useState("");
@@ -77,29 +77,10 @@ export default function AccountPage() {
     },
   });
 
-  useEffect(() => {
-    return () => {
-      if (photoObjectUrl) {
-        URL.revokeObjectURL(photoObjectUrl);
-      }
-    };
-  }, [photoObjectUrl]);
-
-  function setPhotoPreviewFromFile(file: File) {
-    const objectUrl = URL.createObjectURL(file);
-    setPhotoObjectUrl(objectUrl);
-    setPhotoPreview(objectUrl);
-  }
-
-  function clearPhotoObjectUrl() {
-    setPhotoObjectUrl(null);
-  }
-
   const onPhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
     if (!file) {
       setPhoto(null);
-      clearPhotoObjectUrl();
       setPhotoPreview(user?.profile_photo_url ?? "");
       setRemovedPhoto(false);
       return;
@@ -120,7 +101,7 @@ export default function AccountPage() {
     setProfilePhotoError("");
     setPhoto(file);
     setRemovedPhoto(false);
-    setPhotoPreviewFromFile(file);
+    setPreviewFromFile(file);
   };
 
   const onProfileSubmit = async (data: UpdateProfileFormValues) => {
@@ -135,7 +116,6 @@ export default function AccountPage() {
       });
       setUser(updatedUser);
       setPhoto(null);
-      clearPhotoObjectUrl();
       setRemovedPhoto(false);
       setPhotoPreview(updatedUser.profile_photo_url);
       setProfileMessage(t("account.profile.saved"));
@@ -146,10 +126,11 @@ export default function AccountPage() {
         nickname: updatedUser.nickname ?? "",
       });
     } catch (error) {
-      const apiError = getApiErrorState(error, t("account.profile.error"));
-      toast.error(apiError.message);
-      profileForm.setError("root", { message: apiError.message });
-      applyApiErrors(profileForm.setError, apiError.fieldErrors);
+      reportApiError({
+        setError: profileForm.setError,
+        error,
+        fallbackMessage: t("account.profile.error"),
+      });
     }
   };
 
@@ -164,10 +145,11 @@ export default function AccountPage() {
       passwordForm.reset();
       setPasswordMessage(t("account.password.saved"));
     } catch (error) {
-      const apiError = getApiErrorState(error, t("account.password.error"));
-      toast.error(apiError.message);
-      passwordForm.setError("root", { message: apiError.message });
-      applyApiErrors(passwordForm.setError, apiError.fieldErrors);
+      reportApiError({
+        setError: passwordForm.setError,
+        error,
+        fallbackMessage: t("account.password.error"),
+      });
     }
   };
 
@@ -230,9 +212,8 @@ export default function AccountPage() {
                     type="button"
                     onClick={() => {
                       setPhoto(null);
-                      clearPhotoObjectUrl();
+                      clearPreview();
                       setRemovedPhoto(true);
-                      setPhotoPreview("");
                     }}
                     className="text-xs text-muted-foreground transition hover:text-destructive"
                   >
@@ -308,10 +289,7 @@ export default function AccountPage() {
                 disabled={(!profileForm.formState.isDirty && !photo && !removedPhoto) || profileForm.formState.isSubmitting}
               >
                 {profileForm.formState.isSubmitting && (
-                  <svg className="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
+                  <LoadingSpinner className="mr-2 h-4 w-4" />
                 )}
                 {t("account.profile.save")}
               </Button>

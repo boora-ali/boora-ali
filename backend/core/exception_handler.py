@@ -12,36 +12,22 @@ from core import messages
 logger = logging.getLogger(__name__)
 
 
-def _normalize_code(exc: Exception) -> str:
-    if isinstance(exc, ValidationError):
-        return "validation_error"
-
-    if isinstance(exc, APIException):
-        codes = exc.get_codes()
-        if isinstance(codes, str):
-            return codes
-        if isinstance(codes, Sequence) and codes:
-            return str(codes[0])
-        if isinstance(codes, Mapping):
-            for value in codes.values():
-                if isinstance(value, str):
-                    return value
-                if isinstance(value, Sequence) and value:
-                    return str(value[0])
-        return str(getattr(exc, "default_code", "api_error"))
-
-    return "error"
+_STRINGIFY_DISPATCH: list[tuple] = [
+    (ErrorDetail, str),
+    (
+        Mapping,
+        lambda mapping: {key: _stringify_detail(item) for key, item in mapping.items()},
+    ),
+    (Sequence, lambda seq: [str(item) for item in seq]),
+]
 
 
 def _stringify_detail(value):
-    if isinstance(value, ErrorDetail):
-        return str(value)
-    if isinstance(value, str):
+    if isinstance(value, (str, bytes)):
         return value
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
-        return [str(item) for item in value]
-    if isinstance(value, Mapping):
-        return {key: _stringify_detail(item) for key, item in value.items()}
+    for type_, handler in _STRINGIFY_DISPATCH:
+        if isinstance(value, type_):
+            return handler(value)
     return str(value)
 
 
@@ -71,27 +57,64 @@ def _flatten_field_errors(data) -> dict[str, list[str]]:
     return field_errors
 
 
+def _first_code_from_sequence(codes) -> str | None:
+    return str(codes[0]) if codes else None
+
+
+def _first_code_from_mapping(codes) -> str | None:
+    for value in codes.values():
+        if isinstance(value, str):
+            return value
+        if isinstance(value, Sequence) and value:
+            return str(value[0])
+    return None
+
+
+_CODES_TYPE_DISPATCH: list[tuple] = [
+    (str, lambda code: code),
+    (Sequence, _first_code_from_sequence),
+    (Mapping, _first_code_from_mapping),
+]
+
+
+def _normalize_code(exc: Exception) -> str:
+    if isinstance(exc, ValidationError):
+        return "validation_error"
+    if not isinstance(exc, APIException):
+        return "error"
+    codes = exc.get_codes()
+    for type_, handler in _CODES_TYPE_DISPATCH:
+        if isinstance(codes, type_):
+            result = handler(codes)
+            if result is not None:
+                return result
+    return str(getattr(exc, "default_code", "api_error"))
+
+
+def _message_from_mapping_with_detail(data) -> str | None:
+    if "detail" not in data:
+        return None
+    detail = _stringify_detail(data["detail"])
+    return str(detail[0]) if isinstance(detail, list) else str(detail)
+
+
+def _message_from_mapping(data) -> str:
+    field_errors = _flatten_field_errors(data)
+    if field_errors:
+        first_field = next(iter(field_errors.values()))
+        if first_field:
+            return str(first_field[0])
+    return str(messages.VALIDATION_ERROR)
+
+
 def _pick_message(exc: Exception, data) -> str:
     if isinstance(exc, ValidationError):
         return str(messages.VALIDATION_ERROR)
-
-    if isinstance(data, Mapping) and "detail" in data:
-        detail = _stringify_detail(data["detail"])
-        if isinstance(detail, list):
-            return str(detail[0])
-        return str(detail)
-
     if isinstance(data, Mapping):
-        field_errors = _flatten_field_errors(data)
-        if field_errors:
-            first_field = next(iter(field_errors.values()))
-            if first_field:
-                return str(first_field[0])
-        return str(messages.VALIDATION_ERROR)
-
+        msg = _message_from_mapping_with_detail(data)
+        return msg if msg is not None else _message_from_mapping(data)
     if isinstance(data, Sequence) and data and not isinstance(data, (str, bytes)):
         return str(_stringify_detail(data[0]))
-
     return str(_stringify_detail(data))
 
 

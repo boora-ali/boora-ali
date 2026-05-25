@@ -11,6 +11,7 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    HOME=/home/app \
     DJANGO_SETTINGS_MODULE=config.settings
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -26,9 +27,11 @@ COPY --from=builder /install /usr/local
 WORKDIR /app
 COPY . .
 
-RUN groupadd -r app && useradd -r -g app app && \
+RUN groupadd -r app && useradd -r -m -d /home/app -g app app && \
     chmod +x /app/entrypoint.sh && \
     mkdir -p /app/staticfiles && \
+    mkdir -p /home/app && \
+    chown -R app:app /home/app && \
     chmod -R 777 /app/staticfiles
 
 EXPOSE 8000
@@ -42,6 +45,7 @@ CMD ["gunicorn", "config.wsgi:application", \
      "--workers", "2", \
      "--threads", "4", \
      "--worker-class", "gthread", \
+     "--worker-tmp-dir", "/tmp", \
      "--timeout", "60", \
      "--log-level", "info", \
      "--access-logfile", "-", \

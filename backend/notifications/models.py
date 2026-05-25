@@ -1,7 +1,7 @@
-import uuid
-
 from django.conf import settings
 from django.db import models
+
+from core.models import BaseModel
 
 
 class NotificationType(models.TextChoices):
@@ -9,10 +9,7 @@ class NotificationType(models.TextChoices):
     ACCOUNT_DELETION = "account_deletion", "Conta agendada para deleção"
 
 
-class Notification(models.Model):
-    public_id = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True, db_index=True
-    )
+class Notification(BaseModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -23,7 +20,6 @@ class Notification(models.Model):
     body = models.TextField()
     read_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]

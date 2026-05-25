@@ -10,12 +10,10 @@ import { PlaceCard } from "../components/places/PlaceCard";
 import { Button } from "@/components/ui/button";
 import { Eye, Check, Star, X, BookOpen } from "lucide-react";
 import { PlaceFilterPopover } from "../components/places/PlaceFilterPopover";
-import { EmptyState } from "../components/ui/EmptyState";
-import { LoadingState } from "../components/ui/LoadingState";
-import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { PlacesMap } from "../components/places/PlacesMap";
 import { isSessionExpiredError } from "../services/api-errors";
 import { PaginationDots } from "../components/ui/PaginationDots";
+import { PageState } from "../components/ui/PageState";
 import {
   type CarouselApi,
   Carousel,
@@ -240,53 +238,51 @@ export default function PlacesPage() {
         })}
       </div>
 
-      {/* Content */}
-      {loading && !data && <LoadingState />}
-      {!loading && error && <ErrorMessage message={error} />}
-      {!loading && !error && data?.count === 0 && (
-        <EmptyState
-          title={debouncedSearch ? t("places.emptySearch.title") : t("places.empty.title")}
-          description={debouncedSearch ? t("places.emptySearch.description") : t("places.empty.description")}
-          action={!debouncedSearch ? (
-            <Link to="/places/new">
-              <Button>{t("places.new")}</Button>
-            </Link>
-          ) : undefined}
-        />
-      )}
-
-      {!error && data && data.results.length > 0 && (
-        <Carousel
-          aria-label={t("places.title")}
-          className="w-full"
-          opts={{ align: "start", dragFree: false, startIndex: page - 1 }}
-          setApi={setCarouselApi}
-        >
-          <CarouselContent>
-            {Array.from({ length: totalPages }, (_, i) => {
-              const slidePage = i + 1;
-              const cached = placePageCache.get(slidePage, debouncedSearch, status, advFilters)?.results;
-              const slidePlaces = cached ?? (slidePage === loadedPage && loadedQueryKey === queryKey ? data.results : undefined);
-              return (
-                <CarouselItem key={i}>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {slidePlaces
-                      ? slidePlaces.map((place, idx) => (
-                          <PlaceCard key={place.public_id} place={place} index={idx} onDeleted={() => setRefreshTick((t) => t + 1)} />
-                        ))
-                      : Array.from({ length: PAGE_SIZE }, (_, j) => (
-                          <div
-                            key={j}
-                            className="h-64 rounded-2xl bg-muted-foreground/10 animate-pulse"
-                          />
-                        ))}
-                  </div>
-                </CarouselItem>
-              );
-            })}
-          </CarouselContent>
-        </Carousel>
-      )}
+      <PageState
+        loading={loading && !data}
+        error={!loading ? error : ""}
+        empty={!loading && !error && data?.count === 0}
+        emptyTitle={debouncedSearch ? t("places.emptySearch.title") : t("places.empty.title")}
+        emptyDescription={debouncedSearch ? t("places.emptySearch.description") : t("places.empty.description")}
+        emptyAction={!debouncedSearch ? (
+          <Link to="/places/new">
+            <Button>{t("places.new")}</Button>
+          </Link>
+        ) : undefined}
+      >
+        {data && data.results.length > 0 ? (
+          <Carousel
+            aria-label={t("places.title")}
+            className="w-full"
+            opts={{ align: "start", dragFree: false, startIndex: page - 1 }}
+            setApi={setCarouselApi}
+          >
+            <CarouselContent>
+              {Array.from({ length: totalPages }, (_, i) => {
+                const slidePage = i + 1;
+                const cached = placePageCache.get(slidePage, debouncedSearch, status, advFilters)?.results;
+                const slidePlaces = cached ?? (slidePage === loadedPage && loadedQueryKey === queryKey ? data.results : undefined);
+                return (
+                  <CarouselItem key={i}>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {slidePlaces
+                        ? slidePlaces.map((place, idx) => (
+                            <PlaceCard key={place.public_id} place={place} index={idx} onDeleted={() => setRefreshTick((t) => t + 1)} />
+                          ))
+                        : Array.from({ length: PAGE_SIZE }, (_, j) => (
+                            <div
+                              key={j}
+                              className="h-64 rounded-2xl bg-muted-foreground/10 animate-pulse"
+                            />
+                          ))}
+                    </div>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+          </Carousel>
+        ) : null}
+      </PageState>
 
       {!error && data && totalPages > 1 && (
         <PaginationDots

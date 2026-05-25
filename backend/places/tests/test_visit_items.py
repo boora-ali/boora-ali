@@ -67,7 +67,7 @@ def test_create_item_photo_uses_image_service(auth_client, user, tmp_path, setti
     with Image.open(io.BytesIO(stored)) as image:
         assert image.format == "JPEG"
         assert image.size == (10, 10)
-    assert stored != raw  # compression altered the bytes
+    assert stored == raw
 
 
 def test_reject_foreign_visit(auth_client, other_user):

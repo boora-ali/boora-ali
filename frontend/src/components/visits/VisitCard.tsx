@@ -8,6 +8,7 @@ import { fmtDate, fmtRating, fmtPrice } from "../../utils/formatters";
 import { ImageWithSpinner } from "../ui/ImageWithSpinner";
 import { visitsService } from "../../services/visits.service";
 import { ResponsiveCardCarousel } from "../ui/ResponsiveCardCarousel";
+import { SectionLoading } from "../ui/SectionLoading";
 
 type Props = {
   visit: Visit;
@@ -101,7 +102,14 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
         >
           {open ? t("visitCard.hideDetails") : t("visitCard.details")}
         </Button>
-        {loadingDetails && <span className="text-xs text-muted">{t("common.loading")}</span>}
+        {loadingDetails && (
+          <SectionLoading
+            message={t("common.loading")}
+            className="text-xs text-muted"
+            messageClassName="text-xs text-muted"
+            spinnerClassName="h-3.5 w-3.5"
+          />
+        )}
       </div>
       {loadError && <p className="mt-2 text-sm text-danger">{loadError}</p>}
       {open && visibleItems.length > 0 && (
@@ -116,24 +124,25 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
             desktopColumns={5}
             renderItem={(it) => (
               <div className="overflow-hidden rounded-xl border border-border bg-surface text-sm">
-                {it.photo ? (
-                  <button
-                    type="button"
-                    className="w-full cursor-zoom-in"
-                    onClick={() => setLightboxSrc(it.photo!)}
-                  >
-                    <ImageWithSpinner
-                      src={it.photo}
-                      alt={it.name}
-                      className="h-24 w-full object-cover"
-                      spinnerClassName="rounded-none"
-                    />
-                  </button>
-                ) : (
-                  <div className="flex h-24 w-full items-center justify-center bg-muted/10 text-xs text-muted">
-                    {t("visitCard.noPhoto")}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  className="w-full cursor-zoom-in"
+                  onClick={() => it.photo && setLightboxSrc(it.photo)}
+                  disabled={!it.photo}
+                >
+                  <ImageWithSpinner
+                    src={it.photo || undefined}
+                    alt={it.name}
+                    wrapperClassName="h-24 w-full"
+                    className="h-24 w-full object-cover"
+                    spinnerClassName="rounded-none"
+                    fallback={
+                      <div className="flex h-24 w-full items-center justify-center bg-muted/10 text-xs text-muted">
+                        {t("visitCard.noPhoto")}
+                      </div>
+                    }
+                  />
+                </button>
                 <div className="space-y-0.5 p-2">
                   <p className="truncate font-medium">{it.name}</p>
                   <p className="text-xs text-muted">{t(`itemType.${it.type}`)}</p>

@@ -3,10 +3,16 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { HelmetProvider } from "react-helmet-async";
+import { toast } from "sonner";
 import { shareService } from "../services/share.service";
 import SharePage from "./SharePage";
 
 vi.mock("../services/share.service");
+vi.mock("sonner", () => ({
+  toast: {
+    error: vi.fn(),
+  },
+}));
 vi.mock("./NotFoundPage", () => ({
   default: () => <div>NOT FOUND</div>,
 }));
@@ -119,12 +125,52 @@ describe("SharePage", () => {
     renderShare();
     await waitFor(() => expect(screen.getByText("Café Bonito")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: /add to my list/i }));
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/places/place-xyz"));
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith("/places/place-xyz", {
+        state: { refreshAfterImport: true },
+      }),
+    );
+  });
+
+  test("shows toast when import fails", async () => {
+    mockUser = { username: "smovisk" };
+    (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue(shareData);
+    (shareService.importShare as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("duplicate"),
+    );
+    renderShare();
+    await waitFor(() => expect(screen.getByText("Café Bonito")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /add to my list/i }));
+    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    expect(screen.queryByText(/você já tem este lugar na sua lista/i)).not.toBeInTheDocument();
   });
 
   test("shows cover photo when available", async () => {
     (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue(shareData);
     renderShare();
     await waitFor(() => expect(screen.getByAltText("Café Bonito")).toBeInTheDocument());
+    expect(screen.getByRole("status", { name: "Carregando imagem" })).toBeInTheDocument();
+  });
+
+  test("renders common xss payloads as plain text and keeps links safe", async () => {
+    (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...shareData,
+      name: `<img src=x onerror=alert(1)>`,
+      category: `<script>alert(1)</script>`,
+      address: `"><svg onload=alert(1)>`,
+      instagram_url: "javascript:alert(1)",
+      maps_url: "data:text/html,<script>alert(1)</script>",
+    });
+
+    renderShare();
+
+    expect(await screen.findByText(`<img src=x onerror=alert(1)>`)).toBeInTheDocument();
+    expect(screen.getByText(`<script>alert(1)</script>`)).toBeInTheDocument();
+    expect(screen.getByText(`"><svg onload=alert(1)>`)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /instagram/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view on maps/i })).toHaveAttribute(
+      "href",
+      "https://www.google.com/maps/search/?api=1&query=-3.1%2C-60",
+    );
   });
 });

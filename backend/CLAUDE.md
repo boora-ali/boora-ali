@@ -30,16 +30,23 @@ class PlaceWriteSerializer(serializers.ModelSerializer):
         cover_photo = validated_data.pop("cover_photo", None)
         instance = super().create(validated_data)  # salva model primeiro
         if cover_photo:
-            ImageService.save(instance, cover_photo, category="places/covers")
+            instance.cover_photo = ImageService.save(
+                cover_photo, instance.user_id, "places/covers"
+            )
         return instance
 
     def update(self, instance, validated_data):
         cover_photo = validated_data.pop("cover_photo", None)
         if cover_photo:
             ImageService.delete(instance.cover_photo)  # deleta antigo antes
-            ImageService.save(instance, cover_photo, category="places/covers")
+            instance.cover_photo = ImageService.save(
+                cover_photo, instance.user_id, "places/covers"
+            )
         return super().update(instance, validated_data)
 ```
+
+`ImageService.save()` grava o arquivo bruto no storage. A compressão/normalização
+de mídia recente roda em lote via Celery (`places.tasks.compress_recent_media`).
 
 Path: `users/{user_id}/{category}/{sha256[:16]}_{timestamp_ms}` (sem extensão).
 Fernet por usuário: `HKDF(SHA256, salt=b"bora-ali-media-v1", info=user_id, ikm=SECRET_KEY)`.
@@ -69,6 +76,16 @@ Quando `maps_url` presente no save → dispara `resolve_place_coords(place_pk)`.
 Task: `bind=True`, `max_retries=3`, retry exponencial (60s, 120s, 240s).
 `Place.coords_status`: `pending → resolved | failed`.
 Broker/backend Valkey (DB 2). Config em `config/celery.py`.
+
+## Celery Beat Schedules
+
+Schedules do projeto devem ser mantidos em helpers por app e sincronizados por `python manage.py sync_beat_tasks`.
+As migrations de beat só fazem bootstrap inicial/rollback do registro no banco; para reaplicar ou reparar ambientes já existentes, use o comando de sync em vez de criar nova migration.
+
+Schedules hoje registrados nesse fluxo:
+- `places.tasks.compress_recent_media`
+- `accounts.tasks.flush_expired_blacklisted_tokens`
+- `accounts.tasks.purge_deleted_accounts`
 
 ## Storage
 

@@ -1,34 +1,15 @@
 from django.db import migrations
 
-TASK_NAME = "Limpar tokens bloqueados expirados"
-TASK_PATH = "accounts.tasks.flush_expired_blacklisted_tokens"
-
-
 def create_token_cleanup_schedule(apps, _schema_editor):
-    interval_schedule = apps.get_model("django_celery_beat", "IntervalSchedule")
-    periodic_task = apps.get_model("django_celery_beat", "PeriodicTask")
+    from accounts.beat import ensure_token_cleanup_schedule
 
-    interval, _created = interval_schedule.objects.get_or_create(
-        every=7,
-        period="days",
-    )
-    periodic_task.objects.update_or_create(
-        name=TASK_NAME,
-        defaults={
-            "task": TASK_PATH,
-            "interval": interval,
-            "enabled": True,
-            "description": (
-                "Remove tokens SimpleJWT expirados, incluindo tokens bloqueados "
-                "expirados."
-            ),
-        },
-    )
+    ensure_token_cleanup_schedule(apps)
 
 
 def remove_token_cleanup_schedule(apps, _schema_editor):
-    periodic_task = apps.get_model("django_celery_beat", "PeriodicTask")
-    periodic_task.objects.filter(name=TASK_NAME, task=TASK_PATH).delete()
+    from accounts.beat import remove_token_cleanup_schedule as _remove_token_cleanup_schedule
+
+    _remove_token_cleanup_schedule(apps)
 
 
 class Migration(migrations.Migration):

@@ -17,6 +17,8 @@ from PIL import Image, ImageOps
 logger = logging.getLogger(__name__)
 
 _HKDF_SALT = b"bora-ali-media-v1"
+_MAX_COMPRESS_DIMENSION = 1920
+_COMPRESS_QUALITY = 82
 
 
 class ImageService:
@@ -70,29 +72,45 @@ class ImageService:
             return "application/octet-stream"
 
     @staticmethod
-    def _compress(data: bytes, max_dimension: int = 1920, quality: int = 82) -> bytes:
+    def optimize_bytes(
+        data: bytes,
+        max_dimension: int = _MAX_COMPRESS_DIMENSION,
+        quality: int = _COMPRESS_QUALITY,
+    ) -> bytes:
         try:
-            img = Image.open(io.BytesIO(data))
-            img = ImageOps.exif_transpose(img)
-            fmt = img.format or "JPEG"
-            if img.width > max_dimension or img.height > max_dimension:
-                img.thumbnail((max_dimension, max_dimension), Image.LANCZOS)
-            if img.mode not in ("RGB", "RGBA"):
-                img = img.convert("RGB")
-                fmt = "JPEG"
-            buf = io.BytesIO()
-            save_kwargs = {"format": fmt, "optimize": True}
-            if fmt in ("JPEG", "WEBP"):
-                save_kwargs["quality"] = quality
-            img.save(buf, **save_kwargs)
-            return buf.getvalue()
+            with Image.open(io.BytesIO(data)) as img:
+                exif = img.getexif()
+                needs_orientation_fix = exif.get(274) not in (None, 1)
+                needs_resize = img.width > max_dimension or img.height > max_dimension
+                fmt = img.format or "JPEG"
+                needs_reencode = (
+                    needs_orientation_fix
+                    or needs_resize
+                    or img.mode not in ("RGB", "RGBA")
+                )
+
+                if not needs_reencode:
+                    return data
+
+                img = ImageOps.exif_transpose(img)
+                if img.width > max_dimension or img.height > max_dimension:
+                    img.thumbnail((max_dimension, max_dimension), Image.LANCZOS)
+                if img.mode not in ("RGB", "RGBA"):
+                    img = img.convert("RGB")
+                    fmt = "JPEG"
+                buf = io.BytesIO()
+                save_kwargs = {"format": fmt, "optimize": True}
+                if fmt in ("JPEG", "WEBP"):
+                    save_kwargs["quality"] = quality
+                img.save(buf, **save_kwargs)
+                return buf.getvalue()
         except Exception:
             return data
 
     @staticmethod
     def save(file_obj, user_id: int, category: str) -> str:
         file_obj.seek(0)
-        data = ImageService._compress(file_obj.read())
+        data = file_obj.read()
         content_type = ImageService.detect_content_type(data)
         path = ImageService.make_path(user_id, category, data)
 
@@ -121,6 +139,32 @@ class ImageService:
                 "[storage] upload FAILED path=%s error=%s", path, exc, exc_info=True
             )
             raise
+
+    @staticmethod
+    def replace_media_field(
+        instance,
+        field_name: str,
+        file_obj,
+        user_id: int,
+        category: str,
+        path_field_name: str | None = None,
+    ) -> str | None:
+        current_value = getattr(instance, field_name, None)
+        old_path = getattr(current_value, "name", current_value or "")
+        if old_path:
+            ImageService.delete(old_path)
+
+        if file_obj is None:
+            setattr(instance, field_name, None)
+            if path_field_name:
+                setattr(instance, path_field_name, "")
+            return None
+
+        new_path = ImageService.save(file_obj, user_id, category)
+        setattr(instance, field_name, new_path)
+        if path_field_name:
+            setattr(instance, path_field_name, new_path)
+        return new_path
 
     @staticmethod
     def delete(path: str) -> None:
