@@ -47,14 +47,21 @@ def test_collection_share_snapshot_ordering():
 
 def test_collection_share_str_includes_collection_and_state():
     collection = baker.make(Collection, name="Favoritos")
-    share = baker.make(CollectionShare, snapshot_name="Coleção teste", is_active=True, source_collection=collection)
+    share = baker.make(
+        CollectionShare,
+        snapshot_name="Coleção teste",
+        is_active=True,
+        source_collection=collection,
+    )
 
     assert str(share) == f"Favoritos share (ativo, {share.token[:8]})"
 
 
 def test_collection_share_snapshot_str_includes_place_and_category():
     collection = baker.make(Collection, name="Favoritos")
-    share = baker.make(CollectionShare, snapshot_name="Coleção teste", source_collection=collection)
+    share = baker.make(
+        CollectionShare, snapshot_name="Coleção teste", source_collection=collection
+    )
     snapshot = baker.make(
         CollectionSharePlaceSnapshot,
         share=share,
