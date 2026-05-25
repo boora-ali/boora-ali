@@ -24,6 +24,7 @@ const TrashPage = lazy(() => import("./routes/TrashPage"));
 const NotFoundPage = lazy(() => import("./routes/NotFoundPage"));
 const CollectionListPage = lazy(() => import("./routes/CollectionListPage"));
 const CollectionDetailPage = lazy(() => import("./routes/CollectionDetailPage"));
+const CollectionSharePage = lazy(() => import("./routes/CollectionSharePage"));
 const VerifyEmailPage = lazy(() => import("./routes/VerifyEmailPage"));
 const SharePage = lazy(() => import("./routes/SharePage"));
 
@@ -61,6 +62,7 @@ export default function App() {
               />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/share/:token" element={<SharePage />} />
+              <Route path="/share/collections/:token" element={<CollectionSharePage />} />
               <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
               <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
               <Route

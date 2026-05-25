@@ -9,7 +9,14 @@ from core.validators import (
 )
 
 from .maps import extract_coords
-from .models import Collection, CoordsStatus, Place, Visit, VisitItem
+from .models import (
+    Collection,
+    CollectionShare,
+    CoordsStatus,
+    Place,
+    Visit,
+    VisitItem,
+)
 
 
 def _get_owner_id(context) -> int:
@@ -379,3 +386,40 @@ class CollectionDetailSerializer(CollectionSerializer):
         # collection_places is prefetched in viewset get_queryset
         qs = [cp.place for cp in obj.collection_places.all()]
         return PlaceListSerializer(qs, many=True, context=self.context).data
+
+
+class CollectionSharePlaceSnapshotSerializer(serializers.Serializer):
+    source_public_id = serializers.UUIDField(source="source_place_public_id")
+    name = serializers.CharField()
+    category = serializers.CharField()
+    address = serializers.CharField()
+    instagram_url = serializers.CharField()
+    maps_url = serializers.CharField()
+    coords_status = serializers.CharField()
+    latitude = serializers.DecimalField(
+        max_digits=10, decimal_places=7, required=False, allow_null=True
+    )
+    longitude = serializers.DecimalField(
+        max_digits=10, decimal_places=7, required=False, allow_null=True
+    )
+    status = serializers.CharField()
+    notes = serializers.CharField(required=False, allow_blank=True)
+    cover_photo_url = serializers.CharField()
+
+
+class CollectionShareDetailSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    emoji = serializers.CharField()
+    description = serializers.CharField()
+    place_count = serializers.IntegerField()
+    places = CollectionSharePlaceSnapshotSerializer(many=True)
+
+    @staticmethod
+    def from_share(share: CollectionShare, places: list[dict]) -> dict:
+        return {
+            "name": share.snapshot_name,
+            "emoji": share.snapshot_emoji,
+            "description": share.snapshot_description,
+            "place_count": len(places),
+            "places": places,
+        }

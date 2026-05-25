@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { collectionsService, type CollectionDetail } from "../services/collections.service";
+import { shareService } from "../services/share.service";
 import type { Place } from "../types/place";
 import { BackButton } from "../components/ui/BackButton";
 import { PlaceCard } from "../components/places/PlaceCard";
 import { PlacesMap } from "../components/places/PlacesMap";
 import { Button } from "@/components/ui/button";
 import NotFoundPage from "./NotFoundPage";
-import { X, Trash2, FolderOpen } from "lucide-react";
+import { Check, FolderOpen, Link as LinkIcon, Share2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -32,6 +33,10 @@ export default function CollectionDetailPage() {
   const [showMap, setShowMap] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareTokenData, setShareTokenData] = useState<{ token: string; url: string } | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
   const prevId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -72,6 +77,46 @@ export default function CollectionDetailPage() {
       navigate("/collections", { replace: true });
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleCreateShare() {
+    if (!id) return;
+    setShareLoading(true);
+    try {
+      const result = await shareService.createCollectionShare(id);
+      setShareTokenData(result);
+      setShareDialogOpen(true);
+    } catch {
+      toast.error(t("collections.share_error"));
+    } finally {
+      setShareLoading(false);
+    }
+  }
+
+  async function handleCopyShareLink() {
+    if (!shareTokenData) return;
+    try {
+      await navigator.clipboard.writeText(shareTokenData.url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 1500);
+    } catch {
+      toast.error(t("collections.copy_error"));
+    }
+  }
+
+  async function handleRevokeShare() {
+    if (!id || !shareTokenData) return;
+    setShareLoading(true);
+    try {
+      await shareService.revokeCollectionShare(id, shareTokenData.token);
+      toast.success(t("collections.share_revoked"));
+      setShareDialogOpen(false);
+      setShareTokenData(null);
+    } catch {
+      toast.error(t("collections.share_revoke_error"));
+    } finally {
+      setShareLoading(false);
     }
   }
 
@@ -123,15 +168,21 @@ export default function CollectionDetailPage() {
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowDeleteDialog(true)}
-              disabled={deleting}
-              title={t("collections.delete")}
-              className="shrink-0 p-2 rounded-lg text-muted hover:text-destructive hover:bg-surface border border-transparent hover:border-border transition-colors"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={handleCreateShare} disabled={shareLoading}>
+                <Share2 className="mr-2 h-4 w-4" />
+                {t("collections.share")}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteDialog(true)}
+                disabled={deleting}
+                title={t("collections.delete")}
+                className="shrink-0 p-2 rounded-lg text-muted hover:text-destructive hover:bg-surface border border-transparent hover:border-border transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -163,6 +214,30 @@ export default function CollectionDetailPage() {
           {showMap && <PlacesMap places={collection.places} />}
         </>
       </PageState>
+      <Dialog open={shareDialogOpen} onOpenChange={(open) => { if (!open) setShareDialogOpen(false); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("collections.share")}</DialogTitle>
+            <DialogDescription>{t("collections.share_description")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-xl border border-border bg-surface/60 p-3 text-sm break-all">
+              {shareTokenData?.url ?? ""}
+            </div>
+            {shareTokenData && (
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={handleCopyShareLink} disabled={shareLoading}>
+                  {shareCopied ? <Check className="mr-2 h-4 w-4" /> : <LinkIcon className="mr-2 h-4 w-4" />}
+                  {shareCopied ? t("collections.copied") : t("collections.copy_link")}
+                </Button>
+                <Button variant="destructive" onClick={handleRevokeShare} disabled={shareLoading}>
+                  {t("collections.revoke_share")}
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={showDeleteDialog} onOpenChange={(open) => { if (!open) setShowDeleteDialog(false); }}>
         <DialogContent>
           <DialogHeader>

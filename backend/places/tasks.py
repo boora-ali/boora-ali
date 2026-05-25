@@ -18,8 +18,8 @@ from accounts.models import UserProfile
 from core.image_service import ImageService
 
 from .maps import extract_coords
-from .models import CoordsStatus, Place, Visit, VisitItem
-from .services import PlaceShareService
+from .models import CollectionShare, CoordsStatus, Place, Visit, VisitItem
+from .services import CollectionShareService, PlaceShareService
 
 _log = logging.getLogger("places.tasks")
 _MEDIA_COMPRESSION_WINDOW_DAYS = 1
@@ -289,6 +289,57 @@ def copy_shared_place_photo(
         if not changed:
             return
     except Exception as exc:
+        raise self.retry(exc=exc, countdown=60 * (2**self.request.retries))
+
+
+@shared_task(bind=True, max_retries=3)
+def finalize_collection_share(self, share_pk: int):
+    share = (
+        CollectionShare.objects.select_related("owner")
+        .prefetch_related("place_snapshots")
+        .filter(pk=share_pk)
+        .first()
+    )
+    if share is None or share.is_active:
+        return
+
+    written_paths: list[str] = []
+    try:
+        snapshots = list(share.place_snapshots.all().order_by("order_index"))
+        for snapshot in snapshots:
+            if not snapshot.source_cover_photo_path:
+                continue
+
+            raw = _read_media_bytes(snapshot.source_cover_photo_path)
+            if (
+                CollectionShareService.detect_content_type(raw)
+                == "application/octet-stream"
+            ):
+                raw = ImageService.decrypt(raw, user_id=share.owner.pk)
+
+            path = ImageService.save(
+                ContentFile(raw),
+                user_id=share.owner.pk,
+                category=f"collection_shares/{share.token}/places/{snapshot.source_place_public_id}/covers",
+            )
+            snapshot.cover_photo_path = path
+            snapshot.save(update_fields=["cover_photo_path"])
+            written_paths.append(path)
+
+        share.is_active = True
+        share.save(update_fields=["is_active"])
+    except Exception as exc:
+        if self.request.retries >= self.max_retries:
+            for path in written_paths:
+                ImageService.delete(path)
+            share.delete()
+            _log.error(
+                "finalize_collection_share failed permanently: share_pk=%s exc=%s",
+                share_pk,
+                exc,
+                exc_info=True,
+            )
+            return
         raise self.retry(exc=exc, countdown=60 * (2**self.request.retries))
 
 

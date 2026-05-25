@@ -16,6 +16,7 @@ from .filters import PlaceFilter, VisitFilter, VisitItemFilter
 from .models import (
     Collection,
     CollectionPlace,
+    CollectionShare,
     CoordsStatus,
     Place,
     PlaceShare,
@@ -35,7 +36,13 @@ from .serializers import (
     VisitSummarySerializer,
     VisitWriteSerializer,
 )
-from .services import PlaceLifecycleService, PlaceShareImportStatus, PlaceShareService
+from .services import (
+    CollectionShareImportStatus,
+    CollectionShareService,
+    PlaceLifecycleService,
+    PlaceShareImportStatus,
+    PlaceShareService,
+)
 from .tasks import resolve_place_coords
 
 
@@ -343,4 +350,83 @@ class PlaceShareImportView(MutationMixin, APIView):
             )
         return Response(
             {"public_id": str(outcome.imported_place.public_id)}, status=201
+        )
+
+
+class CollectionShareCreateView(MutationMixin, APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "share_create"
+
+    def post(self, request, public_id):
+        collection = get_object_or_404(
+            Collection, public_id=public_id, user=request.user
+        )
+        share = CollectionShareService.create_share(collection, request.user)
+        return Response(
+            {
+                "token": share.token,
+                "url": CollectionShareService.build_share_url(share.token),
+            },
+            status=201,
+        )
+
+
+class CollectionShareImportView(MutationMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        outcome = CollectionShareService.import_shared_collection(token, request.user)
+        if outcome.status == CollectionShareImportStatus.OWNER:
+            return Response(
+                {"detail": "Você já é dono desta coleção."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            {"public_id": str(outcome.imported_collection.public_id)},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class CollectionShareRevokeView(MutationMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, public_id, token):
+        share = get_object_or_404(
+            CollectionShare,
+            token=token,
+            source_collection__public_id=public_id,
+            owner=request.user,
+        )
+        CollectionShareService.revoke_share(share)
+        return Response(status=204)
+
+
+class CollectionShareDetailView(APIView):
+    permission_classes = []
+
+    def get(self, request, token):
+        return Response(CollectionShareService.get_share_detail(token))
+
+
+class CollectionShareMediaView(APIView):
+    permission_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "share_media"
+
+    def get(self, request, token, path):
+        sig = request.query_params.get("sig", "")
+        try:
+            exp = int(request.query_params.get("exp", 0))
+        except (ValueError, TypeError):
+            return Response(status=404)
+        try:
+            image_data = CollectionShareService.get_share_media_bytes(
+                token, path, sig, exp
+            )
+        except Exception:
+            return Response(status=404)
+        return HttpResponse(
+            image_data,
+            content_type=CollectionShareService.detect_content_type(image_data),
         )

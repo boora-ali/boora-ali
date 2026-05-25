@@ -16,7 +16,15 @@ from django.utils import timezone
 
 from core.image_service import ImageService
 
-from .models import Place, PlaceShare, PlaceStatus
+from .models import (
+    Collection,
+    CollectionPlace,
+    CollectionShare,
+    CollectionSharePlaceSnapshot,
+    Place,
+    PlaceShare,
+    PlaceStatus,
+)
 
 
 class PlaceShareImportStatus(str, Enum):
@@ -29,6 +37,17 @@ class PlaceShareImportStatus(str, Enum):
 class PlaceShareImportOutcome:
     status: PlaceShareImportStatus
     imported_place: Place | None = None
+
+
+class CollectionShareImportStatus(str, Enum):
+    OWNER = "owner"
+    IMPORTED = "created"
+
+
+@dataclass(frozen=True)
+class CollectionShareImportOutcome:
+    status: CollectionShareImportStatus
+    imported_collection: Collection | None = None
 
 
 class PlaceLifecycleService:
@@ -281,3 +300,237 @@ class PlaceShareService:
             "status": PlaceStatus.WANT_TO_VISIT,
             "notes": "",
         }
+
+
+class CollectionShareService:
+    @staticmethod
+    def detect_content_type(data: bytes) -> str:
+        return ImageService.detect_content_type(data)
+
+    @staticmethod
+    def build_share_url(token: str) -> str:
+        return f"{settings.PUBLIC_BASE_URL}/share/collections/{token}"
+
+    @staticmethod
+    def build_share_media_url(
+        share_token: str, image_path: str, ttl: int = 3600
+    ) -> str:
+        exp = int(time.time()) + ttl
+        msg = json.dumps([share_token, image_path, exp], separators=(",", ":")).encode()
+        sig = hmac.new(
+            settings.MEDIA_ENCRYPTION_KEY.encode(), msg, hashlib.sha256
+        ).hexdigest()
+        return (
+            f"{settings.PUBLIC_BASE_URL}/api/share/collections/{share_token}/media/"
+            f"{image_path}?sig={sig}&exp={exp}"
+        )
+
+    @staticmethod
+    def get_active_share(token: str) -> CollectionShare:
+        return get_object_or_404(
+            CollectionShare.objects.select_related(
+                "owner", "source_collection"
+            ).prefetch_related("place_snapshots"),
+            token=token,
+            is_active=True,
+        )
+
+    @staticmethod
+    def get_share_detail(token: str) -> dict:
+        share = CollectionShareService.get_active_share(token)
+        snapshots = list(share.place_snapshots.all().order_by("order_index"))
+        places = []
+        for snapshot in snapshots:
+            cover_photo_url = (
+                CollectionShareService.build_share_media_url(
+                    token, snapshot.cover_photo_path
+                )
+                if snapshot.cover_photo_path
+                else None
+            )
+            places.append(
+                {
+                    "source_public_id": str(snapshot.source_place_public_id),
+                    "name": snapshot.name,
+                    "category": snapshot.category,
+                    "address": snapshot.address,
+                    "instagram_url": snapshot.instagram_url,
+                    "maps_url": snapshot.maps_url,
+                    "coords_status": snapshot.coords_status,
+                    "latitude": snapshot.latitude,
+                    "longitude": snapshot.longitude,
+                    "status": snapshot.status,
+                    "notes": snapshot.notes,
+                    "cover_photo_url": cover_photo_url,
+                }
+            )
+        return {
+            "name": share.snapshot_name,
+            "emoji": share.snapshot_emoji,
+            "description": share.snapshot_description,
+            "place_count": len(places),
+            "places": places,
+        }
+
+    @staticmethod
+    def validate_share_media_request(token: str, path: str, sig: str, exp: int) -> None:
+        if time.time() > exp:
+            raise LookupError("expired")
+
+        msg = json.dumps([token, path, exp], separators=(",", ":")).encode()
+        expected = hmac.new(
+            settings.MEDIA_ENCRYPTION_KEY.encode(),
+            msg,
+            hashlib.sha256,
+        ).hexdigest()
+        if not hmac.compare_digest(sig, expected):
+            raise LookupError("invalid signature")
+
+    @staticmethod
+    def get_share_media_bytes(token: str, path: str, sig: str, exp: int) -> bytes:
+        CollectionShareService.validate_share_media_request(token, path, sig, exp)
+        share = CollectionShareService.get_active_share(token)
+        snapshot = share.place_snapshots.filter(cover_photo_path=path).first()
+        if snapshot is None:
+            raise LookupError("path mismatch")
+
+        raw = default_storage.open(path).read()
+        if (
+            CollectionShareService.detect_content_type(raw)
+            == "application/octet-stream"
+        ):
+            return ImageService.decrypt(raw, user_id=share.owner.pk)
+        return raw
+
+    @staticmethod
+    def create_share(collection: Collection, owner) -> CollectionShare:
+        with transaction.atomic():
+            share = CollectionShare.objects.create(
+                owner=owner,
+                source_collection=collection,
+                snapshot_name=collection.name,
+                snapshot_emoji=collection.emoji,
+                snapshot_description=collection.description,
+                is_active=False,
+            )
+
+            snapshots = []
+            for index, collection_place in enumerate(
+                collection.collection_places.select_related("place").order_by(
+                    "-added_at"
+                )
+            ):
+                place = collection_place.place
+                snapshots.append(
+                    CollectionSharePlaceSnapshot(
+                        share=share,
+                        source_place_public_id=place.public_id,
+                        name=place.name,
+                        category=place.category,
+                        address=place.address,
+                        instagram_url=place.instagram_url,
+                        maps_url=place.maps_url,
+                        coords_status=place.coords_status,
+                        latitude=place.latitude,
+                        longitude=place.longitude,
+                        status=place.status,
+                        notes=place.notes,
+                        source_cover_photo_path=str(place.cover_photo or ""),
+                        order_index=index,
+                    )
+                )
+            CollectionSharePlaceSnapshot.objects.bulk_create(snapshots)
+
+            from .tasks import finalize_collection_share
+
+            transaction.on_commit(lambda: finalize_collection_share.delay(share.pk))
+            return share
+
+    @staticmethod
+    def _create_place_defaults(snapshot: CollectionSharePlaceSnapshot) -> dict:
+        return {
+            "category": snapshot.category,
+            "instagram_url": snapshot.instagram_url,
+            "maps_url": snapshot.maps_url,
+            "latitude": snapshot.latitude,
+            "longitude": snapshot.longitude,
+            "coords_status": snapshot.coords_status,
+            "status": snapshot.status,
+            "notes": snapshot.notes,
+        }
+
+    @staticmethod
+    def _copy_place_cover_if_needed(
+        snapshot: CollectionSharePlaceSnapshot, source_user_id: int, target_place: Place
+    ) -> None:
+        if not snapshot.source_cover_photo_path:
+            return
+
+        from .tasks import copy_shared_place_photo
+
+        source_place = (
+            Place.objects.filter(
+                public_id=snapshot.source_place_public_id,
+                user_id=source_user_id,
+            )
+            .only("pk")
+            .first()
+        )
+        if source_place is None:
+            return
+
+        transaction.on_commit(
+            lambda: copy_shared_place_photo.delay(
+                source_place_pk=source_place.pk,
+                source_owner_pk=source_user_id,
+                target_place_pk=target_place.pk,
+                target_owner_pk=target_place.user_id,
+            )
+        )
+
+    @staticmethod
+    def import_shared_collection(
+        token: str, target_user
+    ) -> CollectionShareImportOutcome:
+        share = CollectionShareService.get_active_share(token)
+        if share.owner == target_user:
+            return CollectionShareImportOutcome(
+                status=CollectionShareImportStatus.OWNER
+            )
+
+        snapshots = list(share.place_snapshots.all().order_by("order_index"))
+        with transaction.atomic():
+            collection = Collection.objects.create(
+                user=target_user,
+                name=share.snapshot_name,
+                emoji=share.snapshot_emoji,
+                description=share.snapshot_description,
+            )
+
+            collection_places = []
+            for snapshot in snapshots:
+                place, created = Place.objects.get_or_create(
+                    user=target_user,
+                    name=snapshot.name,
+                    address=snapshot.address,
+                    defaults=CollectionShareService._create_place_defaults(snapshot),
+                )
+                collection_places.append(
+                    CollectionPlace(collection=collection, place=place)
+                )
+                if created:
+                    CollectionShareService._copy_place_cover_if_needed(
+                        snapshot, share.owner_id, place
+                    )
+
+            CollectionPlace.objects.bulk_create(reversed(collection_places))
+
+        return CollectionShareImportOutcome(
+            status=CollectionShareImportStatus.IMPORTED,
+            imported_collection=collection,
+        )
+
+    @staticmethod
+    def revoke_share(share: CollectionShare) -> None:
+        share.is_active = False
+        share.save(update_fields=["is_active"])

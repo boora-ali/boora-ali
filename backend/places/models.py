@@ -341,3 +341,66 @@ class PlaceShare(models.Model):
         indexes = [
             models.Index(fields=["token", "is_active"], name="share_token_active_idx"),
         ]
+
+
+class CollectionShare(models.Model):
+    token = models.CharField(max_length=64, unique=True, default=secrets.token_urlsafe)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="collection_shares",
+    )
+    source_collection = models.ForeignKey(
+        Collection, on_delete=models.CASCADE, related_name="shares"
+    )
+    snapshot_name = models.CharField(max_length=100)
+    snapshot_emoji = models.CharField(max_length=8, blank=True, default="📍")
+    snapshot_description = models.TextField(blank=True, default="")
+    is_active = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "places_collection_share"
+        indexes = [
+            models.Index(
+                fields=["token", "is_active"], name="colshare_token_active_idx"
+            ),
+        ]
+
+
+class CollectionSharePlaceSnapshot(models.Model):
+    share = models.ForeignKey(
+        CollectionShare, on_delete=models.CASCADE, related_name="place_snapshots"
+    )
+    source_place_public_id = models.UUIDField(db_index=True)
+    name = models.CharField(max_length=200)
+    category = models.CharField(max_length=100)
+    address = models.CharField(max_length=300, blank=True, default="")
+    instagram_url = models.URLField(blank=True, default="")
+    maps_url = models.URLField(blank=True, default="")
+    coords_status = models.CharField(
+        max_length=10,
+        choices=CoordsStatus.choices,
+        default=CoordsStatus.RESOLVED,
+    )
+    latitude = models.DecimalField(
+        max_digits=10, decimal_places=7, blank=True, null=True
+    )
+    longitude = models.DecimalField(
+        max_digits=10, decimal_places=7, blank=True, null=True
+    )
+    status = models.CharField(max_length=32, choices=PlaceStatus.choices)
+    notes = models.TextField(blank=True, default="")
+    source_cover_photo_path = models.CharField(max_length=500, blank=True, default="")
+    cover_photo_path = models.CharField(max_length=500, blank=True, default="")
+    order_index = models.PositiveIntegerField(db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "places_collection_share_place_snapshot"
+        ordering = ["order_index", "created_at"]
+        indexes = [
+            models.Index(
+                fields=["share", "order_index"], name="colshare_snapshot_order_idx"
+            ),
+        ]
