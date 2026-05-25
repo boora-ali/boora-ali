@@ -1,4 +1,4 @@
-# Bora Ali
+# Boora Ali
 
 Diário pessoal de lugares. `User → Place → Visit → VisitItem`.
 

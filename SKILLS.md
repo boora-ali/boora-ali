@@ -1,4 +1,4 @@
-# Bora Ali Skills
+# Boora Ali Skills
 
 Contrato mínimo do repo.
 

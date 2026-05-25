@@ -36,7 +36,7 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "")
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 _resend.api_key = RESEND_API_KEY
-EMAIL_FROM = os.getenv("EMAIL_FROM", "Bora Ali <noreply@boraali.com.br>")
+EMAIL_FROM = os.getenv("EMAIL_FROM", "Boora Ali <noreply@booraali.com.br>")
 EMAIL_VERIFICATION_TIMEOUT_HOURS = int(
     os.getenv("EMAIL_VERIFICATION_TIMEOUT_HOURS", "24")
 )
@@ -152,8 +152,8 @@ INSTALLED_APPS = [
 ]
 
 UNFOLD = {
-    "SITE_TITLE": _("Bora Ali Admin"),
-    "SITE_HEADER": _("Bora Ali"),
+    "SITE_TITLE": _("Boora Ali Admin"),
+    "SITE_HEADER": _("Boora Ali"),
     "SITE_SUBHEADER": _("Diário pessoal de lugares"),
     "SITE_SYMBOL": "travel_explore",
     "SITE_URL": "/",
@@ -555,7 +555,7 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Bora Ali API",
+    "TITLE": "Boora Ali API",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }

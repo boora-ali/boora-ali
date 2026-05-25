@@ -32,7 +32,7 @@ export function TermsAcceptModal({ onAccepted }: Props) {
         <div className="mb-4 flex items-center gap-3">
           <img
             src="/bora-ali-mark.svg"
-            alt="Bora Ali"
+            alt="Boora Ali"
             className="h-8 w-8 select-none object-contain"
             draggable={false}
           />

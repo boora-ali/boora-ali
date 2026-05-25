@@ -45,3 +45,9 @@ def test_placeshare_fk_place_and_owner():
     share = baker.make(PlaceShare)
     assert share.place_id is not None
     assert share.owner_id is not None
+
+
+@pytest.mark.django_db
+def test_placeshare_str_includes_place_and_state():
+    share = baker.make(PlaceShare, is_active=False)
+    assert str(share) == f"{share.place.name} share (inativo, {share.token[:8]})"

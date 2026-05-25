@@ -78,7 +78,7 @@ describe("SharePage", () => {
     (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue(shareData);
     renderShare();
     await waitFor(() => expect(screen.getByText("Café Bonito")).toBeInTheDocument());
-    expect(screen.getByText("café")).toBeInTheDocument();
+    expect(screen.getAllByText("café")).toHaveLength(2);
     expect(screen.getByText("Rua das Flores, 10")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /view on maps/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /instagram/i })).toBeInTheDocument();
@@ -165,7 +165,7 @@ describe("SharePage", () => {
     renderShare();
 
     expect(await screen.findByText(`<img src=x onerror=alert(1)>`)).toBeInTheDocument();
-    expect(screen.getByText(`<script>alert(1)</script>`)).toBeInTheDocument();
+    expect(screen.getAllByText(`<script>alert(1)</script>`)).toHaveLength(2);
     expect(screen.getByText(`"><svg onload=alert(1)>`)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /instagram/i })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /view on maps/i })).toHaveAttribute(

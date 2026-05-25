@@ -1,6 +1,6 @@
-# Bora Ali
+# Boora Ali
 
-> Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar
+> Diário pessoal de lugares — registre lugares, visitas e experiências que valem lembrar
 
 ## About
 
@@ -9,14 +9,14 @@ optimized for consumption by Large Language Models (LLMs) and AI assistants.
 
 ## Pages
 
-- [Bora Ali — Entre na sua conta](https://booraali.com.br)
-  Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou.
-- [Bora Ali — Crie sua conta](https://booraali.com.br/register)
-  Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali.
-- [Política de Privacidade — Bora Ali](https://booraali.com.br/politica-de-privacidade)
-  Saiba como o Bora Ali coleta, usa e protege seus dados pessoais.
-- [Termos de Uso — Bora Ali](https://booraali.com.br/termos-de-uso)
-  Leia os termos e condições de uso do Bora Ali.
+- [Boora Ali — Diário pessoal de lugares](https://booraali.com.br)
+  Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares.
+- [Boora Ali — Crie sua conta](https://booraali.com.br/register)
+  Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Boora Ali.
+- [Política de Privacidade — Boora Ali](https://booraali.com.br/politica-de-privacidade)
+  Saiba como o Boora Ali coleta, usa e protege seus dados pessoais.
+- [Termos de Uso — Boora Ali](https://booraali.com.br/termos-de-uso)
+  Leia os termos e condições de uso do Boora Ali.
 
 ## Quick Links
 

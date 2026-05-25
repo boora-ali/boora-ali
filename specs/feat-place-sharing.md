@@ -441,7 +441,7 @@ export function SharePage() {
   return (
     <>
       <Helmet>
-        <title>{data?.name} — Bora Ali</title>
+        <title>{data?.name} — Boora Ali</title>
         <meta name="robots" content="noindex" />
       </Helmet>
       <div className="max-w-lg mx-auto">

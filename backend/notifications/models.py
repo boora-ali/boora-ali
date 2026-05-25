@@ -29,3 +29,7 @@ class Notification(BaseModel):
                 name="notif_user_unread_idx",
             ),
         ]
+
+    def __str__(self) -> str:
+        state = "read" if self.read_at else "unread"
+        return f"{self.user.username} — {self.title} ({state})"

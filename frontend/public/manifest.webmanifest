@@ -1,12 +1,12 @@
 {
-  "name": "Bora Ali",
-  "short_name": "Bora Ali",
+  "name": "Boora Ali",
+  "short_name": "Boora Ali",
   "description": "Seu diario gastronomico pessoal para salvar lugares, registrar visitas e avaliar experiencias.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#FAF7F2",
-  "theme_color": "#C1121F",
+  "background_color": "#F4F7FB",
+  "theme_color": "#F4F7FB",
   "icons": [
     {
       "src": "/icon-192.png",

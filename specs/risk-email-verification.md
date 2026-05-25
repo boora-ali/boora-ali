@@ -64,7 +64,7 @@ pip install resend
 import resend as _resend
 
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-EMAIL_FROM = os.getenv("EMAIL_FROM", "Bora Ali <noreply@boraali.com.br>")
+EMAIL_FROM = os.getenv("EMAIL_FROM", "Boora Ali <noreply@booraali.com.br>")
 EMAIL_VERIFICATION_TIMEOUT_HOURS = int(os.getenv("EMAIL_VERIFICATION_TIMEOUT_HOURS", "24"))
 
 _resend.api_key = RESEND_API_KEY
@@ -113,7 +113,7 @@ def _send_verification_email(user, profile):
         resend.Emails.send({
             "from": settings.EMAIL_FROM,
             "to": [user.email],
-            "subject": "Confirme seu email — Bora Ali",
+            "subject": "Confirme seu email — Boora Ali",
             "html": (
                 f"<p>Olá! Acesse o link abaixo para verificar seu email:</p>"
                 f"<p><a href='{verification_url}'>{verification_url}</a></p>"
@@ -218,7 +218,7 @@ if not user.profile.email_verified and not is_google:
 ```bash
 # .env
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
-EMAIL_FROM=Bora Ali <noreply@boraali.com.br>
+EMAIL_FROM=Boora Ali <noreply@booraali.com.br>
 EMAIL_VERIFICATION_TIMEOUT_HOURS=24
 ```
 

@@ -319,7 +319,7 @@ export function EstablishmentPublicPage() {
   return (
     <div className="max-w-lg mx-auto pb-8">
       <Helmet>
-        <title>{data?.business_name} — Bora Ali</title>
+        <title>{data?.business_name} — Boora Ali</title>
         <meta name="robots" content="noindex" />
       </Helmet>
 

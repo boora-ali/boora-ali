@@ -220,7 +220,7 @@ class PromotionCampaignView(MutationMixin, APIView):
         pix_data = AbacatePayService.create_pix_charge(
             amount_brl=float(plan.price_brl),
             external_id=str(campaign.public_id),
-            description=f"Promoção Bora Ali — {plan.name}",
+            description=f"Promoção Boora Ali — {plan.name}",
         )
 
         Payment.objects.create(

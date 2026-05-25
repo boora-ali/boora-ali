@@ -48,7 +48,7 @@ export default function VerifyEmailPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6">
       <Helmet>
-        <title>Bora Ali — Verificação de email</title>
+        <title>Boora Ali — Verificação de email</title>
       </Helmet>
       <StatusPanel
         icon={

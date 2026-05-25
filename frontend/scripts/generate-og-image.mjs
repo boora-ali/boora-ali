@@ -33,7 +33,7 @@ const textSvg = `
     font-weight="bold"
     fill="${RED}"
     text-anchor="middle"
-  >Bora Ali</text>
+  >Boora Ali</text>
   <text
     x="${W / 2}"
     y="${H / 2 + LOGO_SIZE / 2 + 108}"

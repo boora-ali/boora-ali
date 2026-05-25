@@ -6,8 +6,8 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Helmet>
-        <title>Política de Privacidade — Bora Ali</title>
-        <meta name="description" content="Saiba como o Bora Ali coleta, usa e protege seus dados pessoais." />
+        <title>Política de Privacidade — Boora Ali</title>
+        <meta name="description" content="Saiba como o Boora Ali coleta, usa e protege seus dados pessoais." />
         <link rel="canonical" href="https://booraali.com.br/politica-de-privacidade" />
       </Helmet>
       <div className="flex-1 mx-auto max-w-2xl px-6 py-12">
@@ -24,9 +24,9 @@ export default function PrivacyPolicyPage() {
 
         <div className="space-y-8 text-text/90 leading-relaxed">
           <section>
-            <h2 className="text-lg font-semibold text-text mb-3">1. Sobre o Bora Ali</h2>
+            <h2 className="text-lg font-semibold text-text mb-3">1. Sobre o Boora Ali</h2>
             <p>
-              O <strong>Bora Ali</strong> é um diário gastronômico pessoal que permite registrar e
+              O <strong>Boora Ali</strong> é um diário gastronômico pessoal que permite registrar e
               organizar lugares, visitas, avaliações e consumíveis — como refeições, bebidas e
               petiscos — de uso exclusivamente pessoal. Este documento descreve como tratamos os
               dados dos usuários da plataforma.
@@ -113,4 +113,3 @@ export default function PrivacyPolicyPage() {
     </div>
   );
 }
-

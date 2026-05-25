@@ -1,4 +1,4 @@
-# Business Rules — Bora Ali
+# Business Rules — Boora Ali
 
 Diário pessoal de lugares: o usuário registra locais, visitas e itens consumidos.
 

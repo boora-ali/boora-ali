@@ -302,7 +302,7 @@ diminuir superfície sem mudar comportamento.
 **Problema:**
 
 `POST /api/auth/register/` com email já cadastrado retorna erro diferente de email novo.
-Atacante pode confirmar se um email específico tem conta no Bora Ali.
+Atacante pode confirmar se um email específico tem conta no Boora Ali.
 
 Impacto: se usuários valorizam privacidade de cadastro (o app é diário pessoal), vazar
 que um email tem conta é dado pessoal.

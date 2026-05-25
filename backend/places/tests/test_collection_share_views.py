@@ -52,6 +52,21 @@ def test_collection_share_create_generates_new_token_each_time(auth_client, user
     assert r1.data["token"] != r2.data["token"]
 
 
+def test_collection_share_create_handles_long_maps_url(auth_client, user):
+    collection = baker.make(Collection, user=user)
+    place = baker.make(
+        "places.Place",
+        user=user,
+        maps_url="https://maps.google.com/?q=" + "m" * 370,
+    )
+    baker.make(CollectionPlace, collection=collection, place=place)
+
+    response = auth_client.post(f"/api/collections/{collection.public_id}/share/")
+
+    assert response.status_code == 201
+    assert "token" in response.data
+
+
 def test_collection_share_create_requires_auth(api_client, user):
     collection = baker.make(Collection, user=user)
     r = api_client.post(f"/api/collections/{collection.public_id}/share/")

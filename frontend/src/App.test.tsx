@@ -8,7 +8,9 @@ describe("App", () => {
     render(<App />);
 
     expect(
-      await screen.findByRole("heading", { name: /guarde os lugares que valem lembrar/i }),
+      await screen.findByRole("heading", {
+        name: /guarde lugares, visitas e experiências que valem lembrar/i,
+      }),
     ).toBeInTheDocument();
   });
 });

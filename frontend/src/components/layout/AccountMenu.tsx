@@ -46,7 +46,7 @@ export function AccountMenu() {
           fallback={
             <img
               src="/bora-ali-mark.svg"
-              alt="Bora Ali"
+              alt="Boora Ali"
               className="h-8 w-8 select-none object-contain"
               draggable={false}
             />
@@ -66,7 +66,7 @@ export function AccountMenu() {
               fallback={
                 <img
                   src="/bora-ali-mark.svg"
-                  alt="Bora Ali"
+                  alt="Boora Ali"
                   className="h-11 w-11 select-none object-contain"
                   draggable={false}
                 />
