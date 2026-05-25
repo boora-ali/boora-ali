@@ -49,10 +49,8 @@ describe("VerifyEmailPage", () => {
 
     renderPage();
 
-    await waitFor(() =>
-      expect(screen.getByText(/invalid or expired link/i)).toBeInTheDocument()
-    );
-    expect(screen.getByText(/could not verify your email/i)).toBeInTheDocument();
+    await screen.findByText(/could not verify your email/i);
+    expect(screen.getByText(/invalid or expired link/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /resend verification email/i })).toBeInTheDocument();
   });
 
