@@ -24,6 +24,45 @@ src/
 **api.ts**: Bearer token, 401 → refresh → retry → logout. Detecta session codes.
 **form-data.ts**: `toFormData()`, `hasFile()`, `stripStringImages()` — usado nos services com upload.
 
+## Componentes padrão de estado
+
+Use estes componentes antes de criar um loading/empty/error novo:
+
+- `PageState` (`src/components/ui/PageState.tsx`)
+  - padrão para estado de página inteira
+  - cobre `loading`, `error` e `empty`
+  - use quando a rota inteira depende do fetch
+- `LoadingState` (`src/components/ui/LoadingState.tsx`)
+  - skeleton de página inteira
+  - mantenha para shells maiores e telas com estrutura fixa
+- `EmptyState` (`src/components/ui/EmptyState.tsx`)
+  - vazio padronizado
+  - use quando a tela estiver sem dados reais
+- `ErrorMessage` (`src/components/ui/ErrorMessage.tsx`)
+  - erro simples de bloco ou de página
+- `StatusPanel` (`src/components/ui/StatusPanel.tsx`)
+  - shell centralizado para estados de auth/fluxos especiais
+  - exemplo: verificação de email, share público, mensagens de estado com ações
+- `SectionLoading` (`src/components/ui/SectionLoading.tsx`)
+  - loading leve de seção, lista, sheet ou bloco interno
+  - evita repetir texto + spinner pequeno em vários lugares
+- `LoadingSpinner` (`src/components/ui/LoadingSpinner.tsx`)
+  - spinner inline para botão ou indicador pequeno
+  - use em submits e ações locais, não em page shell
+- `ImageWithSpinner` (`src/components/ui/ImageWithSpinner.tsx`)
+  - imagem autenticada com estado de carregamento embutido
+  - aceita `fallback` quando não há `src`
+- `useImagePreview` (`src/hooks/useImagePreview.ts`)
+  - padrão para preview local com `blob:` e cleanup
+  - use em forms que lidam com upload de imagem
+
+Regra prática:
+- página inteira: `PageState`
+- estado centralizado especial: `StatusPanel`
+- loading pequeno de seção: `SectionLoading`
+- spinner de botão: `LoadingSpinner`
+- imagem com fallback/preview: `ImageWithSpinner` + `useImagePreview`
+
 ## Formulários — padrão obrigatório
 
 Todo formulário usa React Hook Form + Zod:

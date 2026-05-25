@@ -35,6 +35,7 @@ import { Switch } from "@/components/ui/switch";
 import { validateImageFile, ALLOWED_IMAGE_ACCEPT } from "../../utils/url";
 import { ImageWithSpinner } from "../ui/ImageWithSpinner";
 import { visitItemSchema, type VisitItemFormValues } from "../../schemas/visit";
+import { useImagePreview } from "../../hooks/useImagePreview";
 
 type VisitItemPayload = Partial<Omit<VisitItem, "photo" | "price">> & { photo?: string | File; price?: number | string | null };
 
@@ -49,7 +50,7 @@ export const VISIT_ITEM_FORM_ID = "visit-item-form";
 export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) {
   const { t } = useTranslation();
   const existingPhoto = typeof defaultValues?.photo === "string" ? defaultValues.photo : null;
-  const [preview, setPreview] = useState<string | null>(existingPhoto);
+  const { preview, setPreview, setPreviewFromFile, clearPreview } = useImagePreview(existingPhoto);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [removedPhoto, setRemovedPhoto] = useState(false);
   const [photoError, setPhotoError] = useState("");
@@ -82,7 +83,7 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
     setPhotoError("");
     setPhotoFile(file);
     setRemovedPhoto(false);
-    setPreview(URL.createObjectURL(file));
+    setPreviewFromFile(file);
   }
 
   const onFormSubmit = (data: VisitItemFormValues) => {
@@ -135,7 +136,7 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
               onClick={() => {
                 setPhotoFile(null);
                 setRemovedPhoto(true);
-                setPreview(null);
+                clearPreview();
                 if (fileRef.current) fileRef.current.value = "";
               }}
               className="text-xs text-muted-foreground transition hover:text-destructive"

@@ -24,3 +24,4 @@ security/
 **/*.tfvars.json
 .agents/
 skills-lock.json
+.compozy

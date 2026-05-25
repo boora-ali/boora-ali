@@ -38,6 +38,8 @@ docker compose up -d --build
 - `MutationMixin` vem de `core.views`, não de `core.viewsets`
 - rotas públicas: `/api/u/<username>/`, `/api/e/<username>/`, `/api/feed/`
 - não mexer automaticamente em `backend/*/migrations/`
+- schedules Celery Beat do projeto são centralizados em helpers por app + `python manage.py sync_beat_tasks`; migrations só fazem bootstrap inicial
+- tarefas atualmente sincronizadas por esse comando: `places.tasks.compress_recent_media`, `accounts.tasks.flush_expired_blacklisted_tokens`, `accounts.tasks.purge_deleted_accounts`
 - forms frontend com React Hook Form + Zod
 - `onSuccess` em `useQuery` foi removido no React Query v5 — usar `useEffect`
 

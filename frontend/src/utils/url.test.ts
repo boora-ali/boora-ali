@@ -18,6 +18,11 @@ test("extracts coordinates only from full Maps URLs", () => {
 
 test("sanitizes unsafe urls", () => {
   expect(sanitizeUrl("javascript:alert(1)")).toBe("");
+  expect(sanitizeUrl("data:text/html,<script>alert(1)</script>")).toBe("");
+  expect(sanitizeUrl("file:///etc/passwd")).toBe("");
+  expect(sanitizeUrl("https://example.com/path?x=<svg onload=1>")).toBe(
+    "https://example.com/path?x=<svg onload=1>",
+  );
 });
 
 test("builds a Google Maps fallback URL from coordinates", () => {

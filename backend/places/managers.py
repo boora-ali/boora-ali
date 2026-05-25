@@ -80,21 +80,6 @@ class PlaceQuerySet(models.QuerySet):
 
         return self.prefetch_related(Prefetch("visits", queryset=visits_queryset))
 
-    def as_values(self):
-        return self.values(
-            "id",
-            "name",
-            "category",
-            "address",
-            "instagram_url",
-            "maps_url",
-            "status",
-            "notes",
-            "cover_photo",
-            "created_at",
-            "updated_at",
-        )
-
 
 class VisitQuerySet(models.QuerySet):
     def live(self):
@@ -122,34 +107,11 @@ class VisitQuerySet(models.QuerySet):
         return queryset
 
     def with_detail_payload(self, expands: str | Iterable[str] | None = None):
-        expand_set = parse_expands(expands)
-        queryset = self.with_expansion(expands)
+        from .models import VisitItem
 
-        if "items" not in expand_set:
-            from .models import VisitItem
-
-            item_queryset = VisitItem.objects.live().order_by("-created_at")
-            queryset = queryset.prefetch_related(
-                Prefetch("items", queryset=item_queryset)
-            )
-
-        return queryset
-
-    def as_values(self):
-        return self.values(
-            "id",
-            "place_id",
-            "visited_at",
-            "environment_rating",
-            "service_rating",
-            "overall_rating",
-            "would_return",
-            "general_notes",
-            "photo",
-            "photo_path",
-            "created_at",
-            "updated_at",
-        )
+        queryset = self.select_related("place")
+        item_queryset = VisitItem.objects.live().order_by("-created_at")
+        return queryset.prefetch_related(Prefetch("items", queryset=item_queryset))
 
 
 class VisitItemQuerySet(models.QuerySet):
@@ -167,25 +129,24 @@ class VisitItemQuerySet(models.QuerySet):
         ).live()
 
     def with_expansion(self, expands: str | Iterable[str] | None = None):
-        expand_set = parse_expands(expands)
-
-        if "visit.place" in expand_set:
-            return self.select_related("visit", "visit__place")
-
         return self.select_related("visit", "visit__place")
 
-    def as_values(self):
-        return self.values(
-            "id",
-            "visit_id",
-            "name",
-            "type",
-            "rating",
-            "price",
-            "would_order_again",
-            "notes",
-            "photo",
-            "photo_path",
-            "created_at",
-            "updated_at",
+
+class CollectionQuerySet(models.QuerySet):
+    def for_user(self, user):
+        return self.filter(user=user)
+
+    def with_place_count(self):
+        return self.annotate(place_count=Count("collection_places"))
+
+    def with_places_prefetch(self):
+        from .models import CollectionPlace
+
+        return self.prefetch_related(
+            Prefetch(
+                "collection_places",
+                queryset=CollectionPlace.objects.select_related("place").order_by(
+                    "-added_at"
+                ),
+            )
         )

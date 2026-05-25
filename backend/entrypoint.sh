@@ -8,6 +8,7 @@ rm -rf /app/staticfiles/* || true
 chmod -R 777 /app/staticfiles || true
 
 python manage.py migrate --noinput
+python manage.py sync_beat_tasks
 python manage.py collectstatic --noinput --clear
 python manage.py compilemessages || true
 

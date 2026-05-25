@@ -103,6 +103,28 @@ test("notes field included in onSave payload", async () => {
   );
 });
 
+test("submits xss-like text fields as plain strings", async () => {
+  const onSave = vi.fn();
+  render(<Wrapper onSave={onSave} />);
+
+  fireEvent.change(screen.getByLabelText(/item name/i), {
+    target: { value: `<svg onload=alert(1)>` },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/details/i), {
+    target: { value: `"><script>alert(1)</script>` },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+
+  await waitFor(() =>
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: `<svg onload=alert(1)>`,
+        notes: `"><script>alert(1)</script>`,
+      }),
+    ),
+  );
+});
+
 test("defaultValues populate name and price fields", () => {
   render(
     <Wrapper

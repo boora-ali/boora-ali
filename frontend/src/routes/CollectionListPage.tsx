@@ -12,9 +12,8 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { LoadingState } from "../components/ui/LoadingState";
 import { BackButton } from "../components/ui/BackButton";
-import { ErrorMessage } from "../components/ui/ErrorMessage";
+import { PageState } from "../components/ui/PageState";
 import { Trash2, ChevronRight, FolderOpen } from "lucide-react";
 
 export default function CollectionListPage() {
@@ -61,14 +60,6 @@ export default function CollectionListPage() {
       setCreating(false);
     }
   }
-
-  if (state.status === "loading") return <LoadingState />;
-  if (state.status === "error")
-    return (
-      <div className="max-w-2xl mx-auto p-4">
-        <ErrorMessage message={t("common.error")} />
-      </div>
-    );
 
   const collections = state.data ?? [];
 
@@ -129,17 +120,22 @@ export default function CollectionListPage() {
         </Card>
       )}
 
-      {collections.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center animate-fade-in">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface border border-border">
-            <FolderOpen className="h-7 w-7 text-muted" />
+      <PageState
+        loading={state.status === "loading"}
+        error={state.status === "error" ? t("common.error") : ""}
+        empty={collections.length === 0}
+        emptyNode={(
+          <div className="flex flex-col items-center gap-3 py-16 text-center animate-fade-in">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface border border-border">
+              <FolderOpen className="h-7 w-7 text-muted" />
+            </div>
+            <div>
+              <p className="font-fraunces text-lg font-semibold text-text">{t("collections.empty")}</p>
+            </div>
+            <Button size="sm" onClick={() => setShowForm(true)}>{t("collections.new")}</Button>
           </div>
-          <div>
-            <p className="font-fraunces text-lg font-semibold text-text">{t("collections.empty")}</p>
-          </div>
-          <Button size="sm" onClick={() => setShowForm(true)}>{t("collections.new")}</Button>
-        </div>
-      ) : (
+        )}
+      >
         <div className="divide-y divide-border rounded-2xl border border-border bg-surface overflow-hidden">
           {collections.map((c) => (
             <div key={c.public_id} className="flex items-center group">
@@ -178,7 +174,7 @@ export default function CollectionListPage() {
             </div>
           ))}
         </div>
-      )}
+      </PageState>
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <DialogContent>
           <DialogHeader>

@@ -1,8 +1,11 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
+import { within } from "@testing-library/react";
 import { beforeEach, vi } from "vitest";
 import { PlaceCard } from "./PlaceCard";
 import type { Place } from "../../types/place";
+import { placesService } from "../../services/places.service";
 
 const navigateSpy = vi.fn();
 
@@ -10,6 +13,26 @@ vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
   return { ...actual, useNavigate: () => navigateSpy };
 });
+
+vi.mock("../../services/places.service");
+
+vi.mock("../ui/context-menu", () => ({
+  ContextMenu: ({ children }: { children: ReactNode }) => <>{children}</>,
+  ContextMenuTrigger: ({ children }: { children: ReactNode; asChild?: boolean }) => (
+    <>{children}</>
+  ),
+  ContextMenuContent: ({ children }: { children: ReactNode }) => <>{children}</>,
+  ContextMenuItem: ({ children, onClick, className }: {
+    children: ReactNode;
+    onClick?: () => void;
+    className?: string;
+  }) => (
+    <button className={className} onClick={onClick}>
+      {children}
+    </button>
+  ),
+  ContextMenuSeparator: () => <hr />,
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -112,4 +135,35 @@ test("shows map link when place only has coordinates", () => {
     "href",
     "https://www.google.com/maps/search/?api=1&query=-3.1%2C-60",
   );
+});
+
+test("opens delete confirmation dialog instead of native confirm", () => {
+  render(
+    <MemoryRouter>
+      <PlaceCard place={place} onDeleted={vi.fn()} />
+    </MemoryRouter>
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  expect(screen.getByText(/delete place/i)).toBeInTheDocument();
+});
+
+test("confirming delete calls remove and onDeleted", async () => {
+  const onDeleted = vi.fn();
+  (placesService.remove as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined);
+
+  render(
+    <MemoryRouter>
+      <PlaceCard place={place} onDeleted={onDeleted} />
+    </MemoryRouter>
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+  const dialog = await screen.findByRole("dialog");
+  fireEvent.click(within(dialog).getByRole("button", { name: /delete/i }));
+
+  await waitFor(() => expect(placesService.remove).toHaveBeenCalledWith("place-1"));
+  await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));
 });

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Share2, MessageCircle, Link as LinkIcon, Check } from "lucide-react";
 
@@ -28,12 +28,19 @@ import { BackButton } from "../components/ui/BackButton";
 import { MapModal } from "../components/ui/MapModal";
 import { ImageWithSpinner } from "../components/ui/ImageWithSpinner";
 import { ResponsiveCardCarousel } from "../components/ui/ResponsiveCardCarousel";
+import { SectionLoading } from "../components/ui/SectionLoading";
 import { fmtPrice, fmtRating } from "../utils/formatters";
 import { sanitizeUrl } from "../utils/url";
 import { notifyPlacesChanged } from "../utils/places-state";
 import NotFoundPage from "./NotFoundPage";
 
 const COORDS_POLL_INTERVAL_MS = 1000;
+const IMPORTED_COVER_POLL_INTERVAL_MS = 500;
+const IMPORTED_COVER_POLL_TIMEOUT_MS = 15000;
+
+type LocationState = {
+  refreshAfterImport?: boolean;
+};
 
 function ShareButton({ placePublicId, placeName }: { placePublicId: string; placeName: string }) {
   const { t } = useTranslation();
@@ -115,6 +122,8 @@ export default function PlaceDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams();
   const nav = useNavigate();
+  const location = useLocation();
+  const refreshAfterImport = (location.state as LocationState | null)?.refreshAfterImport === true;
   const [place, setPlace] = useState<PlaceWithVisits | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
@@ -165,6 +174,44 @@ export default function PlaceDetailPage() {
 
     return () => window.clearInterval(interval);
   }, [id, place?.coords_status]);
+
+  useEffect(() => {
+    if (!id || !refreshAfterImport || place?.cover_photo) return;
+
+    let cancelled = false;
+    let attempt = 0;
+
+    const interval = window.setInterval(async () => {
+      attempt += 1;
+
+      try {
+        const loadedPlace = await placesService.get(id);
+        if (cancelled) return;
+
+        setPlace(loadedPlace);
+        if (loadedPlace.cover_photo) {
+          notifyPlacesChanged();
+          window.clearInterval(interval);
+          return;
+        }
+      } catch (error) {
+        if (!cancelled && (error as { isNotFound?: boolean }).isNotFound) {
+          setNotFound(true);
+          window.clearInterval(interval);
+          return;
+        }
+      }
+
+      if (attempt * IMPORTED_COVER_POLL_INTERVAL_MS >= IMPORTED_COVER_POLL_TIMEOUT_MS) {
+        window.clearInterval(interval);
+      }
+    }, IMPORTED_COVER_POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [id, place?.cover_photo, refreshAfterImport]);
 
   useEffect(() => {
     if (!place) return;
@@ -242,24 +289,25 @@ export default function PlaceDetailPage() {
         <CardContent className="pt-4">
           <div className="flex flex-col gap-4">
             <div className="overflow-hidden rounded-2xl border border-border bg-background">
-              {place.cover_photo ? (
-                <button
-                  type="button"
-                  className="w-full cursor-zoom-in"
-                  onClick={() => setCoverLightboxOpen(true)}
-                >
-                  <ImageWithSpinner
-                    src={place.cover_photo}
-                    alt={place.name}
-                    className="h-56 w-full object-cover sm:h-72"
-                    spinnerClassName="rounded-none"
-                  />
-                </button>
-              ) : (
-                <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-background to-border/60 text-5xl opacity-40 sm:h-56">
-                  🍽
-                </div>
-              )}
+              <button
+                type="button"
+                className="w-full cursor-zoom-in"
+                onClick={() => place.cover_photo && setCoverLightboxOpen(true)}
+                disabled={!place.cover_photo}
+              >
+                <ImageWithSpinner
+                  src={place.cover_photo || undefined}
+                  alt={place.name}
+                  wrapperClassName="h-56 w-full sm:h-72"
+                  className="h-56 w-full object-cover sm:h-72"
+                  spinnerClassName="rounded-none"
+                  fallback={
+                    <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-background to-border/60 text-5xl opacity-40 sm:h-56">
+                      🍽
+                    </div>
+                  }
+                />
+              </button>
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -501,14 +549,13 @@ export default function PlaceDetailPage() {
 
       <Dialog open={coverLightboxOpen} onOpenChange={setCoverLightboxOpen}>
         <DialogContent className="max-w-screen-md p-0 overflow-hidden" aria-describedby={undefined}>
-          {place.cover_photo && (
-            <ImageWithSpinner
-              src={place.cover_photo}
-              alt={place.name}
-              className="w-full h-auto max-h-[90vh] object-contain"
-              spinnerClassName="rounded-none"
-            />
-          )}
+          <ImageWithSpinner
+            src={place.cover_photo || undefined}
+            alt={place.name}
+            wrapperClassName="w-full"
+            className="w-full h-auto max-h-[90vh] object-contain"
+            spinnerClassName="rounded-none"
+          />
         </DialogContent>
       </Dialog>
 
@@ -519,7 +566,7 @@ export default function PlaceDetailPage() {
           </SheetHeader>
           <div className="mt-4 space-y-2">
             {collections === null ? (
-              <p className="text-sm text-muted">{t("common.loading")}</p>
+              <SectionLoading message={t("common.loading")} className="py-1" />
             ) : (
               <>
                 {collections.map((c) => {

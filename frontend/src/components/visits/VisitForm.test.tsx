@@ -136,6 +136,27 @@ test("visit photo upload sets preview via URL.createObjectURL", async () => {
   createObjectURL.mockRestore();
 });
 
+test("submits xss-like general notes as plain strings", async () => {
+  const onSubmit = vi.fn().mockResolvedValue(undefined);
+  render(<VisitForm onSubmit={onSubmit} />);
+
+  fireEvent.change(screen.getByPlaceholderText(/how was it\? what stood out\?/i), {
+    target: { value: `<img src=x onerror=alert(1)>` },
+  });
+  fireEvent.submit(
+    screen.getByRole("button", { name: /save visit/i }).closest("form")!,
+  );
+
+  await waitFor(() =>
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        general_notes: `<img src=x onerror=alert(1)>`,
+      }),
+      [],
+    ),
+  );
+});
+
 test("shows a local preview for an item photo saved in the modal before submitting the visit", async () => {
   const file = new File(["fake-image"], "drink.jpg", { type: "image/jpeg" });
   const objectUrlSpy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:visit-item-photo");

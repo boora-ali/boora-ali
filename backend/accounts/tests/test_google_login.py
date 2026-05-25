@@ -8,7 +8,7 @@ pytestmark = pytest.mark.django_db
 
 def test_google_login_creates_user_and_returns_tokens(api_client, monkeypatch):
     monkeypatch.setattr(
-        "accounts.google_login.verify_google_id_token",
+        "accounts.services.GoogleAuthService.verify_id_token",
         lambda token: {
             "sub": "sub-1",
             "email": "new@example.com",
@@ -45,7 +45,7 @@ def test_google_login_links_existing_user_by_verified_email(
     user.save(update_fields=["email"])
 
     monkeypatch.setattr(
-        "accounts.google_login.verify_google_id_token",
+        "accounts.services.GoogleAuthService.verify_id_token",
         lambda token: {
             "sub": "sub-2",
             "email": "same@example.com",
@@ -70,7 +70,7 @@ def test_google_login_links_existing_user_by_verified_email(
 
 def test_google_login_rejects_unverified_email(api_client, monkeypatch):
     monkeypatch.setattr(
-        "accounts.google_login.verify_google_id_token",
+        "accounts.services.GoogleAuthService.verify_id_token",
         lambda token: {
             "sub": "sub-3",
             "email": "nope@example.com",

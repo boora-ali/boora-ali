@@ -183,7 +183,7 @@ def test_share_media_valid_sig_returns_decrypted_content(api_client, user):
     mock_file = MagicMock()
     mock_file.read.return_value = fake_raw
 
-    with patch("places.views.default_storage") as mock_storage:
+    with patch("places.services.default_storage") as mock_storage:
         mock_storage.open.return_value = mock_file
 
         r = api_client.get(f"/api/share/{share.token}/media/{path}?sig={sig}&exp={exp}")
@@ -202,7 +202,7 @@ def test_share_media_valid_sig_returns_plaintext_image(api_client, user):
     mock_file = MagicMock()
     mock_file.read.return_value = fake_plaintext
 
-    with patch("places.views.default_storage") as mock_storage:
+    with patch("places.services.default_storage") as mock_storage:
         mock_storage.open.return_value = mock_file
 
         r = api_client.get(f"/api/share/{share.token}/media/{path}?sig={sig}&exp={exp}")
@@ -226,7 +226,7 @@ def test_share_media_storage_error_returns_404(api_client, user):
     path = str(place.cover_photo)
     sig, exp = _make_signed_url_params(share.token, path)
 
-    with patch("places.views.default_storage") as mock_storage:
+    with patch("places.services.default_storage") as mock_storage:
         mock_storage.open.side_effect = Exception("file not found")
         r = api_client.get(f"/api/share/{share.token}/media/{path}?sig={sig}&exp={exp}")
 
@@ -286,7 +286,7 @@ def test_share_import_with_cover_photo_dispatches_task(auth_client, user, other_
     )
     share = baker.make(PlaceShare, place=place, owner=other_user, is_active=True)
     mock_task = MagicMock()
-    with patch("places.views.copy_shared_place_photo", mock_task):
+    with patch("places.tasks.copy_shared_place_photo", mock_task):
         r = auth_client.post(f"/api/share/{share.token}/import/")
     assert r.status_code == 201
     mock_task.delay.assert_called_once()

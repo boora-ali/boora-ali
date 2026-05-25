@@ -7,6 +7,7 @@ from core.views import MutationMixin
 
 from .models import Notification
 from .serializers import NotificationSerializer
+from .service import NotificationService
 
 
 class NotificationListView(generics.ListAPIView):
@@ -26,15 +27,9 @@ class NotificationMarkReadView(MutationMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, public_id):
-        notif = Notification.objects.filter(
-            public_id=public_id,
-            user=request.user,
-            read_at__isnull=True,
-        ).first()
-        if not notif:
+        found = NotificationService.mark_read(public_id, request.user)
+        if not found:
             return Response({"detail": "Notificação não encontrada."}, status=404)
-        notif.read_at = timezone.now()
-        notif.save(update_fields=["read_at"])
         return Response({"detail": "Marcada como lida."})
 
 
@@ -42,8 +37,5 @@ class NotificationMarkAllReadView(MutationMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        Notification.objects.filter(
-            user=request.user,
-            read_at__isnull=True,
-        ).update(read_at=timezone.now())
+        NotificationService.mark_all_read(request.user)
         return Response({"detail": "Todas marcadas como lidas."})

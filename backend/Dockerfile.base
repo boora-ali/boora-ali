@@ -5,7 +5,8 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_COMPILE=0
+    PIP_COMPILE=0 \
+    HOME=/home/app
 
 RUN apk add --no-cache build-base libffi-dev musl-dev postgresql-dev
 
@@ -35,5 +36,7 @@ RUN apk add --no-cache postgresql-libs
 
 COPY --from=builder /venv /venv
 
-RUN addgroup -S app && adduser -S app -G app
+RUN addgroup -S app && adduser -S -D -h /home/app app -G app && \
+    mkdir -p /home/app && \
+    chown -R app:app /home/app
 USER app

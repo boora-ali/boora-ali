@@ -1,4 +1,5 @@
 import io
+from types import SimpleNamespace
 
 import pytest
 from django.conf import settings
@@ -122,10 +123,11 @@ def test_save_returns_valid_path(tmp_path, settings, fake_image_bytes):
         },
     },
 )
-def test_save_applies_exif_orientation(tmp_path, settings, exif_rotated_jpeg_bytes):
+def test_save_preserves_raw_bytes(tmp_path, settings, fake_image_bytes):
     settings.MEDIA_ROOT = str(tmp_path)
-    f = io.BytesIO(exif_rotated_jpeg_bytes)
-    f.name = "rotated.jpg"
+    f = io.BytesIO(fake_image_bytes)
+    f.name = "photo.jpg"
+    raw = f.getvalue()
 
     path = ImageService.save(f, user_id=5, category="places/covers")
 
@@ -134,9 +136,25 @@ def test_save_applies_exif_orientation(tmp_path, settings, exif_rotated_jpeg_byt
     with default_storage.open(path, "rb") as stored_file:
         stored = stored_file.read()
 
+    assert stored == raw
+
+
+@pytest.mark.django_db
+@override_settings(
+    SECRET_KEY="test-secret-key-long-enough-for-hkdf-derivation-1234",
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
+    },
+)
+def test_optimize_bytes_applies_exif_orientation(exif_rotated_jpeg_bytes):
+    optimized = ImageService.optimize_bytes(exif_rotated_jpeg_bytes)
+
     from PIL import Image
 
-    with Image.open(io.BytesIO(stored)) as image:
+    with Image.open(io.BytesIO(optimized)) as image:
         assert image.size == (20, 40)
         assert image.getexif().get(274) in (None, 1)
 
@@ -167,3 +185,46 @@ def test_delete_removes_file(tmp_path, settings, fake_image_bytes):
 def test_delete_empty_path_is_noop():
     ImageService.delete("")
     ImageService.delete(None)
+
+
+@pytest.mark.django_db
+@override_settings(
+    SECRET_KEY="test-secret-key-long-enough-for-hkdf-derivation-1234",
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
+    },
+)
+def test_replace_media_field_replaces_old_file(tmp_path, settings, fake_image_bytes):
+    settings.MEDIA_ROOT = str(tmp_path)
+
+    current = io.BytesIO(fake_image_bytes)
+    current.name = "current.jpg"
+    old_path = ImageService.save(current, user_id=5, category="places/covers")
+
+    instance = SimpleNamespace(
+        photo=SimpleNamespace(name=old_path),
+        photo_path=old_path,
+    )
+
+    replacement = io.BytesIO(fake_image_bytes)
+    replacement.name = "replacement.jpg"
+
+    new_path = ImageService.replace_media_field(
+        instance,
+        "photo",
+        replacement,
+        user_id=5,
+        category="places/covers",
+        path_field_name="photo_path",
+    )
+
+    from django.core.files.storage import default_storage
+
+    assert new_path is not None
+    assert instance.photo == new_path
+    assert instance.photo_path == new_path
+    assert not default_storage.exists(old_path)
+    assert default_storage.exists(new_path)

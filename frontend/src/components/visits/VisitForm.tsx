@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,8 +29,9 @@ import { ImageWithSpinner } from "../ui/ImageWithSpinner";
 import { CharacterCount } from "../ui/CharacterCount";
 import { FormSection } from "../ui/FormSection";
 import { ResponsiveCardCarousel } from "../ui/ResponsiveCardCarousel";
-import { getApiErrorState } from "../../services/api-errors";
-import { applyApiErrors } from "../../utils/form-errors";
+import { useImagePreview } from "../../hooks/useImagePreview";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { reportApiError } from "../../utils/form-api-error";
 import { visitItemsService } from "../../services/visit-items.service";
 import { validateImageFile, ALLOWED_IMAGE_ACCEPT } from "../../utils/url";
 import { visitSchema, type VisitFormValues } from "../../schemas/visit";
@@ -57,37 +58,22 @@ function RatingDots({ value }: { value: number }) {
 }
 
 function VisitItemPhoto({ photo, alt, fallbackText }: { photo?: string | File; alt: string; fallbackText: string }) {
-  const previewUrl = useMemo(() => {
-    if (!(photo instanceof File)) {
-      return null;
-    }
-
-    return URL.createObjectURL(photo);
-  }, [photo]);
+  const initialPhoto = typeof photo === "string" ? photo : null;
+  const { preview, setPreview, setPreviewFromFile } = useImagePreview(initialPhoto);
 
   useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
+    if (photo instanceof File) {
+      setPreviewFromFile(photo);
+      return;
+    }
 
-  if (typeof photo === "string") {
+    setPreview(initialPhoto);
+  }, [initialPhoto, photo, setPreview, setPreviewFromFile]);
+
+  if (preview) {
     return (
       <ImageWithSpinner
-        src={photo}
-        alt={alt}
-        className="h-24 w-full object-cover"
-        spinnerClassName="rounded-none"
-      />
-    );
-  }
-
-  if (previewUrl) {
-    return (
-      <ImageWithSpinner
-        src={previewUrl}
+        src={preview}
         alt={alt}
         className="h-24 w-full object-cover"
         spinnerClassName="rounded-none"
@@ -107,7 +93,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
   const [items, setItems] = useState<ItemPayload[]>(initialItems);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [removedPhoto, setRemovedPhoto] = useState(false);
-  const [preview, setPreview] = useState<string | null>(initial.photo ?? null);
+  const { preview, setPreviewFromFile, clearPreview } = useImagePreview(initial.photo ?? null);
   const [removeError, setRemoveError] = useState("");
   const [itemSaveError, setItemSaveError] = useState("");
   const [isSavingItem, setIsSavingItem] = useState(false);
@@ -116,7 +102,6 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
   const [modalOpen, setModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [draftKey, setDraftKey] = useState(0);
-  const previewObjectUrlRef = useRef<string | null>(null);
 
   const form = useForm<VisitFormValues>({
     resolver: zodResolver(visitSchema),
@@ -129,30 +114,6 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
       general_notes: initial.general_notes ?? "",
     },
   });
-
-  function setPreviewFromFile(file: File | null) {
-    if (previewObjectUrlRef.current) {
-      URL.revokeObjectURL(previewObjectUrlRef.current);
-      previewObjectUrlRef.current = null;
-    }
-
-    if (!file) {
-      setPreview(initial.photo ?? null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-    previewObjectUrlRef.current = objectUrl;
-    setPreview(objectUrl);
-  }
-
-  useEffect(() => {
-    return () => {
-      if (previewObjectUrlRef.current) {
-        URL.revokeObjectURL(previewObjectUrlRef.current);
-      }
-    };
-  }, []);
 
   const { handleSubmit, setError, control, formState: { errors, isSubmitting } } = form;
 
@@ -173,9 +134,11 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
       try {
         await visitItemsService.remove(item.public_id);
       } catch (error) {
-        const apiError = getApiErrorState(error, t("visitForm.removeItemError"));
-        toast.error(apiError.message);
-        setRemoveError(apiError.message);
+        reportApiError({
+          error,
+          fallbackMessage: t("visitForm.removeItemError"),
+          onMessage: setRemoveError,
+        });
         return;
       }
     }
@@ -213,9 +176,11 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
       }
       setModalOpen(false);
     } catch (error) {
-      const apiError = getApiErrorState(error, t("visitForm.saveError"));
-      toast.error(apiError.message);
-      setItemSaveError(apiError.message);
+      reportApiError({
+        error,
+        fallbackMessage: t("visitForm.saveError"),
+        onMessage: setItemSaveError,
+      });
     } finally {
       setIsSavingItem(false);
     }
@@ -228,10 +193,11 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
         items,
       );
     } catch (error) {
-      const apiError = getApiErrorState(error, t("visitForm.saveError"));
-      toast.error(apiError.message);
-      setError("root", { message: apiError.message });
-      applyApiErrors(setError, apiError.fieldErrors);
+      reportApiError({
+        setError,
+        error,
+        fallbackMessage: t("visitForm.saveError"),
+      });
     }
   };
 
@@ -358,7 +324,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
               onClick={() => {
                 setPhotoFile(null);
                 setRemovedPhoto(true);
-                setPreview(null);
+                clearPreview();
                 if (fileRef.current) fileRef.current.value = "";
               }}
               className="text-xs text-muted-foreground transition hover:text-destructive"
@@ -425,10 +391,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
         {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting && (
-            <svg className="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <LoadingSpinner className="mr-2 h-4 w-4" />
           )}
           {t("visitForm.save")}
         </Button>
