@@ -32,8 +32,10 @@ describe("LandingPage", () => {
     expect(screen.getByText("02")).toBeInTheDocument();
     expect(screen.getByText("03")).toBeInTheDocument();
     expect(screen.getByText("04")).toBeInTheDocument();
-    expect(screen.getByText(/largo da batata/i)).toBeInTheDocument();
-    expect(screen.getByText(/livraria da vila/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/diário aberto com mapa, anotações e foto de um lugar salvo no bora ali/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/cartão de lugar com título, categoria, endereço, notas, foto e tags/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/mapa com rota marcada e cartão de lugar salvo/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/cartões de privacidade e compartilhamento de um lugar/i)).toBeInTheDocument();
     expect(screen.getAllByText(/privado por padrão/i).length).toBeGreaterThan(1);
   });
 });

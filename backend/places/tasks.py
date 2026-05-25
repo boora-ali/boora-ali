@@ -17,7 +17,7 @@ from django.utils import timezone
 from accounts.models import UserProfile
 from core.image_service import ImageService
 
-from .maps import extract_coords
+from .maps import extract_coords, extract_place_cid
 from .models import CoordsStatus, Place, Visit, VisitItem
 from .services import PlaceShareService
 
@@ -110,6 +110,12 @@ _ALLOWED_MAPS_HOSTS = {
 }
 
 
+_BROWSER_UA = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+)
+
+
 def _safe_maps_urlopen(url: str, timeout: int = 5):
     parsed = urlparse(url)
     if parsed.scheme != "https":
@@ -120,7 +126,8 @@ def _safe_maps_urlopen(url: str, timeout: int = 5):
         for allowed in _ALLOWED_MAPS_HOSTS
     ):
         raise ValueError(f"Host não permitido para resolução de Maps: {host!r}")
-    return urllib.request.urlopen(url, timeout=timeout)  # nosec B310
+    req = urllib.request.Request(url, headers={"User-Agent": _BROWSER_UA})  # nosec B310
+    return urllib.request.urlopen(req, timeout=timeout)  # nosec B310
 
 
 def _resolve_place_coords(self, place_pk: int):
@@ -131,6 +138,17 @@ def _resolve_place_coords(self, place_pk: int):
     try:
         response = _safe_maps_urlopen(place.maps_url)
         lat, lng = extract_coords(response.url)
+
+        # Fallback: GPS-shared URLs (entry=gps) resolve without embedded coords.
+        # Extract the CID from !1s0x<high>:0x<low> and re-fetch via ?cid= which
+        # always redirects to a coordinate-bearing URL.
+        if lat is None or lng is None:
+            cid = extract_place_cid(response.url)
+            if cid is not None:
+                cid_url = f"https://maps.google.com/maps?cid={cid}"
+                cid_response = _safe_maps_urlopen(cid_url)
+                lat, lng = extract_coords(cid_response.url)
+
         if lat is None or lng is None:
             raise ValueError("Coordenadas não encontradas na URL do Maps")
     except Exception as exc:  # pragma: no cover - covered through retry tests
