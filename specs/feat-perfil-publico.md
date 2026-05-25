@@ -324,7 +324,7 @@ export function PublicProfilePage() {
   return (
     <>
       <Helmet>
-        <title>{data?.username} — Bora Ali</title>
+        <title>{data?.username} — Boora Ali</title>
         <meta name="robots" content="noindex" />
       </Helmet>
       <div className="max-w-lg mx-auto p-4 space-y-6">

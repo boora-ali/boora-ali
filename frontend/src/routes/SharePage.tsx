@@ -11,6 +11,7 @@ import NotFoundPage from "./NotFoundPage";
 import { getApiErrorState } from "../services/api-errors";
 import { PageState } from "../components/ui/PageState";
 import { ImageWithSpinner } from "../components/ui/ImageWithSpinner";
+import { Button } from "@/components/ui/button";
 
 export default function SharePage() {
   const { token } = useParams<{ token: string }>();
@@ -48,7 +49,7 @@ export default function SharePage() {
     };
   }, [token]);
 
-  const title = data ? `${data.name} — Bora Ali` : "Bora Ali";
+  const title = data ? `${data.name} — Boora Ali` : "Boora Ali";
   const mapsHref = data
     ? getMapsHref({
         mapsUrl: data.maps_url,
@@ -81,17 +82,24 @@ export default function SharePage() {
       <PageState
         loading={hasToken && isLoading}
         loadingNode={(
-          <div className="min-h-[100dvh] bg-background">
-            <div className="relative h-[58dvh]">
-              <div className="absolute inset-0 animate-pulse bg-border/40" />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/5 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/70 to-transparent" />
-            </div>
-            <div className="relative -mt-14 px-6 pb-36">
-              <div className="space-y-4 pt-2">
-                <div className="h-2.5 w-14 rounded-full bg-border/60 animate-pulse" />
-                <div className="h-9 w-4/5 rounded-lg bg-border/50 animate-pulse" />
-                <div className="h-2.5 w-1/2 rounded-full bg-border/40 animate-pulse" />
+          <div className="min-h-[100dvh] bg-background px-5 py-6">
+            <div className="mx-auto max-w-5xl space-y-4">
+              <div className="h-12 w-48 rounded-full bg-border/50 animate-pulse" />
+              <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+                <div className="space-y-4 rounded-3xl border border-border bg-surface p-4 shadow-sm">
+                  <div className="aspect-[4/3] rounded-2xl bg-border/30 animate-pulse" />
+                  <div className="space-y-2.5">
+                    <div className="h-2.5 w-16 rounded-full bg-border/50 animate-pulse" />
+                    <div className="h-9 w-3/5 rounded-lg bg-border/50 animate-pulse" />
+                    <div className="h-2.5 w-4/5 rounded-full bg-border/40 animate-pulse" />
+                  </div>
+                </div>
+                <div className="space-y-4 rounded-3xl border border-border bg-surface p-5 shadow-sm">
+                  <div className="h-2.5 w-24 rounded-full bg-border/50 animate-pulse" />
+                  <div className="h-24 rounded-2xl bg-border/30 animate-pulse" />
+                  <div className="h-10 rounded-2xl bg-border/30 animate-pulse" />
+                  <div className="h-10 rounded-2xl bg-border/30 animate-pulse" />
+                </div>
               </div>
             </div>
           </div>
@@ -100,102 +108,103 @@ export default function SharePage() {
         errorNode={<NotFoundPage />}
       >
         {data ? (
-          <div className="min-h-[100dvh] bg-background">
-            {/* Hero — foto que dissolve no creme */}
-            <div className="relative h-[58dvh]">
-              {data.cover_photo_url ? (
-                <ImageWithSpinner
-                  src={data.cover_photo_url}
-                  alt={data.name}
-                  wrapperClassName="absolute inset-0 overflow-hidden bg-gradient-to-br from-border/20 to-border/50"
-                  className="h-full w-full object-cover"
-                  spinnerClassName="bg-black/10"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-border/20 to-border/50 flex items-center justify-center">
-                  <MapPin className="h-14 w-14 text-muted opacity-15" />
-                </div>
-              )}
-
-              {/* Fade lateral escuro suave */}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/5 to-transparent" />
-              {/* Fade forte na base para o creme */}
-              <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/70 to-transparent" />
-            </div>
-
-            {/* Conteúdo editorial */}
-            <div className="relative -mt-14 px-6 pb-36">
-              <div className="animate-fade-slide-up">
-                {/* Categoria — pequena, espaçada */}
-                <p className="text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-muted/80">
-                  {data.category}
+          <div className="min-h-[100dvh] bg-background px-5 py-6 pb-32 sm:pb-28">
+            <div className="mx-auto max-w-5xl space-y-8">
+              <header className="space-y-3">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-muted/70">
+                  {t("share.snapshot_label")}
                 </p>
+                <div className="flex flex-wrap items-end gap-4">
+                  <span className="flex h-16 w-16 items-center justify-center rounded-3xl border border-border bg-surface text-3xl shadow-sm">
+                    <MapPin className="h-7 w-7 text-primary" />
+                  </span>
+                  <div>
+                    <h1 className="font-fraunces text-3xl font-bold text-text sm:text-4xl">
+                      {data.name}
+                    </h1>
+                    <p className="text-sm text-muted">{data.category}</p>
+                  </div>
+                </div>
+              </header>
 
-                {/* Nome — editorial, dominante */}
-                <h1 className="mt-1.5 font-fraunces text-[2.1rem] font-bold leading-[1.05] text-text">
-                  {data.name}
-                </h1>
-
-                {/* Endereço */}
-                {data.address && (
-                  <p className="mt-3 flex items-start gap-1.5 text-sm text-muted leading-snug">
-                    <MapPin className="mt-[2px] h-3.5 w-3.5 shrink-0 text-primary/50" />
-                    {data.address}
-                  </p>
-                )}
-
-                {/* Divisor */}
-                <div className="mt-5 border-t border-border/50" />
-
-                {/* Links externos — texto limpo com ícone pequeno */}
-                {(mapsHref || data.instagram_url) && (
-                  <div className="mt-4 flex flex-col gap-3">
-                    {mapsHref && (
-                      <a
-                        href={mapsHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex items-center gap-3 text-sm text-text/60 transition-colors hover:text-text"
-                      >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-surface shadow-sm transition group-hover:border-border">
-                          <MapPin className="h-3.5 w-3.5 text-primary/70" />
-                        </span>
-                        {t("share.view_maps")}
-                      </a>
-                    )}
-                    {sanitizeUrl(data.instagram_url) && (
-                      <a
-                        href={sanitizeUrl(data.instagram_url)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex items-center gap-3 text-sm text-text/60 transition-colors hover:text-text"
-                      >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-surface shadow-sm transition group-hover:border-border">
-                          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-[1.8]">
-                            <rect x="3.75" y="3.75" width="16.5" height="16.5" rx="4.5" />
-                            <circle cx="12" cy="12" r="3.5" />
-                            <circle cx="17.5" cy="6.5" r="0.75" fill="currentColor" stroke="none" />
-                          </svg>
-                        </span>
-                        {t("share.view_instagram")}
-                      </a>
+              <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+                <article className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
+                  <div className="relative aspect-[4/3] bg-border/20">
+                    {data.cover_photo_url ? (
+                      <ImageWithSpinner
+                        src={data.cover_photo_url}
+                        alt={data.name}
+                        wrapperClassName="absolute inset-0"
+                        className="h-full w-full object-cover"
+                        spinnerClassName="bg-black/10"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-border/20 to-border/50">
+                        <MapPin className="h-14 w-14 text-muted/30" />
+                      </div>
                     )}
                   </div>
-                )}
+                  <div className="space-y-3 p-4 sm:p-5">
+                    {data.address && <p className="text-sm text-muted">{data.address}</p>}
+                    <p className="text-sm leading-7 text-text/80">
+                      {data.category}
+                    </p>
+                  </div>
+                </article>
 
-                {/* Assinatura */}
-                <p className="mt-8 text-[0.65rem] tracking-widest text-muted/40 uppercase">
-                  Bora Ali
-                </p>
+                <aside className="space-y-4 rounded-3xl border border-border bg-surface p-5 shadow-sm">
+                  <div className="space-y-2">
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-muted/70">
+                      {t("share.snapshot_label")}
+                    </p>
+                    <p className="text-sm text-muted">
+                      {data.address ? t("share.address_saved") : t("share.no_address")}
+                    </p>
+                  </div>
+
+                  {(mapsHref || data.instagram_url) && (
+                    <div className="space-y-2">
+                      {mapsHref && (
+                        <a
+                          href={mapsHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-text transition hover:bg-surface"
+                        >
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface">
+                            <MapPin className="h-4 w-4 text-primary" />
+                          </span>
+                          {t("share.view_maps")}
+                        </a>
+                      )}
+                      {sanitizeUrl(data.instagram_url) && (
+                        <a
+                          href={sanitizeUrl(data.instagram_url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-text transition hover:bg-surface"
+                        >
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface">
+                            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-primary stroke-[1.8]">
+                              <rect x="3.75" y="3.75" width="16.5" height="16.5" rx="4.5" />
+                              <circle cx="12" cy="12" r="3.5" />
+                              <circle cx="17.5" cy="6.5" r="0.75" fill="currentColor" stroke="none" />
+                            </svg>
+                          </span>
+                          {t("share.view_instagram")}
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </aside>
               </div>
             </div>
           </div>
         ) : null}
       </PageState>
 
-      {/* CTA fixo — painel com glass */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 pb-7 pt-4 bg-background/85 backdrop-blur-md border-t border-border/40">
-        <div className="max-w-lg mx-auto space-y-2.5">
+      <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/90 px-5 pb-7 pt-4 backdrop-blur-md">
+        <div className="mx-auto max-w-5xl">
           {user ? (
             <div className="flex gap-2.5">
               <button
@@ -206,14 +215,14 @@ export default function SharePage() {
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
-              <button
+              <Button
                 type="button"
                 onClick={handleImport}
                 disabled={importing || isLoading || isError}
-                className="flex h-12 flex-1 items-center justify-center rounded-2xl bg-primary text-sm font-medium tracking-wide text-white shadow-sm transition hover:bg-primary/90 active:scale-[0.98] disabled:opacity-50"
+                className="h-12 flex-1 rounded-2xl text-sm font-medium tracking-wide"
               >
                 {importing ? t("share.importing") : t("share.import_button")}
-              </button>
+              </Button>
             </div>
           ) : (
             <Link to={`/login?next=/share/${token}`} className="block">

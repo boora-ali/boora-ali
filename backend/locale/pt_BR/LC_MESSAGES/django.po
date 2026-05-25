@@ -1,8 +1,8 @@
-# Bora Ali - Portuguese (Brazil) translations
+# Boora Ali - Portuguese (Brazil) translations
 # Copyright (C) 2026
 msgid ""
 msgstr ""
-"Project-Id-Version: Bora Ali 0.1.0\n"
+"Project-Id-Version: Boora Ali 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-30 00:00+0000\n"
 "PO-Revision-Date: 2026-04-30 00:00+0000\n"

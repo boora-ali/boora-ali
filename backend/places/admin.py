@@ -12,7 +12,17 @@ from unfold.contrib.filters.admin import (
 
 from config.admin_site import site as admin_site
 
-from .models import CoordsStatus, Place, Visit, VisitItem
+from .models import (
+    Collection,
+    CollectionPlace,
+    CollectionShare,
+    CollectionSharePlaceSnapshot,
+    CoordsStatus,
+    Place,
+    PlaceShare,
+    Visit,
+    VisitItem,
+)
 from .tasks import resolve_place_coords
 
 ADMIN_LIST_PER_PAGE = 10
@@ -46,6 +56,245 @@ def persist_photo_path_with_history(request, obj):
         obj.save(update_fields=["photo_path"])
 
 
+class CollectionSharePlaceSnapshotInline(TabularInline):
+    model = CollectionSharePlaceSnapshot
+    extra = 0
+    tab = True
+    show_count = True
+    can_delete = False
+    fields = (
+        "order_index",
+        "source_place_public_id",
+        "name",
+        "category",
+        "status",
+        "maps_url",
+        "instagram_url",
+        "source_cover_photo_path",
+        "cover_photo_path",
+    )
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class CollectionPlaceInline(TabularInline):
+    model = CollectionPlace
+    extra = 0
+    tab = True
+    show_count = True
+    autocomplete_fields = ("place",)
+    fields = ("place", "added_at")
+    readonly_fields = ("added_at",)
+
+
+class PlaceShareInline(TabularInline):
+    model = PlaceShare
+    extra = 0
+    tab = True
+    show_count = True
+    fields = ("token", "is_active", "created_at")
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(CollectionShare, site=admin_site)
+class CollectionShareAdmin(SimpleHistoryAdmin, ModelAdmin):
+    list_display = (
+        "source_collection",
+        "owner",
+        "snapshot_name",
+        "snapshot_emoji",
+        "is_active",
+        "place_count",
+        "created_at",
+    )
+    list_filter = (
+        "is_active",
+        ("created_at", RangeDateTimeFilter),
+    )
+    list_filter_submit = True
+    search_fields = (
+        "token",
+        "snapshot_name",
+        "snapshot_description",
+        "source_collection__name",
+        "owner__username",
+        "owner__email",
+    )
+    list_select_related = ("owner", "source_collection")
+    autocomplete_fields = ("owner", "source_collection")
+    readonly_fields = ("token", "created_at")
+    inlines = (CollectionSharePlaceSnapshotInline,)
+    list_per_page = ADMIN_LIST_PER_PAGE
+    list_fullwidth = True
+    compressed_fields = True
+    warn_unsaved_form = True
+    fieldsets = (
+        (
+            "Share",
+            {
+                "classes": ("tab",),
+                "fields": (
+                    "owner",
+                    "source_collection",
+                    "snapshot_name",
+                    "snapshot_emoji",
+                    "snapshot_description",
+                    "is_active",
+                ),
+            },
+        ),
+        (
+            "Sistema",
+            {
+                "classes": ("tab",),
+                "fields": ("token", "created_at"),
+            },
+        ),
+    )
+
+    @admin.display(description="Places", ordering="place_count")
+    def place_count(self, obj):
+        return obj.place_snapshots.count()
+
+
+@admin.register(Collection, site=admin_site)
+class CollectionAdmin(SimpleHistoryAdmin, ModelAdmin):
+    list_display = ("name", "user", "emoji", "place_count", "updated_at")
+    list_filter = ("emoji", "created_at", "updated_at")
+    search_fields = ("name", "description", "user__username", "user__email")
+    list_select_related = ("user",)
+    autocomplete_fields = ("user",)
+    readonly_fields = ("created_at", "updated_at")
+    inlines = (CollectionPlaceInline,)
+    list_per_page = ADMIN_LIST_PER_PAGE
+    list_fullwidth = True
+    compressed_fields = True
+    warn_unsaved_form = True
+    fieldsets = (
+        (
+            "Coleção",
+            {
+                "classes": ("tab",),
+                "fields": ("user", "name", "emoji", "description"),
+            },
+        ),
+        (
+            "Sistema",
+            {
+                "classes": ("tab",),
+                "fields": ("created_at", "updated_at"),
+            },
+        ),
+    )
+
+    @admin.display(description="Places")
+    def place_count(self, obj):
+        return obj.collection_places.count()
+
+
+@admin.register(CollectionSharePlaceSnapshot, site=admin_site)
+class CollectionSharePlaceSnapshotAdmin(SimpleHistoryAdmin, ModelAdmin):
+    list_display = (
+        "share",
+        "order_index",
+        "name",
+        "category",
+        "status",
+        "source_place_public_id",
+        "cover_photo_path",
+    )
+    list_filter = (
+        ("status", ChoicesDropdownFilter),
+        "category",
+        ("created_at", RangeDateTimeFilter),
+    )
+    list_filter_submit = True
+    search_fields = (
+        "name",
+        "category",
+        "address",
+        "maps_url",
+        "instagram_url",
+        "source_place_public_id",
+        "share__token",
+        "share__source_collection__name",
+    )
+    list_select_related = ("share", "share__source_collection", "share__owner")
+    autocomplete_fields = ("share",)
+    readonly_fields = (
+        "share",
+        "source_place_public_id",
+        "name",
+        "category",
+        "address",
+        "instagram_url",
+        "maps_url",
+        "coords_status",
+        "latitude",
+        "longitude",
+        "status",
+        "notes",
+        "source_cover_photo_path",
+        "cover_photo_path",
+        "order_index",
+        "created_at",
+    )
+    list_per_page = ADMIN_LIST_PER_PAGE
+    list_fullwidth = True
+    compressed_fields = True
+    warn_unsaved_form = True
+    fieldsets = (
+        (
+            "Snapshot",
+            {
+                "classes": ("tab",),
+                "fields": (
+                    "share",
+                    "order_index",
+                    "source_place_public_id",
+                    "name",
+                    "category",
+                    "status",
+                    "coords_status",
+                    "address",
+                    "notes",
+                ),
+            },
+        ),
+        (
+            "Links e mídia",
+            {
+                "classes": ("tab",),
+                "fields": (
+                    "instagram_url",
+                    "maps_url",
+                    "source_cover_photo_path",
+                    "cover_photo_path",
+                ),
+            },
+        ),
+        (
+            "Coordenadas",
+            {
+                "classes": ("tab",),
+                "fields": ("latitude", "longitude"),
+            },
+        ),
+        (
+            "Sistema",
+            {
+                "classes": ("tab",),
+                "fields": ("created_at",),
+            },
+        ),
+    )
+
+
 @admin.register(Place, site=admin_site)
 class PlaceAdmin(SimpleHistoryAdmin, ModelAdmin):
     actions = [retry_failed_coords]
@@ -70,6 +319,7 @@ class PlaceAdmin(SimpleHistoryAdmin, ModelAdmin):
     list_select_related = ("user",)
     autocomplete_fields = ("user",)
     readonly_fields = ("public_id", "cover_preview", "created_at", "updated_at")
+    inlines = (PlaceShareInline,)
     list_per_page = ADMIN_LIST_PER_PAGE
     list_fullwidth = True
     compressed_fields = True

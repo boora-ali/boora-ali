@@ -87,7 +87,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Bora Ali — Entre na sua conta</title>
+        <title>Boora Ali — Entre na sua conta</title>
         <meta name="description" content="Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou." />
         <link rel="canonical" href="https://booraali.com.br/login" />
       </Helmet>
@@ -95,7 +95,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center gap-4">
           <LottieState
             animation="login-pin"
-            label="Bora Ali"
+            label="Boora Ali"
             className="h-28 w-28 scale-[2.7]"
             fallback={
               <img

@@ -34,7 +34,7 @@ export function Footer() {
         >
           LinkedIn
         </a>
-        <span className="text-xs">&copy; {new Date().getFullYear()} Bora Ali &mdash; {t("footer.rights")}</span>
+        <span className="text-xs">&copy; {new Date().getFullYear()} Boora Ali &mdash; {t("footer.rights")}</span>
       </div>
     </footer>
   );

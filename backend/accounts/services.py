@@ -56,7 +56,7 @@ class AccountLifecycleService:
                 {
                     "from": settings.EMAIL_FROM,
                     "to": [user.email],
-                    "subject": "Confirme seu email — Bora Ali",
+                    "subject": "Confirme seu email — Boora Ali",
                     "html": (
                         "<p>Olá! Acesse o link abaixo para verificar seu email:</p>"
                         f"<p><a href='{verification_url}'>{verification_url}</a></p>"

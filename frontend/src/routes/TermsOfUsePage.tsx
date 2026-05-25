@@ -6,8 +6,8 @@ export default function TermsOfUsePage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Helmet>
-        <title>Termos de Uso — Bora Ali</title>
-        <meta name="description" content="Leia os termos e condições de uso do Bora Ali." />
+        <title>Termos de Uso — Boora Ali</title>
+        <meta name="description" content="Leia os termos e condições de uso do Boora Ali." />
         <link rel="canonical" href="https://booraali.com.br/termos-de-uso" />
       </Helmet>
       <div className="flex-1 mx-auto max-w-2xl px-6 py-12">
@@ -26,7 +26,7 @@ export default function TermsOfUsePage() {
           <section>
             <h2 className="text-lg font-semibold text-text mb-3">1. Aceitação dos Termos</h2>
             <p>
-              Ao criar uma conta no <strong>Bora Ali</strong>, você concorda com estes Termos de Uso
+              Ao criar uma conta no <strong>Boora Ali</strong>, você concorda com estes Termos de Uso
               e com nossa{" "}
               <Link to="/politica-de-privacidade" className="text-primary hover:underline">
                 Política de Privacidade
@@ -36,9 +36,9 @@ export default function TermsOfUsePage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-3">2. O que é o Bora Ali</h2>
+            <h2 className="text-lg font-semibold text-text mb-3">2. O que é o Boora Ali</h2>
             <p>
-              O Bora Ali é uma plataforma de uso pessoal para registro de experiências
+              O Boora Ali é uma plataforma de uso pessoal para registro de experiências
               gastronômicas — restaurantes, bares, cafeterias, padarias e outros estabelecimentos.
               Você pode registrar lugares, visitas, avaliações de ambiente e atendimento, consumíveis
               (pratos, bebidas, doces etc.) com preços e notas, além de fotos e localização geográfica.
@@ -57,7 +57,7 @@ export default function TermsOfUsePage() {
 
           <section>
             <h2 className="text-lg font-semibold text-text mb-3">4. Uso permitido</h2>
-            <p className="mb-2">Você pode usar o Bora Ali para:</p>
+            <p className="mb-2">Você pode usar o Boora Ali para:</p>
             <ul className="list-disc list-inside space-y-1 text-text/80 ml-2">
               <li>Registrar e organizar suas experiências gastronômicas pessoais.</li>
               <li>Fazer upload de fotos dos lugares e pratos que você consumiu.</li>
@@ -90,7 +90,7 @@ export default function TermsOfUsePage() {
           <section>
             <h2 className="text-lg font-semibold text-text mb-3">7. Disponibilidade do serviço</h2>
             <p>
-              O Bora Ali é oferecido como está, sem garantia de disponibilidade contínua. Podemos
+              O Boora Ali é oferecido como está, sem garantia de disponibilidade contínua. Podemos
               realizar manutenções, atualizações ou encerrar o serviço com aviso prévio razoável.
               Recomendamos exportar seus dados periodicamente.
             </p>
@@ -108,7 +108,7 @@ export default function TermsOfUsePage() {
           <section>
             <h2 className="text-lg font-semibold text-text mb-3">9. Limitação de responsabilidade</h2>
             <p>
-              O Bora Ali não se responsabiliza por perdas de dados decorrentes de falhas técnicas,
+              O Boora Ali não se responsabiliza por perdas de dados decorrentes de falhas técnicas,
               nem pela precisão de informações de estabelecimentos cadastrados pelos usuários. As
               avaliações e notas são de caráter pessoal e subjetivo.
             </p>

@@ -305,6 +305,9 @@ class Collection(BaseModel):
         db_table = "places_collection"
         ordering = ["-updated_at"]
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class CollectionPlace(models.Model):
     collection = models.ForeignKey(
@@ -342,6 +345,10 @@ class PlaceShare(models.Model):
             models.Index(fields=["token", "is_active"], name="share_token_active_idx"),
         ]
 
+    def __str__(self) -> str:
+        state = "ativo" if self.is_active else "inativo"
+        return f"{self.place.name} share ({state}, {self.token[:8]})"
+
 
 class CollectionShare(models.Model):
     token = models.CharField(max_length=64, unique=True, default=secrets.token_urlsafe)
@@ -367,17 +374,24 @@ class CollectionShare(models.Model):
             ),
         ]
 
+    def __str__(self) -> str:
+        collection_name = (
+            self.source_collection.name if self.source_collection_id else "collection"
+        )
+        state = "ativo" if self.is_active else "rascunho"
+        return f"{collection_name} share ({state}, {self.token[:8]})"
+
 
 class CollectionSharePlaceSnapshot(models.Model):
     share = models.ForeignKey(
         CollectionShare, on_delete=models.CASCADE, related_name="place_snapshots"
     )
     source_place_public_id = models.UUIDField(db_index=True)
-    name = models.CharField(max_length=200)
-    category = models.CharField(max_length=100)
-    address = models.CharField(max_length=300, blank=True, default="")
-    instagram_url = models.URLField(blank=True, default="")
-    maps_url = models.URLField(blank=True, default="")
+    name = models.CharField(max_length=2000)
+    category = models.CharField(max_length=2000)
+    address = models.CharField(max_length=2000, blank=True, default="")
+    instagram_url = models.URLField(blank=True, default="", max_length=2000)
+    maps_url = models.URLField(blank=True, default="", max_length=2000)
     coords_status = models.CharField(
         max_length=10,
         choices=CoordsStatus.choices,
@@ -391,8 +405,8 @@ class CollectionSharePlaceSnapshot(models.Model):
     )
     status = models.CharField(max_length=32, choices=PlaceStatus.choices)
     notes = models.TextField(blank=True, default="")
-    source_cover_photo_path = models.CharField(max_length=500, blank=True, default="")
-    cover_photo_path = models.CharField(max_length=500, blank=True, default="")
+    source_cover_photo_path = models.CharField(max_length=2000, blank=True, default="")
+    cover_photo_path = models.CharField(max_length=2000, blank=True, default="")
     order_index = models.PositiveIntegerField(db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -404,3 +418,9 @@ class CollectionSharePlaceSnapshot(models.Model):
                 fields=["share", "order_index"], name="colshare_snapshot_order_idx"
             ),
         ]
+
+    def __str__(self) -> str:
+        collection_name = (
+            self.share.source_collection.name if self.share_id else "share"
+        )
+        return f"{collection_name}: {self.name} [{self.category}]"

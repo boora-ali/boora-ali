@@ -3,14 +3,14 @@
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "Bora Ali",
-      "description": "Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar",
+      "name": "Boora Ali",
+      "description": "Diário pessoal de lugares — registre lugares, visitas e experiências que valem lembrar",
       "url": "https://booraali.com.br"
     },
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "Bora Ali",
+      "name": "Boora Ali",
       "url": "https://booraali.com.br"
     }
   ],
@@ -19,18 +19,18 @@
       {
         "@context": "https://schema.org",
         "@type": "WebPage",
-        "name": "Bora Ali — Entre na sua conta",
+        "name": "Boora Ali — Diário pessoal de lugares",
         "url": "https://booraali.com.br",
-        "description": "Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou."
+        "description": "Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares."
       }
     ],
     "/register": [
       {
         "@context": "https://schema.org",
         "@type": "WebPage",
-        "name": "Bora Ali — Crie sua conta",
+        "name": "Boora Ali — Crie sua conta",
         "url": "https://booraali.com.br/register",
-        "description": "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali."
+        "description": "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Boora Ali."
       },
       {
         "@context": "https://schema.org",
@@ -55,9 +55,9 @@
       {
         "@context": "https://schema.org",
         "@type": "WebPage",
-        "name": "Política de Privacidade — Bora Ali",
+        "name": "Política de Privacidade — Boora Ali",
         "url": "https://booraali.com.br/politica-de-privacidade",
-        "description": "Saiba como o Bora Ali coleta, usa e protege seus dados pessoais."
+        "description": "Saiba como o Boora Ali coleta, usa e protege seus dados pessoais."
       },
       {
         "@context": "https://schema.org",
@@ -82,9 +82,9 @@
       {
         "@context": "https://schema.org",
         "@type": "WebPage",
-        "name": "Termos de Uso — Bora Ali",
+        "name": "Termos de Uso — Boora Ali",
         "url": "https://booraali.com.br/termos-de-uso",
-        "description": "Leia os termos e condições de uso do Bora Ali."
+        "description": "Leia os termos e condições de uso do Boora Ali."
       },
       {
         "@context": "https://schema.org",

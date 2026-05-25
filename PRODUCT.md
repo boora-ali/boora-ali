@@ -1,8 +1,8 @@
-# PRODUCT.md — Bora Ali
+# PRODUCT.md — Boora Ali
 
 ## Product Purpose
 
-Bora Ali é um diário pessoal de lugares. O usuário anota onde quer ir, onde já esteve e o que consumiu — um caderno analógico, mas que não se perde na gaveta.
+Boora Ali é um diário pessoal de lugares. O usuário anota onde quer ir, onde já esteve e o que consumiu — um caderno analógico, mas que não se perde na gaveta.
 
 Não é rede social. Não é guia de restaurantes. É memória afetiva de lugares: "fui aqui com quem, comi o quê, achei quanto".
 
@@ -20,7 +20,7 @@ Contexto de uso real: em pé na fila do restaurante tentando lembrar o nome do p
 
 ## Brand
 
-**Nome:** Bora Ali — gíria brasileira. "Bora" = vamo, "ali" = naquele lugar específico. Coloquial, urgente, afetivo.
+**Nome:** Boora Ali — gíria brasileira. "Boora" = vamo, "ali" = naquele lugar específico. Coloquial, urgente, afetivo.
 
 **Tom:** conversa de grupo de zap. Direto, sem frescura, com carinho. Não é app corporativo. Não é startup que quer parecer cool. É ferramenta pessoal que funciona.
 

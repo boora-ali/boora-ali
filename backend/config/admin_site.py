@@ -4,8 +4,8 @@ from unfold.sites import UnfoldAdminSite
 
 
 class BoraAliAdminSite(UnfoldAdminSite):
-    site_header = "Bora Ali Admin"
-    site_title = "Bora Ali"
+    site_header = "Boora Ali Admin"
+    site_title = "Boora Ali"
     index_title = "Insights"
 
     def index(self, request, extra_context=None):

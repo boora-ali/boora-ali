@@ -1,31 +1,32 @@
 import { defineConfig } from "aeo.js";
 
 export default defineConfig({
-  title: "Bora Ali",
+  title: "Boora Ali",
   url: "https://booraali.com.br",
   description:
-    "Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar",
+    "Diário pessoal de lugares — registre lugares, visitas e experiências que valem lembrar",
 
   pages: [
     {
       pathname: "/",
-      title: "Bora Ali — Entre na sua conta",
-      description: "Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou.",
+      title: "Boora Ali — Diário pessoal de lugares",
+      description:
+        "Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares.",
     },
     {
       pathname: "/register",
-      title: "Bora Ali — Crie sua conta",
-      description: "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali.",
+      title: "Boora Ali — Crie sua conta",
+      description: "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Boora Ali.",
     },
     {
       pathname: "/politica-de-privacidade",
-      title: "Política de Privacidade — Bora Ali",
-      description: "Saiba como o Bora Ali coleta, usa e protege seus dados pessoais.",
+      title: "Política de Privacidade — Boora Ali",
+      description: "Saiba como o Boora Ali coleta, usa e protege seus dados pessoais.",
     },
     {
       pathname: "/termos-de-uso",
-      title: "Termos de Uso — Bora Ali",
-      description: "Leia os termos e condições de uso do Bora Ali.",
+      title: "Termos de Uso — Boora Ali",
+      description: "Leia os termos e condições de uso do Boora Ali.",
     },
   ],
 

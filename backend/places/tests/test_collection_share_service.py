@@ -59,6 +59,55 @@ def test_create_share_materializes_snapshot(user):
     assert snapshot.order_index == 0
 
 
+@pytest.mark.parametrize(
+    "field_name, place_kwargs, expected_value",
+    [
+        (
+            "name",
+            {"name": "N" * 400},
+            "N" * 400,
+        ),
+        (
+            "category",
+            {"category": "C" * 400},
+            "C" * 400,
+        ),
+        (
+            "address",
+            {"address": "A" * 400},
+            "A" * 400,
+        ),
+        (
+            "instagram_url",
+            {"instagram_url": "https://instagram.com/" + "i" * 370},
+            "https://instagram.com/" + "i" * 370,
+        ),
+        (
+            "maps_url",
+            {"maps_url": "https://maps.google.com/?q=" + "m" * 370},
+            "https://maps.google.com/?q=" + "m" * 370,
+        ),
+        (
+            "source_cover_photo_path",
+            {"cover_photo": "users/1/places/covers/" + "p" * 360},
+            "users/1/places/covers/" + "p" * 360,
+        ),
+    ],
+)
+def test_create_share_identifies_long_snapshot_fields(
+    user, field_name, place_kwargs, expected_value
+):
+    collection = baker.make(Collection, user=user, name="Favoritos", emoji="⭐")
+    place = baker.make("places.Place", user=user, **place_kwargs)
+    baker.make(CollectionPlace, collection=collection, place=place)
+
+    with patch("places.services.transaction.on_commit"):
+        share = CollectionShareService.create_share(collection, user)
+
+    snapshot = share.place_snapshots.get()
+    assert getattr(snapshot, field_name) == expected_value
+
+
 def test_get_share_detail_returns_frozen_data(user):
     collection = baker.make(Collection, user=user, name="Origem", emoji="☕")
     place = baker.make(

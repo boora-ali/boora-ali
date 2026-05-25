@@ -1,4 +1,4 @@
-# 📍 Bora Ali
+# 📍 Boora Ali
 
 Diário pessoal de lugares — cafés, restaurantes, bares. Catalogue, avalie, registre visitas e itens pedidos.
 

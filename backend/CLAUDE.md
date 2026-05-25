@@ -1,4 +1,4 @@
-# Backend — Bora Ali
+# Backend — Boora Ali
 
 Ver invariantes globais em `../CLAUDE.md`. Este arquivo cobre padrões específicos do backend.
 
