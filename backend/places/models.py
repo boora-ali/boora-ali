@@ -41,6 +41,39 @@ class VisitItemType(models.TextChoices):
     OTHER = "other", _("Other")
 
 
+class Category(BaseModel):
+    name = models.CharField(
+        max_length=100, unique=True, verbose_name="name", db_column="name"
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = "places_category"
+        ordering = ("name",)
+        verbose_name = "category"
+        verbose_name_plural = "categories"
+
+
+class PlaceCategory(BaseModel):
+    category = models.ForeignKey(
+        db_column="id_category",
+        to="Category",
+        on_delete=models.CASCADE,
+        related_name="category_links",
+    )
+    place = models.ForeignKey(
+        db_column="id_place",
+        to="Place",
+        on_delete=models.CASCADE,
+        related_name="plance_links",
+    )
+
+    class Meta:
+        db_table = "places_place_category"
+
+
 class Place(BaseModel):
     objects = PlaceQuerySet.as_manager()
     history = HistoricalRecords()
@@ -56,9 +89,6 @@ class Place(BaseModel):
         db_column="user_id",
     )
     name = models.CharField(max_length=200, verbose_name="name", db_column="name")
-    category = models.CharField(
-        max_length=100, verbose_name="category", db_column="category"
-    )
     address = models.CharField(
         max_length=300, blank=True, verbose_name="address", db_column="address"
     )
@@ -106,6 +136,11 @@ class Place(BaseModel):
         verbose_name="cover photo",
         db_column="cover_photo",
     )
+    categories = models.ManyToManyField(
+        "Category",
+        through="PlaceCategory",
+        through_fields=("place", "category")
+    )
 
     class Meta:
         db_table = "places_place"
@@ -114,17 +149,11 @@ class Place(BaseModel):
         verbose_name_plural = "places"
         indexes = [
             models.Index(fields=["user", "status"], name="place_user_status_idx"),
-            models.Index(fields=["user", "category"], name="place_user_category_idx"),
             models.Index(
                 fields=["user", "deleted_at"], name="place_user_deleted_at_idx"
             ),
             GinIndex(
                 fields=["name"], name="place_name_trgm_idx", opclasses=["gin_trgm_ops"]
-            ),
-            GinIndex(
-                fields=["category"],
-                name="place_category_trgm_idx",
-                opclasses=["gin_trgm_ops"],
             ),
             GinIndex(
                 fields=["address"],
