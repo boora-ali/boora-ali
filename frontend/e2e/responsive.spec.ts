@@ -87,7 +87,7 @@ for (const viewport of viewports) {
     await page.getByRole("link", { name: /novo lugar|novo/i }).waitFor({ state: "visible" });
 
     // Then the page header, new-place link, and place card are visible
-    await expect(page.getByRole("heading", { name: "Bora Ali" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Boora Ali" })).toBeVisible();
     await expect(page.getByRole("link", { name: /novo lugar|novo/i })).toBeVisible();
     await expect(page.getByText(place.name)).toBeVisible();
 

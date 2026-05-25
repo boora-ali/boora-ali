@@ -86,8 +86,8 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Bora Ali — Crie sua conta</title>
-        <meta name="description" content="Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali." />
+        <title>Boora Ali — Crie sua conta</title>
+        <meta name="description" content="Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Boora Ali." />
         <link rel="canonical" href="https://booraali.com.br/register" />
       </Helmet>
       <div className="flex-1 max-w-sm w-full mx-auto p-6 mt-8 space-y-3">

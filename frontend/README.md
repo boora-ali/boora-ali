@@ -1,4 +1,4 @@
-# Bora Ali Frontend
+# Boora Ali Frontend
 
 Frontend webapp built with React + TypeScript + Vite.
 

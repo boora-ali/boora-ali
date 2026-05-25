@@ -64,7 +64,7 @@ export default function CollectionSharePage() {
     };
   }, [token]);
 
-  const title = data ? `${data.name} — Bora Ali` : "Bora Ali";
+  const title = data ? `${data.name} — Boora Ali` : "Boora Ali";
 
   const places = useMemo(() => data?.places ?? [], [data]);
 

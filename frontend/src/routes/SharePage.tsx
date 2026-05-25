@@ -49,7 +49,7 @@ export default function SharePage() {
     };
   }, [token]);
 
-  const title = data ? `${data.name} — Bora Ali` : "Bora Ali";
+  const title = data ? `${data.name} — Boora Ali` : "Boora Ali";
   const mapsHref = data
     ? getMapsHref({
         mapsUrl: data.maps_url,

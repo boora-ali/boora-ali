@@ -30,6 +30,19 @@ const faq = [
   },
 ];
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faq.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.answer,
+    },
+  })),
+};
+
 function SectionRail({ number, label }: { number: string; label: string }) {
   return (
     <div className="flex min-w-0 flex-row items-center gap-3 lg:w-[11rem] lg:flex-col lg:items-start lg:gap-2">
@@ -66,7 +79,7 @@ function NotebookHeroGraphic() {
     <div className="relative mx-auto max-w-[31rem] rounded-[2rem] border border-border bg-surface p-4 shadow-[0_28px_70px_-34px_rgba(18,24,38,0.22)]">
       <img
         src="/landing-assets/hero-notebook.png"
-        alt="Diário aberto com mapa, anotações e foto de um lugar salvo no Bora Ali"
+        alt="Diário aberto com mapa, anotações e foto de um lugar salvo no Boora Ali"
         className="block h-auto w-full rounded-[1.5rem] border border-border"
         loading="eager"
         decoding="async"
@@ -121,7 +134,7 @@ export default function LandingPage() {
   return (
     <>
       <Helmet>
-        <title>Bora Ali — Diário pessoal de lugares</title>
+        <title>Boora Ali — Diário pessoal de lugares</title>
         <meta
           name="description"
           content="Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares."
@@ -134,7 +147,7 @@ export default function LandingPage() {
         <meta name="robots" content="index, follow" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://booraali.com.br/" />
-        <meta property="og:title" content="Bora Ali — Diário pessoal de lugares" />
+        <meta property="og:title" content="Boora Ali — Diário pessoal de lugares" />
         <meta
           property="og:description"
           content="Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares."
@@ -142,15 +155,18 @@ export default function LandingPage() {
         <meta property="og:image" content="https://booraali.com.br/og-image.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:site_name" content="Bora Ali" />
+        <meta property="og:site_name" content="Boora Ali" />
         <meta property="og:locale" content="pt_BR" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Bora Ali — Diário pessoal de lugares" />
+        <meta name="twitter:title" content="Boora Ali — Diário pessoal de lugares" />
         <meta
           name="twitter:description"
           content="Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares."
         />
         <meta name="twitter:image" content="https://booraali.com.br/og-image.png" />
+        <script type="application/ld+json">
+          {JSON.stringify(faqSchema)}
+        </script>
       </Helmet>
 
       <div className="relative isolate overflow-hidden bg-background text-text">
@@ -158,7 +174,7 @@ export default function LandingPage() {
           <Link to="/" className="flex items-center gap-3">
             <img src="/bora-ali-mark.svg" alt="" className="h-10 w-10" />
             <div className="leading-tight">
-              <p className="font-fraunces text-lg font-bold text-text">Bora Ali</p>
+              <p className="font-fraunces text-lg font-bold text-text">Boora Ali</p>
               <p className="text-[0.68rem] uppercase tracking-[0.22em] text-muted">Diário de lugares</p>
             </div>
           </Link>
@@ -197,11 +213,11 @@ export default function LandingPage() {
             <div className="space-y-7">
               <div className="space-y-4">
                 <h1 className="max-w-2xl font-fraunces text-5xl font-bold leading-[0.92] tracking-tight text-[color:var(--color-text)] sm:text-6xl lg:text-7xl">
-                  Guarde os lugares que valem lembrar.
+                  Guarde lugares, visitas e experiências que valem lembrar.
                 </h1>
                 <p className="max-w-xl text-base leading-8 text-muted sm:text-lg">
-                  O Bora Ali organiza os lugares que você quer conhecer, já visitou e quer revisitar.
-                  Salve endereços, registre visitas e mantenha o contexto do que fez sentido em cada parada.
+                  O Boora Ali é seu diário pessoal de lugares. Salve endereços, registre visitas,
+                  mantenha notas, fotos e contexto de cada parada, e volte ao que fez sentido com mais rapidez.
                 </p>
               </div>
 
@@ -357,7 +373,7 @@ export default function LandingPage() {
         <footer className="border-t border-border/70 bg-background/80">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="font-fraunces text-xl font-bold text-[color:var(--color-text)]">Bora Ali</p>
+              <p className="font-fraunces text-xl font-bold text-[color:var(--color-text)]">Boora Ali</p>
               <p className="text-sm text-muted">
                 O diário pessoal dos lugares que você quer conhecer, visitou e quer lembrar.
               </p>

@@ -1,42 +1,42 @@
 {
   "version": "1.0",
-  "generated": "2026-05-25T02:40:46.711Z",
+  "generated": "2026-05-25T03:00:07.123Z",
   "site": {
-    "title": "Bora Ali",
-    "description": "Diário pessoal de lugares — registre lugares, visitas e pratos que valem lembrar",
+    "title": "Boora Ali",
+    "description": "Diário pessoal de lugares — registre lugares, visitas e experiências que valem lembrar",
     "url": "https://booraali.com.br"
   },
   "entries": [
     {
       "id": "0f775caa248eb976",
       "url": "https://booraali.com.br/register",
-      "title": "Bora Ali — Crie sua conta",
-      "content": "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali.",
-      "description": "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Bora Ali.",
+      "title": "Boora Ali — Crie sua conta",
+      "content": "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Boora Ali.",
+      "description": "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Boora Ali.",
       "keywords": []
     },
     {
       "id": "4aa7837b4a0929be",
       "url": "https://booraali.com.br",
-      "title": "Bora Ali — Entre na sua conta",
-      "content": "Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou.",
-      "description": "Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou.",
+      "title": "Boora Ali — Diário pessoal de lugares",
+      "content": "Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares.",
+      "description": "Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares.",
       "keywords": []
     },
     {
       "id": "8999721a53e2b70e",
       "url": "https://booraali.com.br/termos-de-uso",
-      "title": "Termos de Uso — Bora Ali",
-      "content": "Leia os termos e condições de uso do Bora Ali.",
-      "description": "Leia os termos e condições de uso do Bora Ali.",
+      "title": "Termos de Uso — Boora Ali",
+      "content": "Leia os termos e condições de uso do Boora Ali.",
+      "description": "Leia os termos e condições de uso do Boora Ali.",
       "keywords": []
     },
     {
       "id": "9442f6ceda872f63",
       "url": "https://booraali.com.br/politica-de-privacidade",
-      "title": "Política de Privacidade — Bora Ali",
-      "content": "Saiba como o Bora Ali coleta, usa e protege seus dados pessoais.",
-      "description": "Saiba como o Bora Ali coleta, usa e protege seus dados pessoais.",
+      "title": "Política de Privacidade — Boora Ali",
+      "content": "Saiba como o Boora Ali coleta, usa e protege seus dados pessoais.",
+      "description": "Saiba como o Boora Ali coleta, usa e protege seus dados pessoais.",
       "keywords": []
     }
   ],

@@ -1,4 +1,4 @@
-# Frontend — Bora Ali
+# Frontend — Boora Ali
 
 Ver invariantes globais em `../CLAUDE.md`. Este arquivo cobre padrões específicos do frontend.
 
