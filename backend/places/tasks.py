@@ -17,7 +17,7 @@ from django.utils import timezone
 from accounts.models import UserProfile
 from core.image_service import ImageService
 
-from .maps import extract_coords, extract_place_cid
+from .maps import extract_coords
 from .models import CoordsStatus, Place, Visit, VisitItem
 from .services import PlaceShareService
 
@@ -139,17 +139,24 @@ def _resolve_place_coords(self, place_pk: int):
         response = _safe_maps_urlopen(place.maps_url)
         lat, lng = extract_coords(response.url)
 
-        # Fallback: GPS-shared URLs (entry=gps) resolve without embedded coords.
-        # Extract the CID from !1s0x<high>:0x<low> and re-fetch via ?cid= which
-        # always redirects to a coordinate-bearing URL.
         if lat is None or lng is None:
-            cid = extract_place_cid(response.url)
-            if cid is not None:
-                cid_url = f"https://maps.google.com/maps?cid={cid}"
-                cid_response = _safe_maps_urlopen(cid_url)
-                lat, lng = extract_coords(cid_response.url)
+            # GPS-shared URLs (entry=gps) resolve to a place-card URL without
+            # embedded coordinates. Google only delivers coords via JavaScript
+            # — not in the HTTP redirect chain or initial HTML. Retrying will not
+            # help; fail fast so we don't burn 3 retry slots unnecessarily.
+            # Future fix: use extract_place_cid() + Google Places API.
+            if "entry=gps" in response.url:
+                _log.warning(
+                    "resolve_place_coords: GPS-shared URL sem coords embutidas "
+                    "(entry=gps). Integre Google Places API para suporte completo. "
+                    "place_pk=%s maps_url=%r",
+                    place_pk,
+                    place.maps_url,
+                )
+                place.coords_status = CoordsStatus.FAILED
+                place.save(update_fields=["coords_status"])
+                return
 
-        if lat is None or lng is None:
             raise ValueError("Coordenadas não encontradas na URL do Maps")
     except Exception as exc:  # pragma: no cover - covered through retry tests
         if self.request.retries >= self.max_retries:
