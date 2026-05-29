@@ -14,11 +14,6 @@ export default defineConfig({
         "Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares.",
     },
     {
-      pathname: "/register",
-      title: "Boora Ali — Crie sua conta",
-      description: "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Boora Ali.",
-    },
-    {
       pathname: "/politica-de-privacidade",
       title: "Política de Privacidade — Boora Ali",
       description: "Saiba como o Boora Ali coleta, usa e protege seus dados pessoais.",
