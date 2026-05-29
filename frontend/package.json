@@ -11,7 +11,7 @@
     "prebuild": "node scripts/generate-og-image.mjs",
     "build": "tsc -b && vite build",
     "build:preprod": "tsc -b && vite build --mode preprod",
-    "build:prod": "tsc -b && vite build --mode production",
+    "build:prod": "tsc -b && vite build --mode production && node scripts/prerender-root.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "perf:preview": "vite preview --host 127.0.0.1 --port 4173",
