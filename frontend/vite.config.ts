@@ -4,6 +4,8 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { aeoVitePlugin } from "aeo.js/vite";
 import path from "path";
+import VitePluginPrerender from "@prerenderer/rollup-plugin";
+import PuppeteerRenderer from "@prerenderer/renderer-puppeteer";
 
 function parseAllowedHosts(value?: string) {
   if (!value) return [];
@@ -33,7 +35,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       tailwindcss(),
       react(),
-      ...(!isProd ? [aeoVitePlugin({
+      ...(isProd ? [aeoVitePlugin({
         title: "Boora Ali",
         description:
           "Diário pessoal de lugares — registre lugares, visitas e experiências que valem lembrar",
@@ -43,11 +45,6 @@ export default defineConfig(({ mode }) => {
             pathname: "/",
             title: "Boora Ali — Diário pessoal de lugares",
             description: "Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares.",
-          },
-          {
-            pathname: "/register",
-            title: "Boora Ali — Crie sua conta",
-            description: "Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Boora Ali.",
           },
           {
             pathname: "/politica-de-privacidade",
@@ -61,6 +58,18 @@ export default defineConfig(({ mode }) => {
           },
         ],
       })] : []),
+      ...(isProd ? [
+        // NOTE: "/" route is excluded — Vite 8 (Rolldown) does not correctly
+        // re-emit index.html when the prerender plugin replaces it, causing
+        // the root index.html to be deleted from dist. Sub-routes work fine.
+        VitePluginPrerender({
+          routes: ["/register", "/politica-de-privacidade", "/termos-de-uso"],
+          renderer: new PuppeteerRenderer({
+            headless: true,
+            renderAfterTime: 2000,
+          }),
+        }),
+      ] : []),
     ],
     resolve: {
       alias: [

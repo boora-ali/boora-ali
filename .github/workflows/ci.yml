@@ -90,13 +90,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clear stale Puppeteer cache
+        run: rm -rf ~/.cache/puppeteer
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Install dependencies
         working-directory: frontend
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
         run: npm ci
 
       - name: ESLint
@@ -146,13 +151,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clear stale Puppeteer cache
+        run: rm -rf ~/.cache/puppeteer
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Install dependencies
         working-directory: frontend
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
         run: npm ci
 
       - name: npm audit
@@ -227,13 +237,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clear stale Puppeteer cache
+        run: rm -rf ~/.cache/puppeteer
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Install dependencies
         working-directory: frontend
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
         run: npm ci
 
       - name: Run tests with coverage
