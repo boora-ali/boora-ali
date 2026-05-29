@@ -1,4 +1,5 @@
 import { Bell } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useNotifications } from "../../hooks/useNotifications";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ triggerClassName }: NotificationBellProps) {
+  const { t } = useTranslation();
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
 
   return (
@@ -25,21 +27,21 @@ export function NotificationBell({ triggerClassName }: NotificationBellProps) {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <span className="text-sm font-medium text-text">Notificações</span>
+          <span className="text-sm font-medium text-text">{t("notifications.title")}</span>
           {unreadCount > 0 && (
             <button
               type="button"
               className="text-xs text-muted-foreground transition hover:text-foreground"
               onClick={markAllRead}
             >
-              Marcar todas como lidas
+              {t("notifications.markAllRead")}
             </button>
           )}
         </div>
         <div className="max-h-80 overflow-y-auto">
           {notifications.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-              Nenhuma notificação
+              {t("notifications.empty")}
             </p>
           ) : (
             notifications.map((n) => (

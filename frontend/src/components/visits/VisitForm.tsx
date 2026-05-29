@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Pencil, X } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -349,13 +350,13 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
                       </div>
                     )}
                     <div className="absolute right-1 top-1 flex gap-1">
-                      <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(i)}
+                      <Button type="button" variant="ghost" size="sm" aria-label={t("common.edit")} onClick={() => openEdit(i)}
                         className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
-                        ✎
+                        <Pencil className="h-3 w-3" />
                       </Button>
-                      <Button type="button" variant="ghost" size="sm" aria-label="Remover" onClick={() => handleRemoveItem(i)}
+                      <Button type="button" variant="ghost" size="sm" aria-label={t("common.remove")} onClick={() => handleRemoveItem(i)}
                         className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
-                        ✕
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
