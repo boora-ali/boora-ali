@@ -99,8 +99,7 @@ export function AccountMenu() {
               <span className="text-sm text-muted">{t("account.menu.language")}</span>
               <LanguageToggle />
             </div>
-            <div className="flex items-center justify-between gap-3 px-3">
-              <span className="text-sm text-muted">{t("darkMode.label")}</span>
+            <div className="flex items-center px-3">
               <DarkModeToggle />
             </div>
           </div>

@@ -94,8 +94,6 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [removedPhoto, setRemovedPhoto] = useState(false);
   const { preview, setPreviewFromFile, clearPreview } = useImagePreview(initial.photo ?? null);
-  const [removeError, setRemoveError] = useState("");
-  const [itemSaveError, setItemSaveError] = useState("");
   const [isSavingItem, setIsSavingItem] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -121,8 +119,8 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
     const file = e.target.files?.[0] ?? null;
     if (!file) { setPhotoFile(null); setPreviewFromFile(null); return; }
     const err = validateImageFile(file);
-    if (err === "type") { toast.error(t("upload.invalidType")); setError("root", { message: t("upload.invalidType") }); e.target.value = ""; return; }
-    if (err === "size") { toast.error(t("upload.tooLarge")); setError("root", { message: t("upload.tooLarge") }); e.target.value = ""; return; }
+    if (err === "type") { toast.error(t("upload.invalidType")); e.target.value = ""; return; }
+    if (err === "size") { toast.error(t("upload.tooLarge")); e.target.value = ""; return; }
     setPhotoFile(file);
     setRemovedPhoto(false);
     setPreviewFromFile(file);
@@ -137,25 +135,21 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
         reportApiError({
           error,
           fallbackMessage: t("visitForm.removeItemError"),
-          onMessage: setRemoveError,
         });
         return;
       }
     }
     setItems((prev) => prev.filter((_, i) => i !== index));
-    setRemoveError("");
   }
 
   function openAdd() {
     setEditingIndex(null);
-    setItemSaveError("");
     setDraftKey((k) => k + 1);
     setModalOpen(true);
   }
 
   function openEdit(index: number) {
     setEditingIndex(index);
-    setItemSaveError("");
     setDraftKey((k) => k + 1);
     setModalOpen(true);
   }
@@ -163,7 +157,6 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
   async function handleItemSave(data: ItemPayload) {
     const currentItem = editingIndex !== null ? items[editingIndex] : undefined;
 
-    setItemSaveError("");
     setIsSavingItem(true);
 
     try {
@@ -179,7 +172,6 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
       reportApiError({
         error,
         fallbackMessage: t("visitForm.saveError"),
-        onMessage: setItemSaveError,
       });
     } finally {
       setIsSavingItem(false);
@@ -337,7 +329,6 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
 
         <FormSection title={t("visitForm.sections.consumed")} description={t("visitForm.consumedDescription")}>
         <div className="flex flex-col gap-2">
-          {removeError && <p className="text-sm text-destructive">{removeError}</p>}
           {items.length > 0 && (
             <ResponsiveCardCarousel
               ariaLabel={t("visitForm.consumedTitle")}
@@ -388,7 +379,6 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
         </div>
         </FormSection>
 
-        {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting && (
             <LoadingSpinner className="mr-2 h-4 w-4" />
@@ -398,10 +388,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
       </form>
 
       <Dialog open={modalOpen} onOpenChange={(o) => {
-        if (!o) {
-          setItemSaveError("");
-          setModalOpen(false);
-        }
+        if (!o) setModalOpen(false);
       }}>
         <DialogContent className="flex max-h-[calc(100svh-0.5rem)] flex-col gap-2 overflow-hidden p-3 sm:max-h-[calc(100vh-2rem)] sm:gap-3 sm:p-6">
           <DialogHeader className="shrink-0 pr-8">
@@ -413,7 +400,6 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
             onSave={handleItemSave}
             className="flex-1 overflow-y-auto overscroll-contain pr-1"
           />
-          {itemSaveError && <p className="text-sm text-destructive">{itemSaveError}</p>}
           <DialogFooter className="shrink-0 pt-0">
             <Button variant="secondary" className="h-10" onClick={() => setModalOpen(false)} disabled={isSavingItem}>{t("common.cancel")}</Button>
             <Button type="submit" form={VISIT_ITEM_FORM_ID} className="h-10" disabled={isSavingItem}>{t("common.save")}</Button>

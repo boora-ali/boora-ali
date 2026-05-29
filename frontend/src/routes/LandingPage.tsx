@@ -1,10 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { ArrowRight, MoonStar, SunMedium, Compass } from "lucide-react";
+import { ArrowRight, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { useDarkMode } from "../hooks/useDarkMode";
-import { useTranslation } from "react-i18next";
+import { DarkModeToggle } from "../components/ui/DarkModeToggle";
 
 const trustPoints = [
   "Privado por padrão",
@@ -55,24 +53,6 @@ function SectionRail({ number, label }: { number: string; label: string }) {
   );
 }
 
-function LandingThemeToggle() {
-  const { dark, toggle } = useDarkMode();
-  const { t } = useTranslation();
-
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-2 shadow-sm">
-      <SunMedium className={`h-4 w-4 ${dark ? "text-muted" : "text-primary"}`} />
-      <span className={`text-xs font-medium transition-colors ${dark ? "text-muted" : "text-text"}`}>
-        Claro
-      </span>
-      <Switch checked={dark} onCheckedChange={toggle} aria-label={t("darkMode.toggle")} />
-      <span className={`text-xs font-medium transition-colors ${dark ? "text-text" : "text-muted"}`}>
-        Escuro
-      </span>
-      <MoonStar className={`h-4 w-4 ${dark ? "text-primary" : "text-muted"}`} />
-    </div>
-  );
-}
 
 function NotebookHeroGraphic() {
   return (
@@ -191,7 +171,7 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center gap-2">
             <div className="hidden lg:block">
-              <LandingThemeToggle />
+              <DarkModeToggle />
             </div>
             <Button asChild variant="secondary" className="hidden sm:inline-flex">
               <Link to="/login">Entrar</Link>
@@ -205,7 +185,7 @@ export default function LandingPage() {
           </div>
         </header>
         <div className="mx-auto flex w-full max-w-7xl px-4 pt-4 sm:px-6 lg:hidden">
-          <LandingThemeToggle />
+          <DarkModeToggle />
         </div>
 
         <main className="mx-auto w-full max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:pb-28 lg:pt-14">
