@@ -28,15 +28,17 @@ export function AccountMenu() {
   if (pathname === "/account") return null;
 
   return (
-    <div ref={menuRef} className="fixed right-4 top-4 z-40 flex items-center gap-2">
-      <NotificationBell />
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-11 min-w-11 items-center justify-center rounded-xl border border-border bg-surface px-2 text-sm font-semibold text-text shadow-sm transition hover:border-muted/50 hover:bg-background"
-        aria-label={t("account.menu.open")}
-        aria-expanded={open}
-      >
+    <div ref={menuRef} className="fixed right-4 top-4 z-40">
+      <div className="inline-flex items-center rounded-2xl border border-border bg-surface shadow-sm">
+        <NotificationBell />
+        <span className="h-6 w-px shrink-0 bg-border/60" aria-hidden="true" />
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          className="m-1 inline-flex h-9 min-w-9 items-center justify-center rounded-xl px-1.5 text-sm font-semibold text-text transition hover:bg-background"
+          aria-label={t("account.menu.open")}
+          aria-expanded={open}
+        >
         <ImageWithSpinner
           src={user?.profile_photo_url || undefined}
           alt={t("account.photoAlt")}
@@ -52,7 +54,8 @@ export function AccountMenu() {
             />
           }
         />
-      </button>
+        </button>
+      </div>
 
       {open && (
         <div className="mt-2 w-72 rounded-2xl border border-border bg-surface p-3 shadow-lg">

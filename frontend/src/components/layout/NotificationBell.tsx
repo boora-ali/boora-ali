@@ -2,14 +2,19 @@ import { Bell } from "lucide-react";
 import { useNotifications } from "../../hooks/useNotifications";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  triggerClassName?: string;
+}
+
+export function NotificationBell({ triggerClassName }: NotificationBellProps) {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-xl border border-border bg-surface shadow-sm hover:bg-background">
+        <Button variant="ghost" size="icon" className={cn("relative h-10 w-10 rounded-xl hover:bg-background", triggerClassName)}>
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
