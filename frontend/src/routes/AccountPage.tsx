@@ -99,7 +99,6 @@ export default function AccountPage() {
 
   const onProfileSubmit = async (data: UpdateProfileFormValues) => {
     try {
-      setProfileMessage("");
       const updatedUser = await authService.updateMe({
         username: data.username,
         email: data.email,
@@ -129,7 +128,6 @@ export default function AccountPage() {
 
   const onPasswordSubmit = async (data: ChangePasswordFormValues) => {
     try {
-      setPasswordMessage("");
       await authService.changePassword({
         current_password: data.current_password,
         new_password: data.new_password,
@@ -148,7 +146,6 @@ export default function AccountPage() {
 
   async function onDeleteAccount() {
     setIsDeleting(true);
-    setDeleteError("");
     try {
       await authService.deleteAccount(user?.is_google_account ? undefined : { password: deletePassword });
       setDeleteRequested(true);

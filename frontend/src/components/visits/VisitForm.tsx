@@ -113,7 +113,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
     },
   });
 
-  const { handleSubmit, setError, control, formState: { errors, isSubmitting } } = form;
+  const { handleSubmit, setError, control, formState: { isSubmitting } } = form;
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
