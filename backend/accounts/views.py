@@ -127,6 +127,7 @@ class MeView(MutationMixin, generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         from django.contrib.auth import get_user_model
+
         return (
             get_user_model()
             .objects.select_related("profile", "google_identity")
