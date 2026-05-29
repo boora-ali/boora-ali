@@ -60,7 +60,6 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [removedCover, setRemovedCover] = useState(false);
   const { preview, setPreview, setPreviewFromFile, clearPreview } = useImagePreview(initial.cover_photo ?? null);
-  const [coverPhotoError, setCoverPhotoError] = useState("");
   const [geocoding, setGeocoding] = useState(false);
   const [resolvingMapsUrl, setResolvingMapsUrl] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -151,9 +150,8 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
       return;
     }
     const err = validateImageFile(file);
-    if (err === "type") { toast.error(t("upload.invalidType")); setCoverPhotoError(t("upload.invalidType")); e.target.value = ""; return; }
-    if (err === "size") { toast.error(t("upload.tooLarge")); setCoverPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
-    setCoverPhotoError("");
+    if (err === "type") { toast.error(t("upload.invalidType")); e.target.value = ""; return; }
+    if (err === "size") { toast.error(t("upload.tooLarge")); e.target.value = ""; return; }
     setCoverFile(file);
     setPreviewFromFile(file);
   }
@@ -404,11 +402,9 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
               {t("placeForm.removePhoto")}
             </button>
           )}
-          {coverPhotoError && <p className="text-sm text-destructive">{coverPhotoError}</p>}
         </div>
         </FormSection>
 
-        {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting && (
             <LoadingSpinner className="mr-2 h-4 w-4" />

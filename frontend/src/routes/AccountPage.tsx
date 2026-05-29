@@ -49,11 +49,7 @@ export default function AccountPage() {
   const [photo, setPhoto] = useState<File | null>(null);
   const { preview: photoPreview, setPreview: setPhotoPreview, setPreviewFromFile, clearPreview } = useImagePreview(user?.profile_photo_url ?? "");
   const [removedPhoto, setRemovedPhoto] = useState(false);
-  const [profileMessage, setProfileMessage] = useState("");
-  const [profilePhotoError, setProfilePhotoError] = useState("");
-  const [passwordMessage, setPasswordMessage] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
   const [deleteRequested, setDeleteRequested] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
@@ -88,17 +84,14 @@ export default function AccountPage() {
     const err = validateImageFile(file);
     if (err === "type") {
       toast.error(t("upload.invalidType"));
-      setProfilePhotoError(t("upload.invalidType"));
       event.target.value = "";
       return;
     }
     if (err === "size") {
       toast.error(t("upload.tooLarge"));
-      setProfilePhotoError(t("upload.tooLarge"));
       event.target.value = "";
       return;
     }
-    setProfilePhotoError("");
     setPhoto(file);
     setRemovedPhoto(false);
     setPreviewFromFile(file);
@@ -106,7 +99,6 @@ export default function AccountPage() {
 
   const onProfileSubmit = async (data: UpdateProfileFormValues) => {
     try {
-      setProfileMessage("");
       const updatedUser = await authService.updateMe({
         username: data.username,
         email: data.email,
@@ -118,7 +110,7 @@ export default function AccountPage() {
       setPhoto(null);
       setRemovedPhoto(false);
       setPhotoPreview(updatedUser.profile_photo_url);
-      setProfileMessage(t("account.profile.saved"));
+      toast.success(t("account.profile.saved"));
       profileForm.reset({
         username: updatedUser.username,
         email: updatedUser.email,
@@ -136,14 +128,13 @@ export default function AccountPage() {
 
   const onPasswordSubmit = async (data: ChangePasswordFormValues) => {
     try {
-      setPasswordMessage("");
       await authService.changePassword({
         current_password: data.current_password,
         new_password: data.new_password,
         confirm_password: data.confirm_password,
       });
       passwordForm.reset();
-      setPasswordMessage(t("account.password.saved"));
+      toast.success(t("account.password.saved"));
     } catch (error) {
       reportApiError({
         setError: passwordForm.setError,
@@ -155,14 +146,13 @@ export default function AccountPage() {
 
   async function onDeleteAccount() {
     setIsDeleting(true);
-    setDeleteError("");
     try {
       await authService.deleteAccount(user?.is_google_account ? undefined : { password: deletePassword });
       setDeleteRequested(true);
       setShowDeleteDialog(false);
       setDeletePassword("");
     } catch {
-      setDeleteError(t("account.delete.error"));
+      toast.error(t("account.delete.error"));
     } finally {
       setIsDeleting(false);
     }
@@ -221,8 +211,6 @@ export default function AccountPage() {
                   </button>
                 )}
               </div>
-              {profilePhotoError && <p className="text-sm text-destructive">{profilePhotoError}</p>}
-
               <FormField
                 control={profileForm.control}
                 name="display_name"
@@ -279,10 +267,6 @@ export default function AccountPage() {
                   </FormItem>
                 )}
               />
-              {profileMessage && <p className="text-sm font-medium text-primary">{profileMessage}</p>}
-              {profileForm.formState.errors.root && (
-                <p className="text-sm text-destructive">{profileForm.formState.errors.root.message}</p>
-              )}
               <Button
                 type="submit"
                 className="w-full sm:w-auto"
@@ -343,10 +327,6 @@ export default function AccountPage() {
                     </FormItem>
                   )}
                 />
-                {passwordMessage && <p className="text-sm font-medium text-primary">{passwordMessage}</p>}
-                {passwordForm.formState.errors.root && (
-                  <p className="text-sm text-destructive">{passwordForm.formState.errors.root.message}</p>
-                )}
                 <Button
                   type="submit"
                   variant="secondary"
@@ -367,7 +347,6 @@ export default function AccountPage() {
             <h3 className="font-medium text-destructive">{t("account.delete.title")}</h3>
             <p className="text-sm text-muted-foreground">{t("account.delete.description")}</p>
             <p className="text-xs text-muted-foreground">{t("account.delete.grace")}</p>
-            {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
             {deleteRequested ? (
               <p className="text-sm font-medium text-primary">{t("account.delete.scheduled")}</p>
             ) : (

@@ -347,11 +347,17 @@
     "close": "Fechar",
     "delete": "Excluir",
     "edit": "Editar",
+    "remove": "Remover",
     "open": "Ver diário",
     "back": "Voltar",
     "home": "Início",
     "na": "N/A",
     "photo": "Foto"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "markAllRead": "Marcar todas como lidas",
+    "empty": "Nenhuma notificação"
   },
   "upload": {
     "invalidType": "Formato não permitido. Use JPEG, PNG ou WEBP.",

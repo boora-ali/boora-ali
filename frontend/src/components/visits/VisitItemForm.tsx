@@ -53,7 +53,6 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
   const { preview, setPreview, setPreviewFromFile, clearPreview } = useImagePreview(existingPhoto);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [removedPhoto, setRemovedPhoto] = useState(false);
-  const [photoError, setPhotoError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<VisitItemFormValues>({
@@ -78,9 +77,8 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
       return;
     }
     const err = validateImageFile(file);
-    if (err === "type") { toast.error(t("upload.invalidType")); setPhotoError(t("upload.invalidType")); e.target.value = ""; return; }
-    if (err === "size") { toast.error(t("upload.tooLarge")); setPhotoError(t("upload.tooLarge")); e.target.value = ""; return; }
-    setPhotoError("");
+    if (err === "type") { toast.error(t("upload.invalidType")); e.target.value = ""; return; }
+    if (err === "size") { toast.error(t("upload.tooLarge")); e.target.value = ""; return; }
     setPhotoFile(file);
     setRemovedPhoto(false);
     setPreviewFromFile(file);
@@ -144,7 +142,6 @@ export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) 
               {t("placeForm.removePhoto")}
             </button>
           )}
-          {photoError && <p className="text-sm text-destructive">{photoError}</p>}
         </div>
 
         <FormField
