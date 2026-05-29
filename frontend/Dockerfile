@@ -14,11 +14,11 @@ RUN apk add --no-cache \
     ttf-freefont
 
 # Tell Puppeteer to use system Chromium instead of downloading its own
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci
 
 COPY . .
 ARG VITE_API_URL=""
