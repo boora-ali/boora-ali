@@ -126,7 +126,13 @@ class MeView(MutationMixin, generics.RetrieveUpdateAPIView):
     http_method_names = ["get", "patch", "head", "options"]
 
     def get_object(self):
-        return self.request.user
+        from django.contrib.auth import get_user_model
+
+        return (
+            get_user_model()
+            .objects.select_related("profile", "google_identity")
+            .get(pk=self.request.user.pk)
+        )
 
 
 class PasswordChangeView(MutationMixin, RateLimitHeadersMixin, generics.GenericAPIView):

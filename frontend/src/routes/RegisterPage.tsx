@@ -90,9 +90,9 @@ export default function RegisterPage() {
         <meta name="description" content="Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Boora Ali." />
         <link rel="canonical" href="https://booraali.com.br/register" />
       </Helmet>
-      <div className="flex-1 max-w-sm w-full mx-auto p-6 mt-8 space-y-3">
+      <div className="flex-1 max-w-sm w-full mx-auto p-6 mt-8 space-y-2">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
             <h1 className="font-fraunces text-3xl font-bold text-center text-foreground">
               {t("auth.register.title")}
             </h1>
@@ -192,9 +192,6 @@ export default function RegisterPage() {
                 </Label>
               )}
             />
-            {form.formState.errors.root && (
-              <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
-            )}
             <Button
               type="submit"
               className="w-full"

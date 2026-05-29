@@ -346,11 +346,17 @@
     "close": "Close",
     "delete": "Delete",
     "edit": "Edit",
+    "remove": "Remove",
     "open": "View journal",
     "back": "Back",
     "home": "Home",
     "na": "N/A",
     "photo": "Photo"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications"
   },
   "upload": {
     "invalidType": "Format not allowed. Use JPEG, PNG or WEBP.",

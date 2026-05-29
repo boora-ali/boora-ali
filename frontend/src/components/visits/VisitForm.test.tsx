@@ -1,9 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, vi } from "vitest";
+import { beforeEach, expect, vi } from "vitest";
+import { toast } from "sonner";
 import { VisitForm } from "./VisitForm";
 import { visitItemsService } from "../../services/visit-items.service";
 
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock("../../services/visit-items.service");
 
 beforeEach(() => {
@@ -32,7 +34,7 @@ test("deletes an existing consumable through the API when removing it", async ()
     />
   );
 
-  screen.getByLabelText("Remover").click();
+  screen.getByLabelText("Remove").click();
 
   await waitFor(() => {
     expect(visitItemsService.remove).toHaveBeenCalledWith("item-1");
@@ -91,7 +93,7 @@ test("shows root error message when onSubmit rejects", async () => {
   );
 
   await waitFor(() =>
-    expect(screen.getByText(/failed to save visit/i)).toBeInTheDocument(),
+    expect(toast.error).toHaveBeenCalledWith("Failed to save visit"),
   );
 });
 
@@ -114,7 +116,7 @@ test("removes draft item from list without calling visitItemsService", async () 
   );
 
   expect(screen.getByText("Draft drink")).toBeInTheDocument();
-  fireEvent.click(screen.getByLabelText("Remover"));
+  fireEvent.click(screen.getByLabelText("Remove"));
 
   await waitFor(() =>
     expect(screen.queryByText("Draft drink")).not.toBeInTheDocument(),

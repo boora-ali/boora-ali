@@ -140,7 +140,10 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_google_account(self, obj):
-        return GoogleIdentity.objects.filter(user=obj).exists()
+        try:
+            return obj.google_identity is not None
+        except GoogleIdentity.DoesNotExist:
+            return False
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

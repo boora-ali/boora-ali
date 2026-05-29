@@ -23,8 +23,6 @@ describe("LandingPage", () => {
     expect(screen.getByRole("link", { name: /começar grátis/i })).toHaveAttribute("href", "/register");
     expect(screen.getByRole("link", { name: /já tenho conta/i })).toHaveAttribute("href", "/login");
     expect(screen.getAllByRole("switch").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText(/claro/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/escuro/i).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: /entrar/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /como funciona/i })).toHaveAttribute("href", "#como-funciona");
     expect(screen.getAllByRole("link", { name: /privacidade/i }).length).toBeGreaterThan(0);

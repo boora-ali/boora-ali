@@ -2,6 +2,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { AxiosError } from "axios";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { toast } from "sonner";
+
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 const navigate = vi.fn();
 const logout = vi.fn().mockResolvedValue(undefined);
@@ -152,7 +155,7 @@ describe("formulário de perfil", () => {
     fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Smovisk Novo" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar perfil" }));
 
-    await waitFor(() => expect(screen.getByText("Salvo")).toBeInTheDocument());
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Salvo"));
     expect(mockAuthService.updateMe).toHaveBeenCalledTimes(1);
   });
 
@@ -182,7 +185,7 @@ describe("formulário de perfil", () => {
     fireEvent.click(screen.getByRole("button", { name: "Salvar perfil" }));
 
     await waitFor(() =>
-      expect(screen.getByText("Internal server error")).toBeInTheDocument()
+      expect(toast.error).toHaveBeenCalledWith("Internal server error")
     );
   });
 
@@ -276,7 +279,7 @@ describe("seção Alterar Senha", () => {
     fireEvent.change(screen.getByLabelText("Confirmar senha"), { target: { value: "novaSenha1!" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar senha" }));
 
-    await waitFor(() => expect(screen.getByText("Senha salva")).toBeInTheDocument());
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Senha salva"));
     expect(mockAuthService.changePassword).toHaveBeenCalledTimes(1);
   });
 });
