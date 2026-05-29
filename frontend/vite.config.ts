@@ -4,6 +4,8 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { aeoVitePlugin } from "aeo.js/vite";
 import path from "path";
+import VitePluginPrerender from "@prerenderer/rollup-plugin";
+import PuppeteerRenderer from "@prerenderer/renderer-puppeteer";
 
 function parseAllowedHosts(value?: string) {
   if (!value) return [];
@@ -33,7 +35,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       tailwindcss(),
       react(),
-      ...(!isProd ? [aeoVitePlugin({
+      ...(isProd ? [aeoVitePlugin({
         title: "Boora Ali",
         description:
           "Diário pessoal de lugares — registre lugares, visitas e experiências que valem lembrar",
@@ -61,6 +63,15 @@ export default defineConfig(({ mode }) => {
           },
         ],
       })] : []),
+      ...(isProd ? [
+        new VitePluginPrerender({
+          routes: ["/", "/register", "/politica-de-privacidade", "/termos-de-uso"],
+          renderer: new PuppeteerRenderer({
+            headless: true,
+            renderAfterTime: 2000,
+          }),
+        }),
+      ] : []),
     ],
     resolve: {
       alias: [
