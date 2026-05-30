@@ -20,6 +20,16 @@ export interface Place {
   avg_rating?: number | null;
 }
 
+export interface PlacePin {
+  public_id: string;
+  name: string;
+  category?: string | null;
+  address?: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
+  status: PlaceStatus;
+}
+
 export interface PlaceConsumablesSummary {
   consumables_count: number;
   average_consumable_rating: number | null;

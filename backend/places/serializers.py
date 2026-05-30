@@ -229,6 +229,21 @@ class PlaceListSerializer(FlexFieldsModelSerializer):
         }
 
 
+class PlaceMapPinSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Place
+        fields = (
+            "public_id",
+            "name",
+            "category",
+            "address",
+            "latitude",
+            "longitude",
+            "status",
+        )
+        read_only_fields = fields
+
+
 class PlaceDetailSerializer(FlexFieldsModelSerializer):
     cover_photo = serializers.SerializerMethodField()
     visits = VisitSummarySerializer(many=True, read_only=True)

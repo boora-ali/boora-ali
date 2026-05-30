@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { LocateFixed, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const DEFAULT_CENTER: [number, number] = [-60.0217314, -3.1190275];
 const TILES_ORIGIN = "https://tiles.openfreemap.org";
@@ -20,6 +22,7 @@ type Props = {
   latitude?: string | null;
   longitude?: string | null;
   onChange: (coords: { latitude: string | null; longitude: string | null }) => void;
+  onUseLocation?: () => void;
 };
 
 function formatCoord(value: number) {
@@ -40,6 +43,7 @@ export function LocationPicker({
   latitude,
   longitude,
   onChange,
+  onUseLocation,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -137,10 +141,41 @@ export function LocationPicker({
   }, []);
 
   useEffect(() => {
-    if (!mapRef.current || !markerRef.current) return;
-    if (hasCoords) {
-      markerRef.current.setLngLat([lng!, lat!]);
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (!hasCoords) {
+      markerRef.current?.remove();
+      markerRef.current = null;
+      return;
     }
+
+    const attachDrag = (m: maplibregl.Marker) => {
+      m.on("dragend", () => {
+        const pos = m.getLngLat();
+        onChangeRef.current({ latitude: formatCoord(pos.lat), longitude: formatCoord(pos.lng) });
+      });
+    };
+
+    if (markerRef.current) {
+      markerRef.current.setLngLat([lng!, lat!]);
+    } else if (map.isStyleLoaded()) {
+      markerRef.current = new maplibregl.Marker({ color: "#C1121F", draggable: true })
+        .setLngLat([lng!, lat!])
+        .addTo(map);
+      attachDrag(markerRef.current);
+    } else {
+      map.once("load", () => {
+        if (!markerRef.current && mapRef.current) {
+          markerRef.current = new maplibregl.Marker({ color: "#C1121F", draggable: true })
+            .setLngLat([lng!, lat!])
+            .addTo(mapRef.current);
+          attachDrag(markerRef.current);
+        }
+      });
+    }
+
+    map.flyTo({ center: [lng!, lat!], zoom: 15 });
   }, [lat, lng, hasCoords]);
 
   function handleClear() {
@@ -154,45 +189,56 @@ export function LocationPicker({
       setGeolocationError(geolocationUnavailableMessage);
       return;
     }
+    onUseLocation?.();
     setLocating(true);
     setGeolocationError("");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude: posLat, longitude: posLng } = position.coords;
-        mapRef.current?.flyTo({ center: [posLng, posLat], zoom: 16 });
 
-        if (markerRef.current) {
-          markerRef.current.setLngLat([posLng, posLat]);
-        } else if (mapRef.current) {
-          markerRef.current = new maplibregl.Marker({
-            color: "#C1121F",
-            draggable: true,
-          })
-            .setLngLat([posLng, posLat])
-            .addTo(mapRef.current);
+    const applyPosition = (position: GeolocationPosition) => {
+      const { latitude: posLat, longitude: posLng } = position.coords;
+      mapRef.current?.flyTo({ center: [posLng, posLat], zoom: 16 });
 
-          markerRef.current.on("dragend", () => {
-            const pos = markerRef.current!.getLngLat();
-            onChangeRef.current({
-              latitude: formatCoord(pos.lat),
-              longitude: formatCoord(pos.lng),
-            });
+      if (markerRef.current) {
+        markerRef.current.setLngLat([posLng, posLat]);
+      } else if (mapRef.current) {
+        markerRef.current = new maplibregl.Marker({
+          color: "#C1121F",
+          draggable: true,
+        })
+          .setLngLat([posLng, posLat])
+          .addTo(mapRef.current);
+
+        markerRef.current.on("dragend", () => {
+          const pos = markerRef.current!.getLngLat();
+          onChangeRef.current({
+            latitude: formatCoord(pos.lat),
+            longitude: formatCoord(pos.lng),
           });
-        }
-
-        onChangeRef.current({
-          latitude: formatCoord(posLat),
-          longitude: formatCoord(posLng),
         });
-        setLocating(false);
-      },
+      }
+
+      onChangeRef.current({
+        latitude: formatCoord(posLat),
+        longitude: formatCoord(posLng),
+      });
+      setLocating(false);
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      applyPosition,
       (error) => {
-        setGeolocationError(
-          error.code === error.PERMISSION_DENIED
-            ? geolocationDeniedMessage
-            : geolocationErrorMessage,
+        if (error.code === error.PERMISSION_DENIED) {
+          setGeolocationError(geolocationDeniedMessage);
+          setLocating(false);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          applyPosition,
+          () => {
+            setGeolocationError(geolocationErrorMessage);
+            setLocating(false);
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
         );
-        setLocating(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
@@ -200,25 +246,31 @@ export function LocationPicker({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-text">{label}</span>
-        <div className="flex items-center gap-3">
-          <button
+        <div className="flex items-center gap-2">
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={handleUseCurrentLocation}
             disabled={locating}
-            className="text-xs text-primary transition hover:text-primary/80 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-7 gap-1.5 px-2.5 text-xs"
           >
+            <LocateFixed className="size-3.5" />
             {locating ? locatingLabel : useCurrentLocationLabel}
-          </button>
+          </Button>
           {hasCoords && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={handleClear}
-              className="text-xs text-muted transition hover:text-red-500"
+              className="h-7 gap-1.5 px-2.5 text-xs text-muted hover:text-destructive"
             >
+              <X className="size-3.5" />
               {clearLabel}
-            </button>
+            </Button>
           )}
         </div>
       </div>

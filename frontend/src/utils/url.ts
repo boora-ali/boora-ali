@@ -20,7 +20,8 @@ export function validateImageFile(file: File): ImageValidationError {
 
 const SAFE_SCHEMES = new Set(["http:", "https:"]);
 const GOOGLE_MAPS_COORD_PATTERNS = [
-  /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+  /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,       // exact place pin — higher precision than viewport
+  /@(-?\d+\.\d+),(-?\d+\.\d+)/,             // viewport center — fallback
   /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/,
   /[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/,
   /\/maps\/search\/(-?\d+\.\d+)[,+\s]+(-?\d+\.\d+)/,

@@ -10,7 +10,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from core.views import MutationMixin
-from core.viewsets import ViewSetBase, WriteViewSetBase
+from core.viewsets import FlexiblePageNumberPagination, ViewSetBase, WriteViewSetBase
 
 from .filters import PlaceFilter, VisitFilter, VisitItemFilter
 from .models import (
@@ -29,6 +29,7 @@ from .serializers import (
     CollectionSerializer,
     PlaceDetailSerializer,
     PlaceListSerializer,
+    PlaceMapPinSerializer,
     PlaceWriteSerializer,
     VisitDetailSerializer,
     VisitItemSerializer,
@@ -52,6 +53,7 @@ class PlaceViewSet(ViewSetBase):
     filterset_class = PlaceFilter
     search_fields = ("name", "category", "address")
     ordering_fields = ("created_at", "updated_at", "name")
+    pagination_class = FlexiblePageNumberPagination
     serializer_class = PlaceListSerializer
     serializer_action_classes = {
         "create": PlaceWriteSerializer,
@@ -96,6 +98,16 @@ class PlaceViewSet(ViewSetBase):
 
     def perform_destroy(self, instance):
         PlaceLifecycleService.soft_delete_place(instance)
+
+    @action(detail=False, methods=["get"], url_path="map-pins", url_name="map-pins")
+    def map_pins(self, request):
+        queryset = self.filter_queryset(
+            Place.objects.for_user(request.user).filter(
+                latitude__isnull=False, longitude__isnull=False
+            )
+        )
+        serializer = PlaceMapPinSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=["post"], url_path="retry-coords")
     def retry_coords(self, request, public_id=None):
