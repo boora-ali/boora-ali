@@ -2,7 +2,7 @@ import { startTransition, useEffect, useRef, useState, type ComponentType } from
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { placesService, placePageCache, type Page, type PlaceFilters } from "../services/places.service";
-import type { Place, PlaceStatus } from "../types/place";
+import type { Place, PlacePin, PlaceStatus } from "../types/place";
 import { PLACE_STATUSES } from "../utils/constants";
 import { PLACES_CHANGED_EVENT } from "../utils/places-state";
 import { useDebounce } from "../hooks/useDebounce";
@@ -49,7 +49,7 @@ export default function PlacesPage() {
   const [page, setPage] = useState(1);
   const [loadedPage, setLoadedPage] = useState<number | null>(null);
   const [loadedQueryKey, setLoadedQueryKey] = useState("");
-  const [mapPlaces, setMapPlaces] = useState<Place[]>([]);
+  const [mapPlaces, setMapPlaces] = useState<PlacePin[]>([]);
   const [refreshTick, setRefreshTick] = useState(0);
   const [showMap, setShowMap] = useState(false);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
@@ -306,7 +306,7 @@ export default function PlacesPage() {
       )}
 
       {!loading && !error && data && data.count > 0 && showMap && (
-        <PlacesMap places={mapPlaces.length > 0 ? mapPlaces : data.results} />
+        <PlacesMap places={mapPlaces} />
       )}
     </div>
   );

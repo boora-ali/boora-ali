@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { Place, PlaceStatus } from "../../types/place";
+import type { Place, PlacePin, PlaceStatus } from "../../types/place";
 
 const TILES_ORIGIN = "https://tiles.openfreemap.org";
 const MAP_STYLE = "/_tiles/styles/bright";
@@ -23,7 +23,7 @@ const STATUS_LABELS: PlaceStatus[] = [
 ];
 
 
-export function PlacesMap({ places }: { places: Place[] }) {
+export function PlacesMap({ places }: { places: PlacePin[] | Place[] }) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -38,15 +38,21 @@ export function PlacesMap({ places }: { places: Place[] }) {
     return [{ place, lat, lng }];
   });
 
+  const mappedPlacesRef = useRef(mappedPlaces);
+  useLayoutEffect(() => {
+    mappedPlacesRef.current = mappedPlaces;
+  });
+
   function addMarkers(map: maplibregl.Map) {
+    const current = mappedPlacesRef.current;
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
-    if (mappedPlaces.length === 0) return;
+    if (current.length === 0) return;
 
     const bounds = new maplibregl.LngLatBounds();
 
-    mappedPlaces.forEach(({ place, lat, lng }) => {
+    current.forEach(({ place, lat, lng }) => {
       const color = STATUS_COLORS[place.status];
 
       const popupHtml = `
@@ -73,8 +79,8 @@ export function PlacesMap({ places }: { places: Place[] }) {
       bounds.extend([lng, lat]);
     });
 
-    if (mappedPlaces.length === 1) {
-      map.flyTo({ center: [mappedPlaces[0].lng, mappedPlaces[0].lat], zoom: 15 });
+    if (current.length === 1) {
+      map.flyTo({ center: [current[0].lng, current[0].lat], zoom: 15 });
     } else {
       map.fitBounds(bounds, { padding: 72, maxZoom: 16 });
     }
