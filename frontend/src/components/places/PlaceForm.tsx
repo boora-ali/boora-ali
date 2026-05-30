@@ -96,6 +96,9 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
     if (coords) {
       setValue("latitude", coords.latitude);
       setValue("longitude", coords.longitude);
+    } else if (isGoogleMapsUrl(value)) {
+      setValue("latitude", null);
+      setValue("longitude", null);
     }
   };
 
@@ -329,6 +332,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
             setValue("latitude", lat);
             setValue("longitude", lng);
           }}
+          onUseLocation={() => setValue("maps_url", "")}
         />
         </FormSection>
 

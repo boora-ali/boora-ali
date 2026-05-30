@@ -68,7 +68,7 @@ test("renders list of places", async () => {
   renderPage();
   await waitFor(() => expect(screen.getByText("Padaria Bom Pão")).toBeInTheDocument());
   fireEvent.click(screen.getByRole("button", { name: "Show map" }));
-  expect(screen.getByText("1 saved pins")).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByText("1 saved pins")).toBeInTheDocument());
   expect(screen.getByRole("button", { name: "Zoom map in" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Zoom map out" })).toBeInTheDocument();
 

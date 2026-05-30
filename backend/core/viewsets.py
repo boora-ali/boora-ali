@@ -4,8 +4,15 @@ import logging
 
 from django.db import IntegrityError, transaction
 from rest_framework import mixins, viewsets
+from rest_framework.pagination import PageNumberPagination
 
 from core import exceptions
+
+
+class FlexiblePageNumberPagination(PageNumberPagination):
+    page_size_query_param = "page_size"
+    max_page_size = 1000
+
 
 logger = logging.getLogger(__name__)
 

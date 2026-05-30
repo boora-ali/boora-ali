@@ -90,11 +90,11 @@ describe("placesService.remove", () => {
 });
 
 describe("placesService.listMapPins", () => {
-  test("calls GET /places/ with has_coords, page_size and ordering", async () => {
-    vi.mocked(api.get).mockResolvedValueOnce({ data: emptyPage } as never);
+  test("calls GET /places/map-pins/ with status param", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] } as never);
     await placesService.listMapPins({ status: "favorite" });
-    expect(api.get).toHaveBeenCalledWith("/places/", {
-      params: expect.objectContaining({ has_coords: true, page_size: 500, status: "favorite" }),
+    expect(api.get).toHaveBeenCalledWith("/places/map-pins/", {
+      params: { status: "favorite" },
     });
   });
 });

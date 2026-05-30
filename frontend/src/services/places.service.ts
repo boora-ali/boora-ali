@@ -1,6 +1,6 @@
 import { api } from "./api";
 import { toFormData, hasFile, stripStringImages } from "./form-data";
-import type { Place, PlaceStatus } from "../types/place";
+import type { Place, PlacePin, PlaceStatus } from "../types/place";
 import type { Visit } from "../types/visit";
 import { AUTH_STATE_CHANGED_EVENT } from "../utils/client-state";
 
@@ -95,10 +95,8 @@ export const placesService = {
 
   listMapPins: (params: { status?: PlaceStatus; search?: string } = {}) =>
     api
-      .get<Page<Place>>("/places/", {
-        params: { ...params, has_coords: true, page_size: 500, ordering: "name" },
-      })
-      .then((r) => r.data.results),
+      .get<PlacePin[]>("/places/map-pins/", { params })
+      .then((r) => r.data),
 
   get: async (publicId: string) => {
     try {

@@ -93,7 +93,7 @@ test("accepts short Google Maps URLs without clearing manual coordinates", async
   );
 });
 
-test("changing the maps url to a short Google Maps link keeps the selected pin", async () => {
+test("changing the maps url to a short Google Maps link clears the pin (backend will resolve)", async () => {
   const onSubmit = vi.fn().mockResolvedValue(undefined);
   const shortUrl = "https://maps.app.goo.gl/KaeiRuA7EwybcJCu7";
 
@@ -119,8 +119,8 @@ test("changing the maps url to a short Google Maps link keeps the selected pin",
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
         maps_url: shortUrl,
-        latitude: "-3.10",
-        longitude: "-60.02",
+        latitude: null,
+        longitude: null,
       }),
     );
   });

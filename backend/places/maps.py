@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 
 _COORD_PATTERNS = (
-    r"@(-?\d+\.\d+),(-?\d+\.\d+)",
-    r"!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)",
+    r"!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)",  # exact place pin — higher precision than viewport
+    r"@(-?\d+\.\d+),(-?\d+\.\d+)",  # viewport center — fallback
     r"[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)",
     r"[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)",
     r"/maps/search/(-?\d+\.\d+)[,+\s]+(-?\d+\.\d+)",
