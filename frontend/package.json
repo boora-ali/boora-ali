@@ -79,7 +79,7 @@
     "globals": "^17.5.0",
     "jsdom": "^29.1.0",
     "lighthouse": "^13.3.0",
-    "postcss": "^8.5.12",
+    "postcss": "^8.5.15",
     "puppeteer": "^25.1.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.3.0",
