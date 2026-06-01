@@ -40,6 +40,9 @@ export default defineConfig(({ mode }) => {
         description:
           "Diário pessoal de lugares — registre lugares, visitas e experiências que valem lembrar",
         url: "https://booraali.com.br",
+        // robots.txt gerado manualmente em public/robots.txt (allow-all).
+        // Desliga o gerador do aeo pra não sobrescrever com lista verbosa.
+        generators: { robotsTxt: false },
         pages: [
           {
             pathname: "/",
