@@ -37,7 +37,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@tailwindcss/postcss": "^4.3.0",
     "@tailwindcss/vite": "^4.3.0",
-    "axios": "^1.16.0",
+    "axios": "^1.17.0",
     "class-variance-authority": "^0.7.1",
     "date-fns": "^4.4.0",
     "embla-carousel-react": "^8.6.0",
