@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 declare global {
   interface Window {
     turnstile: {
+      ready: (callback: () => void) => void;
       render: (container: HTMLElement, options: Record<string, unknown>) => string;
       reset: (widgetId: string) => void;
       remove: (widgetId: string) => void;
@@ -33,7 +34,12 @@ export function TurnstileWidget({ onToken, onExpire, onReady, onError, resetKey 
   useEffect(() => {
     if (!siteKey) return;
 
+    let cancelled = false;
+
     const render = () => {
+      if (cancelled) {
+        return;
+      }
       if (!containerRef.current || !window.turnstile) {
         setStatus("error");
         onError?.();
@@ -62,8 +68,17 @@ export function TurnstileWidget({ onToken, onExpire, onReady, onError, resetKey 
       onReady?.();
     };
 
+    const initialize = () => {
+      if (!window.turnstile) {
+        setStatus("error");
+        onError?.();
+        return;
+      }
+      window.turnstile.ready(render);
+    };
+
     if (window.turnstile) {
-      render();
+      initialize();
     } else {
       let script = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
       if (!script) {
@@ -78,15 +93,17 @@ export function TurnstileWidget({ onToken, onExpire, onReady, onError, resetKey 
         setStatus("error");
         onError?.();
       };
-      script.addEventListener("load", render);
+      script.addEventListener("load", initialize);
       script.addEventListener("error", handleError);
       return () => {
-        script?.removeEventListener("load", render);
+        cancelled = true;
+        script?.removeEventListener("load", initialize);
         script?.removeEventListener("error", handleError);
       };
     }
 
     return () => {
+      cancelled = true;
       if (widgetIdRef.current) {
         window.turnstile?.remove(widgetIdRef.current);
         widgetIdRef.current = null;
