@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 /**
- * Post-build script: prerender / with Puppeteer after vite build.
- * Workaround for Vite 8 (Rolldown) bug where @prerenderer/rollup-plugin
- * cannot replace the root index.html via emitFile.
+ * Post-build script: prerender the public pages with Puppeteer after vite build.
  */
 
 import { createServer } from "node:http";
-import { readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, statSync, mkdirSync } from "node:fs";
 import { resolve, extname, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import puppeteer from "puppeteer";
@@ -15,6 +13,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, "../dist");
 const PORT = 5174;
 const WAIT_MS = 3000;
+const ROUTES = ["/", "/register", "/politica-de-privacidade", "/termos-de-uso"];
+const CHROME_CANDIDATES = [
+  process.env.PUPPETEER_EXECUTABLE_PATH,
+  "/usr/bin/google-chrome",
+  "/usr/bin/google-chrome-stable",
+  "/usr/bin/chromium",
+  "/usr/bin/chromium-browser",
+].filter(Boolean);
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -50,6 +56,15 @@ function serveFile(req, res) {
   }
 }
 
+function resolveChromeExecutable() {
+  for (const candidate of CHROME_CANDIDATES) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return undefined;
+}
+
 async function main() {
   const server = createServer(serveFile);
   await new Promise((resolve) => server.listen(PORT, "127.0.0.1", resolve));
@@ -59,27 +74,30 @@ async function main() {
   try {
     browser = await puppeteer.launch({
       headless: true,
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+      executablePath: resolveChromeExecutable(),
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
     const page = await browser.newPage();
-
     await page.setUserAgent(
       "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
     );
 
-    console.log(`[prerender] Rendering http://127.0.0.1:${PORT}/ ...`);
-    await page.goto(`http://127.0.0.1:${PORT}/`, {
-      waitUntil: "networkidle0",
-      timeout: 30000,
-    });
-    await new Promise((r) => setTimeout(r, WAIT_MS));
+    for (const route of ROUTES) {
+      const url = `http://127.0.0.1:${PORT}${route}`;
+      const outPath = route === "/" ? resolve(DIST, "index.html") : resolve(DIST, route.slice(1), "index.html");
 
-    const html = await page.evaluate(() => document.documentElement.outerHTML);
+      console.log(`[prerender] Rendering ${url} ...`);
+      await page.goto(url, {
+        waitUntil: "networkidle0",
+        timeout: 30000,
+      });
+      await new Promise((r) => setTimeout(r, WAIT_MS));
 
-    const outPath = resolve(DIST, "index.html");
-    writeFileSync(outPath, "<!DOCTYPE html>\n" + html, "utf-8");
-    console.log(`[prerender] Written ${outPath} (${html.length} bytes)`);
+      const html = await page.evaluate(() => document.documentElement.outerHTML);
+      mkdirSync(dirname(outPath), { recursive: true });
+      writeFileSync(outPath, "<!DOCTYPE html>\n" + html, "utf-8");
+      console.log(`[prerender] Written ${outPath} (${html.length} bytes)`);
+    }
   } finally {
     if (browser) await browser.close();
     server.close();

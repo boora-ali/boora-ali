@@ -4,8 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { aeoVitePlugin } from "aeo.js/vite";
 import path from "path";
-import VitePluginPrerender from "@prerenderer/rollup-plugin";
-import PuppeteerRenderer from "@prerenderer/renderer-puppeteer";
 
 function parseAllowedHosts(value?: string) {
   if (!value) return [];
@@ -61,18 +59,6 @@ export default defineConfig(({ mode }) => {
           },
         ],
       })] : []),
-      ...(isProd ? [
-        // NOTE: "/" route is excluded — Vite 8 (Rolldown) does not correctly
-        // re-emit index.html when the prerender plugin replaces it, causing
-        // the root index.html to be deleted from dist. Sub-routes work fine.
-        VitePluginPrerender({
-          routes: ["/register", "/politica-de-privacidade", "/termos-de-uso"],
-          renderer: new PuppeteerRenderer({
-            headless: true,
-            renderAfterTime: 2000,
-          }),
-        }),
-      ] : []),
     ],
     resolve: {
       alias: [
