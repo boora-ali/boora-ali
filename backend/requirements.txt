@@ -1,6 +1,6 @@
 Django==5.2.15
 resend==2.30.1
-django-unfold==0.94.0
+django-unfold==0.99.0
 django-simple-history==3.11.0
 whitenoise==6.12.0
 Pillow==12.2.0
