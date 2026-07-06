@@ -26,6 +26,7 @@ describe("LandingPage", () => {
     expect(screen.getAllByRole("link", { name: /entrar/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /como funciona/i })).toHaveAttribute("href", "#como-funciona");
     expect(screen.getAllByRole("link", { name: /privacidade/i }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /suggestions \/ report bug/i })).toBeInTheDocument();
   });
 
   it("organiza a landing em bandas editoriais com identidade do produto", () => {

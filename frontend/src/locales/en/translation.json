@@ -336,7 +336,26 @@
     "terms": "Terms of Use",
     "privacy": "Privacy Policy",
     "contact": "Contact",
+    "feedback": "Suggestions / Report bug",
     "rights": "All rights reserved."
+  },
+  "feedback": {
+    "title": "Send a suggestion or report a bug",
+    "description": "Use this channel to send a short suggestion or flag a problem.",
+    "kindLabel": "Type",
+    "kindPlaceholder": "Choose a type",
+    "kindSuggestion": "Suggestion",
+    "kindBug": "Bug",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Write what happened or what you would like to see.",
+    "submit": "Send",
+    "sending": "Sending...",
+    "success": "Feedback sent. Thanks.",
+    "error": "Could not send it right now. Please try again.",
+    "errors": {
+      "messageRequired": "Please enter a message.",
+      "messageTooLong": "The message is too long."
+    }
   },
   "common": {
     "loading": "Loading...",

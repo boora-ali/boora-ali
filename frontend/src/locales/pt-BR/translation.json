@@ -337,7 +337,26 @@
     "terms": "Termos de Uso",
     "privacy": "Política de Privacidade",
     "contact": "Contato",
+    "feedback": "Sugestões / Relatar bug",
     "rights": "Todos os direitos reservados."
+  },
+  "feedback": {
+    "title": "Enviar sugestão ou relatar bug",
+    "description": "Use este canal para mandar uma sugestão curta ou avisar sobre um problema.",
+    "kindLabel": "Tipo",
+    "kindPlaceholder": "Escolha o tipo",
+    "kindSuggestion": "Sugestão",
+    "kindBug": "Bug",
+    "messageLabel": "Mensagem",
+    "messagePlaceholder": "Escreva o que aconteceu ou o que você gostaria de ver.",
+    "submit": "Enviar",
+    "sending": "Enviando...",
+    "success": "Feedback enviado. Obrigado.",
+    "error": "Não foi possível enviar agora. Tente novamente.",
+    "errors": {
+      "messageRequired": "Informe a mensagem.",
+      "messageTooLong": "A mensagem ficou longa demais."
+    }
   },
   "common": {
     "loading": "Carregando...",

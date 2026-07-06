@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DarkModeToggle } from "../components/ui/DarkModeToggle";
+import { FeedbackButton } from "../components/feedback/FeedbackButton";
 
 const trustPoints = [
   "Privado por padrão",
@@ -359,6 +360,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted">
+              <FeedbackButton />
               <Link to="/login" className="transition hover:text-text">
                 Entrar
               </Link>

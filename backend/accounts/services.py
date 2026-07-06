@@ -5,13 +5,17 @@ import secrets
 from datetime import timedelta
 from typing import Any
 
-import resend
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework.exceptions import ValidationError
+
+try:
+    import resend
+except ModuleNotFoundError:  # pragma: no cover - optional integration
+    resend = None
 
 from .exceptions import (
     GoogleIdentityEmailConflictException,
@@ -23,7 +27,8 @@ from .models import GoogleIdentity, UserProfile
 
 User = get_user_model()
 
-resend.api_key = settings.RESEND_API_KEY
+if resend is not None:
+    resend.api_key = settings.RESEND_API_KEY
 
 _email_log = logging.getLogger("accounts.email")
 logger = logging.getLogger(__name__)
@@ -51,6 +56,9 @@ class AccountLifecycleService:
         token = AccountLifecycleService._issue_verification_token(profile)
 
         verification_url = f"{settings.PUBLIC_BASE_URL}/verify-email?token={token}"
+        if resend is None:
+            _email_log.warning("resend package not available; skipping verification email for %s", user.email)
+            return token
         try:
             resend.Emails.send(
                 {

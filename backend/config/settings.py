@@ -3,7 +3,10 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-import resend as _resend
+try:
+    import resend as _resend
+except ModuleNotFoundError:  # pragma: no cover - optional integration
+    _resend = None
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
@@ -35,8 +38,12 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "")
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-_resend.api_key = RESEND_API_KEY
+if _resend is not None:
+    _resend.api_key = RESEND_API_KEY
 EMAIL_FROM = os.getenv("EMAIL_FROM", "Boora Ali <noreply@booraali.com.br>")
+FEEDBACK_EMAIL_TO = os.getenv(
+    "FEEDBACK_EMAIL_TO", "samuelviana.dev@gmail.com"
+)
 EMAIL_VERIFICATION_TIMEOUT_HOURS = int(
     os.getenv("EMAIL_VERIFICATION_TIMEOUT_HOURS", "24")
 )
@@ -146,6 +153,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "simple_history",
     "django_celery_beat",
+    "core",
     "accounts",
     "places",
     "notifications",
@@ -539,6 +547,7 @@ REST_FRAMEWORK = {
         "anon": "100/hour",
         "user": "1000/hour",
         "auth": "30/minute",
+        "feedback": "5/minute",
         "share_media": "60/minute",
         "share_create": "20/minute",
     },
