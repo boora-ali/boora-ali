@@ -58,7 +58,10 @@ class AccountLifecycleService:
 
         verification_url = f"{settings.PUBLIC_BASE_URL}/verify-email?token={token}"
         if resend is None:
-            _email_log.warning("resend package not available; skipping verification email for %s", user.email)
+            _email_log.warning(
+                "resend package not available; skipping verification email for %s",
+                user.email,
+            )
             return token
         try:
             resend.Emails.send(
@@ -253,9 +256,7 @@ def build_export_payload(user) -> dict[str, Any]:
                 "title": notification.title,
                 "body": notification.body,
                 "read_at": (
-                    notification.read_at.isoformat()
-                    if notification.read_at
-                    else None
+                    notification.read_at.isoformat() if notification.read_at else None
                 ),
                 "expires_at": notification.expires_at.isoformat(),
                 "created_at": notification.created_at.isoformat(),
@@ -358,7 +359,9 @@ def build_export_payload(user) -> dict[str, Any]:
                                 "name": item.name,
                                 "type": item.type,
                                 "rating": (
-                                    str(item.rating) if item.rating is not None else None
+                                    str(item.rating)
+                                    if item.rating is not None
+                                    else None
                                 ),
                                 "price": (
                                     str(item.price) if item.price is not None else None

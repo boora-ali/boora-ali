@@ -181,7 +181,9 @@ class DataExportView(MutationMixin, APIView):
         from .services import build_export_payload
 
         response = Response(build_export_payload(request.user))
-        response["Content-Disposition"] = 'attachment; filename="meus-dados-boora-ali.json"'
+        response["Content-Disposition"] = (
+            'attachment; filename="meus-dados-boora-ali.json"'
+        )
         return response
 
 
@@ -199,7 +201,9 @@ class WithdrawConsentView(MutationMixin, APIView):
             )
         profile.deletion_requested_at = timezone.now()
         profile.save(update_fields=["deletion_requested_at"])
-        return Response({"detail": "Consentimento revogado. Conta agendada para exclusão."})
+        return Response(
+            {"detail": "Consentimento revogado. Conta agendada para exclusão."}
+        )
 
 
 class VerifyEmailView(MutationMixin, APIView):

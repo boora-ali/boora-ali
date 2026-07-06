@@ -41,9 +41,7 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 if _resend is not None:
     _resend.api_key = RESEND_API_KEY
 EMAIL_FROM = os.getenv("EMAIL_FROM", "Boora Ali <noreply@booraali.com.br>")
-FEEDBACK_EMAIL_TO = os.getenv(
-    "FEEDBACK_EMAIL_TO", "samuelviana.dev@gmail.com"
-)
+FEEDBACK_EMAIL_TO = os.getenv("FEEDBACK_EMAIL_TO", "samuelviana.dev@gmail.com")
 EMAIL_VERIFICATION_TIMEOUT_HOURS = int(
     os.getenv("EMAIL_VERIFICATION_TIMEOUT_HOURS", "24")
 )

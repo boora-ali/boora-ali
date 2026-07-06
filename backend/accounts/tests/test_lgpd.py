@@ -139,7 +139,10 @@ def test_export_returns_user_data(auth_client, user):
     response = auth_client.get("/api/auth/me/export/")
 
     assert response.status_code == 200
-    assert response["Content-Disposition"] == 'attachment; filename="meus-dados-boora-ali.json"'
+    assert (
+        response["Content-Disposition"]
+        == 'attachment; filename="meus-dados-boora-ali.json"'
+    )
     assert response.data["profile"]["username"] == user.username
     assert response.data["google_identity"]["email"] == user.email
     assert response.data["notifications"][0]["title"] == "Conta agendada"

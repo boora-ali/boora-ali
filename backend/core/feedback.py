@@ -72,7 +72,9 @@ class FeedbackRateThrottle(CachedScopedRateThrottle):
 
 class FeedbackService:
     @staticmethod
-    def submit(*, kind: str, message: str, user=None, page_url: str = "") -> FeedbackMessage:
+    def submit(
+        *, kind: str, message: str, user=None, page_url: str = ""
+    ) -> FeedbackMessage:
         feedback = FeedbackMessage.objects.create(
             kind=kind,
             message=message,
@@ -90,16 +92,26 @@ class FeedbackService:
             if feedback.kind == FeedbackMessage.KIND_SUGGESTION
             else "Novo bug — Boora Ali"
         )
-        lines = [f"Tipo: {feedback.get_kind_display()}", "", "Mensagem:", feedback.message]
+        lines = [
+            f"Tipo: {feedback.get_kind_display()}",
+            "",
+            "Mensagem:",
+            feedback.message,
+        ]
         if feedback.user is not None:
             email = getattr(feedback.user, "email", "") or "(sem e-mail)"
             lines.extend(["", "Usuário:", f"{feedback.user.username} <{email}>"])
         if feedback.page_url:
             lines.extend(["", "Origem:", feedback.page_url])
         text_body = "\n".join(lines)
-        html_body = "<br>".join(html.escape(line) if line else "&nbsp;" for line in lines)
+        html_body = "<br>".join(
+            html.escape(line) if line else "&nbsp;" for line in lines
+        )
         if resend is None:
-            logger.warning("resend package not available; skipping feedback email for %s", recipient)
+            logger.warning(
+                "resend package not available; skipping feedback email for %s",
+                recipient,
+            )
             return
         try:
             resend.Emails.send(

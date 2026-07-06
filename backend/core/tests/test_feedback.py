@@ -71,7 +71,9 @@ def test_feedback_persists_when_email_fails(api_client, monkeypatch):
     )
 
     assert response.status_code == 201
-    assert FeedbackMessage.objects.filter(message="Please add a bug report link").exists()
+    assert FeedbackMessage.objects.filter(
+        message="Please add a bug report link"
+    ).exists()
 
 
 @override_settings(
@@ -96,8 +98,12 @@ def test_feedback_throttles():
     api_client = APIClient()
     payload = {"kind": "suggestion", "message": "Add dark mode"}
 
-    first = api_client.post("/api/feedback/", payload, format="json", REMOTE_ADDR=_PUBLIC_IP)
-    second = api_client.post("/api/feedback/", payload, format="json", REMOTE_ADDR=_PUBLIC_IP)
+    first = api_client.post(
+        "/api/feedback/", payload, format="json", REMOTE_ADDR=_PUBLIC_IP
+    )
+    second = api_client.post(
+        "/api/feedback/", payload, format="json", REMOTE_ADDR=_PUBLIC_IP
+    )
 
     assert first.status_code == 201
     assert second.status_code == 429
