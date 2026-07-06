@@ -32,3 +32,5 @@ class BaseModel(TimeStampedModel):
 
 # Backward compat alias
 PublicIdModel = BaseModel
+
+from .feedback import FeedbackMessage  # noqa: E402,F401

@@ -12,6 +12,7 @@ import puppeteer from "puppeteer";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, "../dist");
 const PORT = 5174;
+const LOCAL_ORIGIN = `http://127.0.0.1:${PORT}`;
 const WAIT_MS = 3000;
 const ROUTES = ["/", "/register", "/politica-de-privacidade", "/termos-de-uso"];
 const CHROME_CANDIDATES = [
@@ -65,10 +66,14 @@ function resolveChromeExecutable() {
   return undefined;
 }
 
+function stripLocalOrigin(html) {
+  return html.replaceAll(LOCAL_ORIGIN, "");
+}
+
 async function main() {
   const server = createServer(serveFile);
   await new Promise((resolve) => server.listen(PORT, "127.0.0.1", resolve));
-  console.log(`[prerender] Server started at http://127.0.0.1:${PORT}`);
+  console.log(`[prerender] Server started at ${LOCAL_ORIGIN}`);
 
   let browser;
   try {
@@ -83,7 +88,7 @@ async function main() {
     );
 
     for (const route of ROUTES) {
-      const url = `http://127.0.0.1:${PORT}${route}`;
+      const url = `${LOCAL_ORIGIN}${route}`;
       const outPath = route === "/" ? resolve(DIST, "index.html") : resolve(DIST, route.slice(1), "index.html");
 
       console.log(`[prerender] Rendering ${url} ...`);
@@ -93,7 +98,9 @@ async function main() {
       });
       await new Promise((r) => setTimeout(r, WAIT_MS));
 
-      const html = await page.evaluate(() => document.documentElement.outerHTML);
+      const html = stripLocalOrigin(
+        await page.evaluate(() => document.documentElement.outerHTML)
+      );
       mkdirSync(dirname(outPath), { recursive: true });
       writeFileSync(outPath, "<!DOCTYPE html>\n" + html, "utf-8");
       console.log(`[prerender] Written ${outPath} (${html.length} bytes)`);

@@ -89,6 +89,25 @@ Object.defineProperty(globalThis, "IntersectionObserver", {
   value: IntersectionObserverMock,
 });
 
+if (!HTMLElement.prototype.hasPointerCapture) {
+  HTMLElement.prototype.hasPointerCapture = () => false;
+}
+if (!HTMLElement.prototype.setPointerCapture) {
+  HTMLElement.prototype.setPointerCapture = () => {};
+}
+if (!HTMLElement.prototype.releasePointerCapture) {
+  HTMLElement.prototype.releasePointerCapture = () => {};
+}
+if (!HTMLElement.prototype.scrollIntoView) {
+  HTMLElement.prototype.scrollIntoView = () => {};
+}
+if (!window.URL.createObjectURL) {
+  window.URL.createObjectURL = vi.fn(() => "blob:mock");
+}
+if (!window.URL.revokeObjectURL) {
+  window.URL.revokeObjectURL = vi.fn();
+}
+
 beforeEach(async () => {
   window.localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");
   await i18n.changeLanguage("en");

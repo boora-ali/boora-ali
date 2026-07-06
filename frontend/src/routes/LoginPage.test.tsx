@@ -1,7 +1,9 @@
 import { vi } from "vitest";
 
 vi.mock("../components/auth/GoogleSignInButton", () => ({
-  GoogleSignInButton: () => <button type="button">Google Sign In</button>,
+  GoogleSignInButton: ({ onSuccess }: { onSuccess: (idToken: string) => void }) => (
+    <button type="button" onClick={() => onSuccess("google-id-token")}>Google Sign In</button>
+  ),
 }));
 vi.mock("../components/auth/TurnstileWidget", () => ({ TurnstileWidget: () => null }));
 vi.mock("../contexts/useAuth");
@@ -108,6 +110,19 @@ describe("erros de API", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
     await waitFor(() => expect(mockLogin).not.toHaveBeenCalled());
+  });
+
+  test("erro do Google não aparece como credenciais inválidas", async () => {
+    mockGoogleLogin.mockRejectedValueOnce(axiosErr(403, {}));
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /google sign in/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText("Failed to start Google sign-in")).toBeInTheDocument()
+    );
+    expect(screen.queryByText("Invalid credentials")).not.toBeInTheDocument();
   });
 });
 

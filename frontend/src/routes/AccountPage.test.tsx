@@ -31,6 +31,7 @@ vi.mock("../contexts/useAuth", () => ({
       nickname: "",
       profile_photo_url: profilePhotoUrl,
       is_google_account: isGoogleAccount,
+      terms_accepted_at: "2026-05-29T12:00:00.000Z",
     },
     setUser,
     logout,
@@ -62,6 +63,20 @@ vi.mock("react-i18next", () => ({
         "account.password.confirm": "Confirmar senha",
         "account.password.save": "Salvar senha",
         "account.profile.removePhoto": "Remover foto",
+        "account.privacy.title": "Seus dados",
+        "account.privacy.description": "Exporte seus dados pessoais ou revise o último consentimento registrado.",
+        "account.privacy.export.button": "Exportar meus dados",
+        "account.privacy.export.success": "Download iniciado.",
+        "account.privacy.export.error": "Não foi possível exportar seus dados.",
+        "account.privacy.acceptedAt": "Termos aceitos em {{date}}.",
+        "account.rights.title": "Seus direitos",
+        "account.rights.description": "Atalhos",
+        "account.rights.editProfile": "Editar perfil",
+        "account.rights.exportData": "Exportar dados",
+        "account.rights.withdrawConsent": "Revogar consentimento",
+        "account.rights.deleteAccount": "Excluir conta",
+        "account.rights.withdraw.success": "Consentimento revogado. A exclusão da conta foi agendada.",
+        "account.rights.withdraw.error": "Não foi possível revogar o consentimento.",
         "account.delete.title": "Zona de perigo",
         "account.delete.description": "Descrição exclusão",
         "account.delete.grace": "7 dias",
@@ -199,6 +214,18 @@ describe("formulário de perfil", () => {
 });
 
 describe("exclusão de conta", () => {
+  test("revoga consentimento e agenda exclusão", async () => {
+    mockAuthService.withdrawConsent.mockResolvedValueOnce({ detail: "ok" });
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Revogar consentimento" }));
+
+    await waitFor(() => expect(mockAuthService.withdrawConsent).toHaveBeenCalledTimes(1));
+    expect(screen.getByText(/Conta agendada/)).toBeInTheDocument();
+    expect(toast.success).toHaveBeenCalledWith("Consentimento revogado. A exclusão da conta foi agendada.");
+  });
+
   test("envia senha ao solicitar exclusão de conta não-Google", async () => {
     mockAuthService.deleteAccount.mockResolvedValueOnce(undefined);
     renderPage();
@@ -281,5 +308,19 @@ describe("seção Alterar Senha", () => {
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Senha salva"));
     expect(mockAuthService.changePassword).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("seção Seus dados", () => {
+  test("exibe a central de privacidade e dispara exportação", async () => {
+    mockAuthService.exportData.mockResolvedValueOnce(undefined);
+
+    renderPage();
+
+    expect(screen.getByRole("heading", { name: "Seus dados" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Exportar meus dados" }));
+
+    await waitFor(() => expect(mockAuthService.exportData).toHaveBeenCalledTimes(1));
+    expect(toast.success).toHaveBeenCalledWith("Download iniciado.");
   });
 });
