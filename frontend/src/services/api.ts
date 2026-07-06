@@ -29,9 +29,19 @@ export const api = axios.create({
   withCredentials: true,
 });
 
+function isPublicAuthEndpoint(url?: string) {
+  return (
+    url?.endsWith("/auth/login/") === true ||
+    url?.endsWith("/auth/register/") === true ||
+    url?.endsWith("/auth/google/") === true
+  );
+}
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem(ACCESS_KEY);
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token && !isPublicAuthEndpoint(config.url)) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   notifyLoading(1);
   return config;
 });

@@ -175,7 +175,7 @@ export default function LoginPage() {
                   reportApiError({
                     setError: form.setError,
                     error,
-                    fallbackMessage: t("auth.login.error"),
+                    fallbackMessage: t("auth.login.googleError"),
                   });
                 }
               }}
