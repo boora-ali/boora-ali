@@ -8,7 +8,7 @@ from core.storage_urls import build_public_media_url
 from core.validators import validate_image_upload
 
 from .exceptions import GoogleIdentityPasswordChangeNotAllowedException
-from .models import GoogleIdentity, UserProfile
+from .models import ConsentHistory, GoogleIdentity, UserProfile
 
 User = get_user_model()
 
@@ -16,6 +16,15 @@ User = get_user_model()
 CURRENT_TERMS_VERSION = "1.0"
 
 _PROFILE_FIELDS = ("nickname",)
+
+
+def _get_client_ip(request) -> str | None:
+    if request is None:
+        return None
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -73,6 +82,14 @@ class RegisterSerializer(serializers.ModelSerializer):
                 "terms_accepted_at": timezone.now(),
                 "terms_version": CURRENT_TERMS_VERSION,
             },
+        )
+        request = self.context.get("request")
+        ConsentHistory.objects.create(
+            user=user,
+            terms_version=CURRENT_TERMS_VERSION,
+            ip_address=_get_client_ip(request),
+            user_agent=request.META.get("HTTP_USER_AGENT", "")[:512] if request else "",
+            method="register",
         )
         return user
 

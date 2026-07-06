@@ -74,7 +74,7 @@ export function TurnstileWidget({ onToken, onExpire, onReady, onError, resetKey 
         onError?.();
         return;
       }
-      window.turnstile.ready(render);
+      render();
     };
 
     if (window.turnstile) {
@@ -85,8 +85,6 @@ export function TurnstileWidget({ onToken, onExpire, onReady, onError, resetKey 
         script = document.createElement("script");
         script.id = SCRIPT_ID;
         script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-        script.async = true;
-        script.defer = true;
         document.body.appendChild(script);
       }
       const handleError = () => {

@@ -19,6 +19,20 @@ test("adds Authorization header when token exists in localStorage", async () => 
   localStorage.removeItem(ACCESS_KEY);
 });
 
+test("does not add Authorization header to public auth endpoints", async () => {
+  localStorage.setItem(ACCESS_KEY, "stale-token");
+
+  const { handlers } = api.interceptors.request as unknown as { handlers: RequestHandler[] };
+  const lastHandler = handlers[handlers.length - 1];
+  const cfg = await lastHandler.fulfilled({
+    url: "/auth/google/",
+    headers: {},
+  } as InternalAxiosRequestConfig);
+
+  expect(cfg.headers.Authorization).toBeUndefined();
+  localStorage.removeItem(ACCESS_KEY);
+});
+
 test("falls back to /api when no env vars are set in production", () => {
   const url = resolveApiBaseUrl({ VITE_APP_ENV: "production" });
   expect(url).toBe("/api");
