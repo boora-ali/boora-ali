@@ -148,6 +148,16 @@
       "saved": "Password updated.",
       "error": "Could not change password."
     },
+    "privacy": {
+      "title": "Your data",
+      "description": "Export your personal data or review the last recorded consent.",
+      "export": {
+        "button": "Export my data",
+        "success": "Download started.",
+        "error": "Could not export your data."
+      },
+      "acceptedAt": "Terms accepted on {{date}}."
+    },
     "delete": {
       "title": "Danger zone",
       "description": "Deleting your account will permanently remove all your places, visits, and data.",
@@ -335,6 +345,7 @@
   "footer": {
     "terms": "Terms of Use",
     "privacy": "Privacy Policy",
+    "dpo": "Data Protection Officer",
     "contact": "Contact",
     "feedback": "Suggestions / Report bug",
     "rights": "All rights reserved."

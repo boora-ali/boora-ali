@@ -68,6 +68,28 @@ export const authService = {
   async acceptTerms() {
     await api.post("/auth/terms/accept/");
   },
+  async exportData() {
+    const { data, headers } = await api.get("/auth/me/export/", {
+      responseType: "blob",
+    });
+    const blob = new Blob([data], {
+      type: headers?.["content-type"] || "application/json",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "meus-dados-boora-ali.json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+  async withdrawConsent(): Promise<{ detail: string }> {
+    const { data } = await api.post<{ detail: string }>(
+      "/auth/me/withdraw-consent/",
+    );
+    return data;
+  },
   async deleteAccount(data?: { password?: string }) {
     await api.post("/auth/me/delete/", data ?? {});
   },

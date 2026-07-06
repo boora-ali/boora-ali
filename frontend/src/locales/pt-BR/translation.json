@@ -148,6 +148,16 @@
       "saved": "Senha atualizada.",
       "error": "Não foi possível trocar a senha."
     },
+    "privacy": {
+      "title": "Seus dados",
+      "description": "Exporte seus dados pessoais ou revise o último consentimento registrado.",
+      "export": {
+        "button": "Exportar meus dados",
+        "success": "Download iniciado.",
+        "error": "Não foi possível exportar seus dados."
+      },
+      "acceptedAt": "Termos aceitos em {{date}}."
+    },
     "delete": {
       "title": "Zona de perigo",
       "description": "Ao excluir sua conta, todos os seus lugares, visitas e dados serão removidos permanentemente.",
@@ -336,6 +346,7 @@
   "footer": {
     "terms": "Termos de Uso",
     "privacy": "Política de Privacidade",
+    "dpo": "Encarregado de Dados",
     "contact": "Contato",
     "feedback": "Sugestões / Relatar bug",
     "rights": "Todos os direitos reservados."

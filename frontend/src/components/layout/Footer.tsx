@@ -26,7 +26,7 @@ export function Footer() {
           href="mailto:samuelviana.dev@gmail.com"
           className="hover:text-text transition-colors"
         >
-          {t("footer.contact")}
+          {t("footer.dpo")}
         </a>
         <a
           href="https://www.linkedin.com/in/ssamuelsilva/"

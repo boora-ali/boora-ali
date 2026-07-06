@@ -94,6 +94,42 @@ class UserProfile(models.Model):
         return self.user.username
 
 
+class ConsentHistory(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="consent_history",
+        verbose_name=_("user"),
+    )
+    terms_version = models.CharField(max_length=20, verbose_name=_("terms version"))
+    accepted_at = models.DateTimeField(auto_now_add=True, verbose_name=_("accepted at"))
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        verbose_name=_("ip address"),
+    )
+    user_agent = models.CharField(
+        max_length=512,
+        blank=True,
+        default="",
+        verbose_name=_("user agent"),
+    )
+    method = models.CharField(
+        max_length=20,
+        default="register",
+        verbose_name=_("method"),
+    )
+
+    class Meta:
+        db_table = "accounts_consent_history"
+        ordering = ["-accepted_at"]
+        verbose_name = _("consent history")
+        verbose_name_plural = _("consent histories")
+
+    def __str__(self) -> str:
+        return f"{self.user.username} — {self.terms_version} — {self.method}"
+
+
 class GoogleIdentity(TimeStampedModel):
     history = HistoricalRecords()
 

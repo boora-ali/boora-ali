@@ -47,11 +47,12 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-lg font-semibold text-text mb-3">3. Como usamos seus dados</h2>
             <ul className="list-disc list-inside space-y-1 text-text/80 ml-2">
-              <li>Criar e autenticar sua conta.</li>
-              <li>Exibir e organizar o seu diário gastronômico.</li>
+              <li>Criar e autenticar sua conta com base no contrato de uso.</li>
+              <li>Exibir e organizar o seu diário gastronômico com base no contrato de uso.</li>
               <li>Processar coordenadas geográficas de URLs do Google Maps que você inserir.</li>
-              <li>Enviar e-mails transacionais quando necessário (ex.: recuperação de senha).</li>
-              <li>Proteger o serviço contra abusos e acessos automatizados.</li>
+              <li>Enviar e-mails transacionais quando necessário (ex.: recuperação de senha) por meio da Resend.</li>
+              <li>Proteger o serviço contra abusos e acessos automatizados, inclusive com Cloudflare Turnstile.</li>
+              <li>Foto de perfil é opcional e depende do seu consentimento.</li>
             </ul>
             <p className="mt-3">
               Não usamos seus dados para publicidade, não os vendemos e não os compartilhamos com terceiros,
@@ -64,6 +65,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc list-inside space-y-1 text-text/80 ml-2">
               <li><strong>Cloudflare:</strong> CDN, proteção DDoS e verificação anti-bot (Turnstile). Os IPs são processados pela Cloudflare conforme sua política de privacidade.</li>
               <li><strong>Cloudflare R2:</strong> armazenamento de fotos de perfil e imagens de lugares e visitas.</li>
+              <li><strong>Resend:</strong> envio de e-mails transacionais da plataforma.</li>
               <li><strong>Google OAuth:</strong> login social opcional. Recebemos apenas seu nome, e-mail e foto do Google, sem acesso a outros dados da sua conta.</li>
             </ul>
           </section>
@@ -75,6 +77,11 @@ export default function PrivacyPolicyPage() {
               práticas de segurança como criptografia em trânsito (HTTPS/TLS), hashing de senhas
               com Argon2, tokens JWT com expiração curta e controles de acesso por função.
             </p>
+            <ul className="list-disc list-inside space-y-1 text-text/80 ml-2 mt-3">
+              <li>Conta ativa: enquanto a conta estiver ativa.</li>
+              <li>Conta solicitada para exclusão: 7 dias de graça antes da exclusão permanente.</li>
+              <li>Registros de consentimento: mantidos enquanto necessário para prova e auditoria.</li>
+            </ul>
           </section>
 
           <section>
@@ -82,8 +89,10 @@ export default function PrivacyPolicyPage() {
             <p className="mb-2">Você pode, a qualquer momento:</p>
             <ul className="list-disc list-inside space-y-1 text-text/80 ml-2">
               <li>Acessar e corrigir seus dados pessoais nas configurações da conta.</li>
+              <li>Exportar seus dados diretamente pela área da conta.</li>
               <li>Excluir conteúdos (lugares, visitas, fotos) diretamente pela plataforma.</li>
-              <li>Solicitar a exclusão completa da sua conta e dados por e-mail.</li>
+              <li>Solicitar a exclusão completa da sua conta pelas configurações ou por e-mail.</li>
+              <li>Registrar reclamação na ANPD em <a href="https://www.gov.br/anpd" className="text-primary hover:underline">gov.br/anpd</a>.</li>
             </ul>
           </section>
 

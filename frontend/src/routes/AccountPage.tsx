@@ -53,6 +53,7 @@ export default function AccountPage() {
   const [deleteRequested, setDeleteRequested] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   const profileForm = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileSchema),
@@ -141,6 +142,18 @@ export default function AccountPage() {
         error,
         fallbackMessage: t("account.password.error"),
       });
+    }
+  };
+
+  const onExportData = async () => {
+    setIsExporting(true);
+    try {
+      await authService.exportData();
+      toast.success(t("account.privacy.export.success"));
+    } catch {
+      toast.error(t("account.privacy.export.error"));
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -340,6 +353,34 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold text-foreground">{t("account.privacy.title")}</h2>
+              <p className="text-sm text-muted-foreground">{t("account.privacy.description")}</p>
+            </div>
+            {user?.terms_accepted_at && (
+              <p className="text-xs text-muted-foreground">
+                {t("account.privacy.acceptedAt", {
+                  date: new Date(user.terms_accepted_at).toLocaleString(),
+                })}
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full sm:w-auto"
+              onClick={onExportData}
+              disabled={isExporting}
+            >
+              {isExporting && <LoadingSpinner className="mr-2 h-4 w-4" />}
+              {t("account.privacy.export.button")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-destructive/40">
         <CardContent className="pt-6">

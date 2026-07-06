@@ -101,6 +101,12 @@ if (!HTMLElement.prototype.releasePointerCapture) {
 if (!HTMLElement.prototype.scrollIntoView) {
   HTMLElement.prototype.scrollIntoView = () => {};
 }
+if (!window.URL.createObjectURL) {
+  window.URL.createObjectURL = vi.fn(() => "blob:mock");
+}
+if (!window.URL.revokeObjectURL) {
+  window.URL.revokeObjectURL = vi.fn();
+}
 
 beforeEach(async () => {
   window.localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");

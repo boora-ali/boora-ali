@@ -1,5 +1,6 @@
 import logging
 
+from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -10,12 +11,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.exceptions import InvalidTokenException
 from core.views import MutationMixin
 
+from .models import ConsentHistory
 from .serializers import (
     CURRENT_TERMS_VERSION,
     GoogleLoginSerializer,
     PasswordChangeSerializer,
     RegisterSerializer,
     UserSerializer,
+    _get_client_ip,
 )
 from .services import AccountLifecycleService, GoogleAuthService
 from .throttles import AuthRateThrottle, RateLimitHeadersMixin
@@ -169,6 +172,36 @@ class DeleteAccountView(MutationMixin, APIView):
         return Response({"detail": "Conta agendada para exclusão em 7 dias."})
 
 
+class DataExportView(MutationMixin, APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AuthRateThrottle]
+    throttle_scope = "auth"
+
+    def get(self, request):
+        from .services import build_export_payload
+
+        response = Response(build_export_payload(request.user))
+        response["Content-Disposition"] = 'attachment; filename="meus-dados-boora-ali.json"'
+        return response
+
+
+class WithdrawConsentView(MutationMixin, APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AuthRateThrottle]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        profile = AccountLifecycleService.get_or_create_profile(request.user)
+        if profile.deletion_requested_at:
+            return Response(
+                {"detail": "Conta já está agendada para exclusão."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        profile.deletion_requested_at = timezone.now()
+        profile.save(update_fields=["deletion_requested_at"])
+        return Response({"detail": "Consentimento revogado. Conta agendada para exclusão."})
+
+
 class VerifyEmailView(MutationMixin, APIView):
     permission_classes = [permissions.AllowAny]  # token é o segredo
     throttle_classes = [AuthRateThrottle]
@@ -205,6 +238,13 @@ class TermsAcceptView(MutationMixin, APIView):
 
     def post(self, request):
         AccountLifecycleService.accept_terms(request.user, CURRENT_TERMS_VERSION)
+        ConsentHistory.objects.create(
+            user=request.user,
+            terms_version=CURRENT_TERMS_VERSION,
+            ip_address=_get_client_ip(request),
+            user_agent=request.META.get("HTTP_USER_AGENT", "")[:512],
+            method="re_accept",
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -219,7 +259,15 @@ class GoogleLoginView(MutationMixin, RateLimitHeadersMixin, APIView):
         claims = GoogleAuthService.verify_id_token(
             serializer.validated_data["id_token"]
         )
-        user = GoogleAuthService.resolve_user(claims)
+        user, created = GoogleAuthService.resolve_user(claims)
+        if created:
+            ConsentHistory.objects.create(
+                user=user,
+                terms_version=CURRENT_TERMS_VERSION,
+                ip_address=_get_client_ip(request),
+                user_agent=request.META.get("HTTP_USER_AGENT", "")[:512],
+                method="google_oauth",
+            )
         logger.info(
             "Google login succeeded for user_id=%s username=%s", user.id, user.username
         )
