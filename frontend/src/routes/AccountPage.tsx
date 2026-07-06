@@ -52,7 +52,9 @@ export default function AccountPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteRequested, setDeleteRequested] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isWithdrawingConsent, setIsWithdrawingConsent] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   const profileForm = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileSchema),
@@ -144,6 +146,31 @@ export default function AccountPage() {
     }
   };
 
+  const onExportData = async () => {
+    setIsExporting(true);
+    try {
+      await authService.exportData();
+      toast.success(t("account.privacy.export.success"));
+    } catch {
+      toast.error(t("account.privacy.export.error"));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const onWithdrawConsent = async () => {
+    setIsWithdrawingConsent(true);
+    try {
+      await authService.withdrawConsent();
+      setDeleteRequested(true);
+      toast.success(t("account.rights.withdraw.success"));
+    } catch {
+      toast.error(t("account.rights.withdraw.error"));
+    } finally {
+      setIsWithdrawingConsent(false);
+    }
+  };
+
   async function onDeleteAccount() {
     setIsDeleting(true);
     try {
@@ -166,9 +193,48 @@ export default function AccountPage() {
         <p className="mt-1 text-sm text-muted-foreground">{t("account.subtitle")}</p>
       </div>
 
+      <Card className="scroll-mt-24" id="rights">
+        <CardContent className="pt-6">
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold text-foreground">{t("account.rights.title")}</h2>
+              <p className="text-sm text-muted-foreground">{t("account.rights.description")}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="secondary" size="sm">
+                <a href="#profile">{t("account.rights.editProfile")}</a>
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={onExportData}
+                disabled={isExporting}
+              >
+                {isExporting && <LoadingSpinner className="mr-2 h-4 w-4" />}
+                {t("account.rights.exportData")}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={onWithdrawConsent}
+                disabled={isWithdrawingConsent || deleteRequested}
+              >
+                {isWithdrawingConsent && <LoadingSpinner className="mr-2 h-4 w-4" />}
+                {t("account.rights.withdrawConsent")}
+              </Button>
+              <Button asChild variant="destructive" size="sm">
+                <a href="#danger-zone">{t("account.rights.deleteAccount")}</a>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <PwaInstallButton variant="inline" />
 
-      <Card>
+      <Card id="profile" className="scroll-mt-24">
         <CardContent className="pt-6">
           <Form {...profileForm}>
             <form className="space-y-4" onSubmit={profileForm.handleSubmit(onProfileSubmit)}>
@@ -341,7 +407,35 @@ export default function AccountPage() {
         </Card>
       )}
 
-      <Card className="border-destructive/40">
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold text-foreground">{t("account.privacy.title")}</h2>
+              <p className="text-sm text-muted-foreground">{t("account.privacy.description")}</p>
+            </div>
+            {user?.terms_accepted_at && (
+              <p className="text-xs text-muted-foreground">
+                {t("account.privacy.acceptedAt", {
+                  date: new Date(user.terms_accepted_at).toLocaleString(),
+                })}
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full sm:w-auto"
+              onClick={onExportData}
+              disabled={isExporting}
+            >
+              {isExporting && <LoadingSpinner className="mr-2 h-4 w-4" />}
+              {t("account.privacy.export.button")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card id="danger-zone" className="border-destructive/40 scroll-mt-24">
         <CardContent className="pt-6">
           <div className="space-y-2">
             <h3 className="font-medium text-destructive">{t("account.delete.title")}</h3>

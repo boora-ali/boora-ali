@@ -5,6 +5,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.permissions import IsAuthenticated
 
 from config.admin_site import site as admin_site
+from core.feedback import FeedbackSubmitView
 from core.media_views import serve_user_media
 
 
@@ -16,6 +17,7 @@ urlpatterns = [
     path("api/health/", health, name="health"),
     path("admin/", admin_site.urls),
     path("api/auth/", include("accounts.urls")),
+    path("api/feedback/", FeedbackSubmitView.as_view(), name="feedback"),
     path("api/", include("places.urls")),
     path("api/notifications/", include("notifications.urls")),
     path("api/media/<path:path>", serve_user_media, name="serve-user-media"),

@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     CookieTokenRefreshView,
+    DataExportView,
     DeleteAccountView,
     GoogleLoginView,
     LogoutView,
@@ -12,6 +13,7 @@ from .views import (
     TermsAcceptView,
     ThrottledLoginView,
     VerifyEmailView,
+    WithdrawConsentView,
 )
 
 urlpatterns = [
@@ -24,6 +26,8 @@ urlpatterns = [
     path("password/", PasswordChangeView.as_view()),
     path("terms/accept/", TermsAcceptView.as_view()),
     path("me/delete/", DeleteAccountView.as_view()),
+    path("me/export/", DataExportView.as_view()),
+    path("me/withdraw-consent/", WithdrawConsentView.as_view()),
     path("verify-email/", VerifyEmailView.as_view()),
     path("resend-verification/", ResendVerificationEmailView.as_view()),
 ]

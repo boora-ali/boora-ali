@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { DarkModeToggle } from "../ui/DarkModeToggle";
 import { BotpressChatToggle } from "../ui/BotpressChatToggle";
 import { AuthCtx } from "../../contexts/auth";
+import { FeedbackButton } from "../feedback/FeedbackButton";
 
 export function Footer() {
   const { t } = useTranslation();
@@ -14,6 +15,7 @@ export function Footer() {
       <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted">
         {!user && <DarkModeToggle />}
         <BotpressChatToggle />
+        <FeedbackButton />
         <Link to="/termos-de-uso" className="hover:text-text transition-colors">
           {t("footer.terms")}
         </Link>
@@ -24,7 +26,7 @@ export function Footer() {
           href="mailto:samuelviana.dev@gmail.com"
           className="hover:text-text transition-colors"
         >
-          {t("footer.contact")}
+          {t("footer.dpo")}
         </a>
         <a
           href="https://www.linkedin.com/in/ssamuelsilva/"

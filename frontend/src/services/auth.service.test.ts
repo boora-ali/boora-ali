@@ -137,3 +137,42 @@ describe("authService.register", () => {
     );
   });
 });
+
+describe("authService privacy endpoints", () => {
+  test("exportData pede o blob e dispara download", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: new Blob(["{}"], { type: "application/json" }),
+      headers: { "content-type": "application/json" },
+    } as never);
+    const createObjectUrl = vi
+      .spyOn(window.URL, "createObjectURL")
+      .mockReturnValue("blob:123");
+    const revokeObjectUrl = vi
+      .spyOn(window.URL, "revokeObjectURL")
+      .mockImplementation(() => {});
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+
+    await authService.exportData();
+
+    expect(api.get).toHaveBeenCalledWith("/auth/me/export/", {
+      responseType: "blob",
+    });
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+
+    createObjectUrl.mockRestore();
+    revokeObjectUrl.mockRestore();
+    clickSpy.mockRestore();
+  });
+
+  test("withdrawConsent chama a rota e retorna o payload", async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({
+      data: { detail: "ok" },
+    } as never);
+
+    await expect(authService.withdrawConsent()).resolves.toEqual({ detail: "ok" });
+
+    expect(api.post).toHaveBeenCalledWith("/auth/me/withdraw-consent/");
+  });
+});
