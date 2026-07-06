@@ -158,6 +158,18 @@
       },
       "acceptedAt": "Terms accepted on {{date}}."
     },
+    "rights": {
+      "title": "Your rights",
+      "description": "Shortcuts to edit your profile, export your data, withdraw consent, or delete the account.",
+      "editProfile": "Edit profile",
+      "exportData": "Export data",
+      "withdrawConsent": "Withdraw consent",
+      "deleteAccount": "Delete account",
+      "withdraw": {
+        "success": "Consent withdrawn. Account deletion has been scheduled.",
+        "error": "Could not withdraw consent."
+      }
+    },
     "delete": {
       "title": "Danger zone",
       "description": "Deleting your account will permanently remove all your places, visits, and data.",
@@ -196,6 +208,68 @@
       "title": "Visits ({{count}})",
       "add": "+ Add visit",
       "empty": "No visits yet."
+    }
+  },
+  "privacy": {
+    "lgpd": {
+      "categories": {
+        "title": "2. Data processed",
+        "intro": "Boora Ali only processes what it needs to operate and to honor the data subject's rights:",
+        "account": {
+          "label": "Account",
+          "detail": "username, email, and hashed password. Practical basis: contract performance and authentication."
+        },
+        "profile": {
+          "label": "Profile",
+          "detail": "display name, nickname, and optional profile photo. Practical basis: contract performance; the photo depends on your consent."
+        },
+        "content": {
+          "label": "Content",
+          "detail": "places, visits, ratings, photos, and notes. Practical basis: contract performance, while the account is active."
+        },
+        "technical": {
+          "label": "Technical data",
+          "detail": "IP, user-agent, and access logs. Practical basis: security, abuse prevention, and service operation."
+        },
+        "consent": {
+          "label": "Consent",
+          "detail": "acceptance records, withdrawal, and related history. Practical basis: consent proof and audit."
+        }
+      },
+      "operators": {
+        "title": "3. Operators and third parties",
+        "cloudflare": {
+          "label": "Cloudflare",
+          "detail": "CDN and abuse/attack protection, including Turnstile for anti-bot verification."
+        },
+        "r2": {
+          "label": "Cloudflare R2",
+          "detail": "image storage, such as profile photos and place or visit images."
+        },
+        "resend": {
+          "label": "Resend",
+          "detail": "transactional email delivery, such as password recovery and account notifications."
+        },
+        "google": {
+          "label": "Google OAuth",
+          "detail": "optional social login, with your Google name, email, and photo."
+        }
+      },
+      "retention": {
+        "title": "4. Retention",
+        "account": "Active account: while the account remains active.",
+        "content": "Journal content: while the account remains active or until you remove the item.",
+        "technical": "Logs and technical signals: for as long as needed for security, debugging, and operation.",
+        "consent": "Consent records: while needed for proof and audit."
+      },
+      "rights": {
+        "title": "5. Rights and actions",
+        "intro": "The rights below already have a matching action in the app:",
+        "editProfile": "Edit your profile in account settings.",
+        "exportData": "Export your data from the account area.",
+        "withdrawConsent": "Withdraw consent in the account area, which schedules deletion.",
+        "deleteAccount": "Delete the account in account settings."
+      }
     }
   },
   "placeForm": {

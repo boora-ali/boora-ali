@@ -69,6 +69,14 @@ vi.mock("react-i18next", () => ({
         "account.privacy.export.success": "Download iniciado.",
         "account.privacy.export.error": "Não foi possível exportar seus dados.",
         "account.privacy.acceptedAt": "Termos aceitos em {{date}}.",
+        "account.rights.title": "Seus direitos",
+        "account.rights.description": "Atalhos",
+        "account.rights.editProfile": "Editar perfil",
+        "account.rights.exportData": "Exportar dados",
+        "account.rights.withdrawConsent": "Revogar consentimento",
+        "account.rights.deleteAccount": "Excluir conta",
+        "account.rights.withdraw.success": "Consentimento revogado. A exclusão da conta foi agendada.",
+        "account.rights.withdraw.error": "Não foi possível revogar o consentimento.",
         "account.delete.title": "Zona de perigo",
         "account.delete.description": "Descrição exclusão",
         "account.delete.grace": "7 dias",
@@ -206,6 +214,18 @@ describe("formulário de perfil", () => {
 });
 
 describe("exclusão de conta", () => {
+  test("revoga consentimento e agenda exclusão", async () => {
+    mockAuthService.withdrawConsent.mockResolvedValueOnce({ detail: "ok" });
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Revogar consentimento" }));
+
+    await waitFor(() => expect(mockAuthService.withdrawConsent).toHaveBeenCalledTimes(1));
+    expect(screen.getByText(/Conta agendada/)).toBeInTheDocument();
+    expect(toast.success).toHaveBeenCalledWith("Consentimento revogado. A exclusão da conta foi agendada.");
+  });
+
   test("envia senha ao solicitar exclusão de conta não-Google", async () => {
     mockAuthService.deleteAccount.mockResolvedValueOnce(undefined);
     renderPage();

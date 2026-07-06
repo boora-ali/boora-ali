@@ -72,8 +72,9 @@ export const authService = {
     const { data, headers } = await api.get("/auth/me/export/", {
       responseType: "blob",
     });
+    const contentType = headers?.["content-type"];
     const blob = new Blob([data], {
-      type: headers?.["content-type"] || "application/json",
+      type: typeof contentType === "string" ? contentType : "application/json",
     });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");

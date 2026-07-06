@@ -158,6 +158,18 @@
       },
       "acceptedAt": "Termos aceitos em {{date}}."
     },
+    "rights": {
+      "title": "Seus direitos",
+      "description": "Atalhos para editar seu perfil, exportar seus dados, revogar consentimento ou excluir a conta.",
+      "editProfile": "Editar perfil",
+      "exportData": "Exportar dados",
+      "withdrawConsent": "Revogar consentimento",
+      "deleteAccount": "Excluir conta",
+      "withdraw": {
+        "success": "Consentimento revogado. A exclusão da conta foi agendada.",
+        "error": "Não foi possível revogar o consentimento."
+      }
+    },
     "delete": {
       "title": "Zona de perigo",
       "description": "Ao excluir sua conta, todos os seus lugares, visitas e dados serão removidos permanentemente.",
@@ -196,6 +208,68 @@
       "title": "Visitas ({{count}})",
       "add": "+ Adicionar visita",
       "empty": "Nenhuma visita ainda."
+    }
+  },
+  "privacy": {
+    "lgpd": {
+      "categories": {
+        "title": "2. Dados tratados",
+        "intro": "O Boora Ali trata apenas o que precisa para funcionar e para cumprir os direitos do titular:",
+        "account": {
+          "label": "Conta",
+          "detail": "nome de usuário, e-mail e senha com hash. Base prática: execução do contrato e autenticação."
+        },
+        "profile": {
+          "label": "Perfil",
+          "detail": "nome de exibição, apelido e foto de perfil opcional. Base prática: execução do contrato; a foto depende do seu consentimento."
+        },
+        "content": {
+          "label": "Conteúdo",
+          "detail": "lugares, visitas, avaliações, fotos e notas. Base prática: execução do contrato, enquanto a conta estiver ativa."
+        },
+        "technical": {
+          "label": "Dados técnicos",
+          "detail": "IP, user-agent e logs de acesso. Base prática: segurança, prevenção a abuso e operação do serviço."
+        },
+        "consent": {
+          "label": "Consentimento",
+          "detail": "registro de aceite, revogação e histórico associado. Base prática: prova do consentimento e auditoria."
+        }
+      },
+      "operators": {
+        "title": "3. Operadores e terceiros",
+        "cloudflare": {
+          "label": "Cloudflare",
+          "detail": "CDN e proteção contra abuso/ataques, incluindo o Turnstile para verificação anti-bot."
+        },
+        "r2": {
+          "label": "Cloudflare R2",
+          "detail": "armazenamento de imagens, como foto de perfil e imagens de lugares e visitas."
+        },
+        "resend": {
+          "label": "Resend",
+          "detail": "envio de e-mails transacionais, como recuperação de senha e notificações de conta."
+        },
+        "google": {
+          "label": "Google OAuth",
+          "detail": "login social opcional, com nome, e-mail e foto do Google."
+        }
+      },
+      "retention": {
+        "title": "4. Retenção",
+        "account": "Conta ativa: enquanto a conta estiver ativa.",
+        "content": "Conteúdo do diário: enquanto a conta estiver ativa ou até você remover o item.",
+        "technical": "Logs e sinais técnicos: pelo tempo necessário para segurança, diagnóstico e operação.",
+        "consent": "Registros de consentimento: enquanto forem necessários para prova e auditoria."
+      },
+      "rights": {
+        "title": "5. Direitos e ações",
+        "intro": "Os direitos abaixo já têm ação correspondente no app:",
+        "editProfile": "Editar perfil nas configurações da conta.",
+        "exportData": "Exportar seus dados na área da conta.",
+        "withdrawConsent": "Revogar consentimento na área da conta, o que agenda a exclusão.",
+        "deleteAccount": "Excluir a conta nas configurações da conta."
+      }
     }
   },
   "placeForm": {

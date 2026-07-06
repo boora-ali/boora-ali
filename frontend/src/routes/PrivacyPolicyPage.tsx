@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { useTranslation } from "react-i18next";
 import { Footer } from "../components/layout/Footer";
 
 export default function PrivacyPolicyPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Helmet>
@@ -34,44 +37,50 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-3">2. Dados coletados</h2>
-            <p className="mb-2">Coletamos apenas os dados necessários para o funcionamento do serviço:</p>
+            <h2 className="text-lg font-semibold text-text mb-3">{t("privacy.lgpd.categories.title")}</h2>
+            <p className="mb-2">{t("privacy.lgpd.categories.intro")}</p>
             <ul className="list-disc list-inside space-y-1 text-text/80 ml-2">
-              <li><strong>Conta:</strong> nome de usuário, e-mail e senha (armazenada com hash seguro).</li>
-              <li><strong>Perfil:</strong> nome de exibição, apelido e foto de perfil (opcional).</li>
-              <li><strong>Conteúdo:</strong> lugares, visitas, avaliações, fotos e notas que você registrar.</li>
-              <li><strong>Dados técnicos:</strong> endereço IP (para proteção contra bots via Cloudflare Turnstile) e logs de acesso padrão.</li>
+              <li><strong>{t("privacy.lgpd.categories.account.label")}:</strong> {t("privacy.lgpd.categories.account.detail")}</li>
+              <li><strong>{t("privacy.lgpd.categories.profile.label")}:</strong> {t("privacy.lgpd.categories.profile.detail")}</li>
+              <li><strong>{t("privacy.lgpd.categories.content.label")}:</strong> {t("privacy.lgpd.categories.content.detail")}</li>
+              <li><strong>{t("privacy.lgpd.categories.technical.label")}:</strong> {t("privacy.lgpd.categories.technical.detail")}</li>
+              <li><strong>{t("privacy.lgpd.categories.consent.label")}:</strong> {t("privacy.lgpd.categories.consent.detail")}</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-3">3. Como usamos seus dados</h2>
+            <h2 className="text-lg font-semibold text-text mb-3">{t("privacy.lgpd.operators.title")}</h2>
             <ul className="list-disc list-inside space-y-1 text-text/80 ml-2">
-              <li>Criar e autenticar sua conta com base no contrato de uso.</li>
-              <li>Exibir e organizar o seu diário gastronômico com base no contrato de uso.</li>
-              <li>Processar coordenadas geográficas de URLs do Google Maps que você inserir.</li>
-              <li>Enviar e-mails transacionais quando necessário (ex.: recuperação de senha) por meio da Resend.</li>
-              <li>Proteger o serviço contra abusos e acessos automatizados, inclusive com Cloudflare Turnstile.</li>
-              <li>Foto de perfil é opcional e depende do seu consentimento.</li>
-            </ul>
-            <p className="mt-3">
-              Não usamos seus dados para publicidade, não os vendemos e não os compartilhamos com terceiros,
-              exceto pelos serviços de infraestrutura listados abaixo.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold text-text mb-3">4. Serviços de terceiros</h2>
-            <ul className="list-disc list-inside space-y-1 text-text/80 ml-2">
-              <li><strong>Cloudflare:</strong> CDN, proteção DDoS e verificação anti-bot (Turnstile). Os IPs são processados pela Cloudflare conforme sua política de privacidade.</li>
-              <li><strong>Cloudflare R2:</strong> armazenamento de fotos de perfil e imagens de lugares e visitas.</li>
-              <li><strong>Resend:</strong> envio de e-mails transacionais da plataforma.</li>
-              <li><strong>Google OAuth:</strong> login social opcional. Recebemos apenas seu nome, e-mail e foto do Google, sem acesso a outros dados da sua conta.</li>
+              <li><strong>{t("privacy.lgpd.operators.cloudflare.label")}:</strong> {t("privacy.lgpd.operators.cloudflare.detail")}</li>
+              <li><strong>{t("privacy.lgpd.operators.r2.label")}:</strong> {t("privacy.lgpd.operators.r2.detail")}</li>
+              <li><strong>{t("privacy.lgpd.operators.resend.label")}:</strong> {t("privacy.lgpd.operators.resend.detail")}</li>
+              <li><strong>{t("privacy.lgpd.operators.google.label")}:</strong> {t("privacy.lgpd.operators.google.detail")}</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-3">5. Armazenamento e segurança</h2>
+            <h2 className="text-lg font-semibold text-text mb-3">{t("privacy.lgpd.retention.title")}</h2>
+            <ul className="list-disc list-inside space-y-1 text-text/80 ml-2">
+              <li>{t("privacy.lgpd.retention.account")}</li>
+              <li>{t("privacy.lgpd.retention.content")}</li>
+              <li>{t("privacy.lgpd.retention.technical")}</li>
+              <li>{t("privacy.lgpd.retention.consent")}</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-text mb-3">{t("privacy.lgpd.rights.title")}</h2>
+            <p className="mb-2">{t("privacy.lgpd.rights.intro")}</p>
+            <ul className="list-disc list-inside space-y-1 text-text/80 ml-2">
+              <li>{t("privacy.lgpd.rights.editProfile")}</li>
+              <li>{t("privacy.lgpd.rights.exportData")}</li>
+              <li>{t("privacy.lgpd.rights.withdrawConsent")}</li>
+              <li>{t("privacy.lgpd.rights.deleteAccount")}</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-text mb-3">6. Armazenamento e segurança</h2>
             <p>
               Os dados são armazenados em servidores na Europa (Contabo VPS, Alemanha). Adotamos
               práticas de segurança como criptografia em trânsito (HTTPS/TLS), hashing de senhas
@@ -85,19 +94,18 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-3">6. Seus direitos</h2>
-            <p className="mb-2">Você pode, a qualquer momento:</p>
-            <ul className="list-disc list-inside space-y-1 text-text/80 ml-2">
-              <li>Acessar e corrigir seus dados pessoais nas configurações da conta.</li>
-              <li>Exportar seus dados diretamente pela área da conta.</li>
-              <li>Excluir conteúdos (lugares, visitas, fotos) diretamente pela plataforma.</li>
-              <li>Solicitar a exclusão completa da sua conta pelas configurações ou por e-mail.</li>
-              <li>Registrar reclamação na ANPD em <a href="https://www.gov.br/anpd" className="text-primary hover:underline">gov.br/anpd</a>.</li>
-            </ul>
+            <h2 className="text-lg font-semibold text-text mb-3">7. Exercício de direitos</h2>
+            <p className="mb-2">
+              Para pedidos e reclamações, use o e-mail do encarregado ou o canal público da ANPD em{" "}
+              <a href="https://www.gov.br/anpd" className="text-primary hover:underline">
+                gov.br/anpd
+              </a>
+              .
+            </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-3">7. Cookies e armazenamento local</h2>
+            <h2 className="text-lg font-semibold text-text mb-3">8. Cookies e armazenamento local</h2>
             <p>
               Utilizamos <em>localStorage</em> do navegador para manter sua sessão autenticada e
               preferências de idioma e tema. Não utilizamos cookies de rastreamento ou publicidade.
@@ -105,7 +113,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-3">8. Contato</h2>
+            <h2 className="text-lg font-semibold text-text mb-3">9. Contato</h2>
             <p>
               Para dúvidas, solicitações ou exercício dos seus direitos, entre em contato pelo e-mail:{" "}
               <a
