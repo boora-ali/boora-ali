@@ -300,7 +300,7 @@ class CollectionSharePlaceSnapshotAdmin(SimpleHistoryAdmin, ModelAdmin):
 @admin.register(Category, site=admin_site)
 class CategoryAdmin(ModelAdmin):
     list_display = ("name", "place_count", "created_at")
-    search_fields = ("name", )
+    search_fields = ("name",)
     readonly_fields = ("public_id", "created_at", "updated_at")
     list_per_page = ADMIN_LIST_PER_PAGE
     list_fullwidth = True
@@ -311,7 +311,7 @@ class CategoryAdmin(ModelAdmin):
             "Categoria",
             {
                 "classes": ("tab",),
-                "fields": ("name", ),
+                "fields": ("name",),
             },
         ),
         (

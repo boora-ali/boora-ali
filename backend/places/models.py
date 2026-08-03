@@ -137,9 +137,7 @@ class Place(BaseModel):
         db_column="cover_photo",
     )
     categories = models.ManyToManyField(
-        "Category",
-        through="PlaceCategory",
-        through_fields=("place", "category")
+        "Category", through="PlaceCategory", through_fields=("place", "category")
     )
 
     class Meta:

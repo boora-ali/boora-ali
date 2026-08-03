@@ -351,9 +351,7 @@ class PlaceWriteSerializer(MediaWriteSerializerMixin, FlexFieldsModelSerializer)
             return []
         categories = list(Category.objects.filter(public_id__in=value))
         if len(categories) != len(set(str(v) for v in value)):
-            raise serializers.ValidationError(
-                "Uma ou mais categorias não existem."
-            )
+            raise serializers.ValidationError("Uma ou mais categorias não existem.")
         return categories
 
     def _set_categories(self, instance, categories):
