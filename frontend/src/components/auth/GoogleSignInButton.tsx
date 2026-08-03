@@ -126,7 +126,7 @@ export function GoogleSignInButton({ onSuccess }: Props) {
   }
 
   return (
-    <div className="space-y-3 border-[3px] border-border bg-surface p-3 shadow-[3px_3px_0_#000] dark:shadow-[3px_3px_0_#fff]">
+    <div className="space-y-3 border-[3px] border-border bg-surface p-3 shadow-[3px_3px_0_var(--color-shadow)]">
       <p className="text-sm font-bold text-text">{t("auth.login.google")}</p>
       {loading && <p className="text-sm text-text/75">{t("auth.login.googleLoading")}</p>}
       <div ref={containerRef} />

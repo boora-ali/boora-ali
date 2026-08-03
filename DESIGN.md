@@ -47,9 +47,10 @@ components:
 | Tema | Fundo | Texto e borda | Ação |
 | --- | --- | --- | --- |
 | Claro | branco puro | preto puro | vermelho de marca `#E03A3E` |
-| Escuro | preto puro | branco puro | vermelho de marca `#E03A3E` |
+| Escuro | carvão quente `oklch(0.145 0.012 35)` | marfim quente `oklch(0.93 0.018 80)` | vermelho de marca `#E03A3E` |
 
-O toggle claro/escuro permanece disponível. Ele inverte papel e tinta, mas não troca a cor de ação: vermelho é a assinatura da marca nos dois modos.
+O toggle claro/escuro permanece disponível. À noite, o diário usa carvão e marfim quentes, com sombra quase preta, para preservar contraste sem o brilho agressivo de branco sobre preto. O vermelho continua sendo a assinatura da marca nos dois modos.
+Essa regra também se aplica à landing, que consome os próprios tokens `--landing-paper`, `--landing-ink` e `--landing-shadow`.
 
 ## Color Rules
 
@@ -93,11 +94,12 @@ O toggle claro/escuro permanece disponível. Ele inverte papel e tinta, mas não
 - CTA primário: vermelho, texto branco, borda de 3px e sombra sólida.
 - Focus visível é obrigatório e usa o contraste do tema.
 
-### Authentication and form primitives
+### Authentication, cards and form primitives
 
 - Login e cadastro são uma porta em duas faixas: manifesto vermelho e formulário em papel ou tinta.
-- `Button`, `Input`, `PasswordInput`, `Switch`, seleção de idioma e provedores externos compartilham cantos retos, borda de 3px e sombra mecânica.
+- `Button`, `Card`, `Badge`, `Input`, `Textarea`, `Select`, `PasswordInput`, `Switch`, seleção de idioma e provedores externos compartilham cantos retos, borda de 3px e sombra mecânica.
 - Essa base é global. Telas existentes que usam esses primitivos recebem o mesmo tratamento sem forks de componentes.
+- Em Places, filtros e cards usam a mesma tinta, borda e elevação; as cores dos estados são azul, amarelo, vermelho e preto.
 
 ### Images
 

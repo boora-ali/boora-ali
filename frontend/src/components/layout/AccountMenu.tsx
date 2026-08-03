@@ -29,13 +29,13 @@ export function AccountMenu() {
 
   return (
     <div ref={menuRef} className="fixed right-4 top-4 z-40">
-      <div className="inline-flex items-center rounded-2xl border border-border bg-surface shadow-sm">
+      <div className="inline-flex items-center border-[3px] border-foreground bg-surface shadow-[3px_3px_0_var(--color-shadow)]">
         <NotificationBell />
         <span className="h-6 w-px shrink-0 bg-border/60" aria-hidden="true" />
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
-          className="m-1 inline-flex h-9 min-w-9 items-center justify-center rounded-xl px-1.5 text-sm font-semibold text-text transition hover:bg-background"
+          className="m-1 inline-flex h-9 min-w-9 items-center justify-center border-[3px] border-transparent px-1.5 text-sm font-semibold text-text transition hover:border-foreground hover:bg-background"
           aria-label={t("account.menu.open")}
           aria-expanded={open}
         >
@@ -43,8 +43,8 @@ export function AccountMenu() {
           src={user?.profile_photo_url || undefined}
           alt={t("account.photoAlt")}
           wrapperClassName="h-8 w-8"
-          className="h-8 w-8 rounded-lg object-cover"
-          spinnerClassName="rounded-lg"
+          className="h-8 w-8 object-cover"
+          spinnerClassName="rounded-none"
           fallback={
             <img
               src="/bora-ali-mark.svg"
@@ -58,14 +58,14 @@ export function AccountMenu() {
       </div>
 
       {open && (
-        <div className="mt-2 w-72 rounded-2xl border border-border bg-surface p-3 shadow-lg">
-          <div className="flex items-center gap-3 border-b border-border pb-3">
+        <div className="mt-2 w-72 border-[3px] border-foreground bg-surface p-3 shadow-[6px_6px_0_var(--color-shadow)]">
+          <div className="flex items-center gap-3 border-b-[3px] border-foreground pb-3">
             <ImageWithSpinner
               src={user?.profile_photo_url || undefined}
               alt={t("account.photoAlt")}
               wrapperClassName="h-11 w-11"
-              className="h-11 w-11 rounded-xl object-cover"
-              spinnerClassName="rounded-xl"
+              className="h-11 w-11 object-cover"
+              spinnerClassName="rounded-none"
               fallback={
                 <img
                   src="/bora-ali-mark.svg"
@@ -85,7 +85,7 @@ export function AccountMenu() {
             <Link
               to="/account"
               onClick={() => setOpen(false)}
-              className="block rounded-xl px-3 py-2 text-sm font-medium text-text transition hover:bg-background"
+              className="block border-[3px] border-transparent px-3 py-2 text-sm font-medium text-text transition hover:border-foreground hover:bg-background"
             >
               {t("account.menu.account")}
             </Link>
@@ -93,7 +93,7 @@ export function AccountMenu() {
               <Link
                 to="/places/trash"
                 onClick={() => setOpen(false)}
-                className="block rounded-xl px-3 py-2 text-sm font-medium text-text transition hover:bg-background"
+                className="block border-[3px] border-transparent px-3 py-2 text-sm font-medium text-text transition hover:border-foreground hover:bg-background"
               >
                 {t("account.menu.trash")}
               </Link>
@@ -114,7 +114,7 @@ export function AccountMenu() {
               await logout();
               navigate("/login", { replace: true });
             }}
-            className="w-full rounded-xl border border-border px-3 py-2 text-sm font-medium text-text transition hover:border-muted/50 hover:bg-background"
+            className="w-full border-[3px] border-foreground bg-surface px-3 py-2 text-sm font-medium text-text shadow-[3px_3px_0_var(--color-shadow)] transition-[transform,box-shadow,background-color] hover:translate-x-px hover:translate-y-px hover:bg-background hover:shadow-[2px_2px_0_var(--color-shadow)]"
           >
             {t("account.menu.logout")}
           </button>

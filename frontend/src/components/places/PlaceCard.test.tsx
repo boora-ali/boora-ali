@@ -59,6 +59,28 @@ test("renders main place data", () => {
   expect(screen.getByText("Rua das Flores, 10")).toBeInTheDocument();
 });
 
+test("keeps the status label in the filters instead of duplicating it on the card", () => {
+  render(
+    <MemoryRouter>
+      <PlaceCard place={{ ...place, status: "want_to_visit" }} />
+    </MemoryRouter>
+  );
+
+  expect(screen.queryByText("Want to visit")).not.toBeInTheDocument();
+});
+
+test("keeps a black card border and uses the place status as its external shadow", () => {
+  render(
+    <MemoryRouter>
+      <PlaceCard place={{ ...place, status: "want_to_visit" }} />
+    </MemoryRouter>
+  );
+
+  const card = screen.getByRole("article");
+  expect(card).toHaveClass("border-black");
+  expect(card).toHaveClass("shadow-[6px_6px_0_#2563eb]");
+});
+
 test("navigates to place detail on click", () => {
   render(
     <MemoryRouter>

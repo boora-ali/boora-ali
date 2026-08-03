@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ExternalLink, Share2, Trash2 } from "lucide-react";
 import type { Place } from "../../types/place";
-import { Badge } from "../ui/Badge";
 import { getMapsHref, sanitizeUrl } from "../../utils/url";
 import { UtensilsCrossed } from "lucide-react";
 import { ImageWithSpinner } from "../ui/ImageWithSpinner";
@@ -25,6 +24,13 @@ interface PlaceCardProps {
   index?: number;
   onDeleted?: () => void;
 }
+
+const STATUS_SHADOW_CLASSES: Record<Place["status"], string> = {
+  want_to_visit: "shadow-[6px_6px_0_#2563eb] hover:shadow-[4px_4px_0_#2563eb] dark:shadow-[6px_6px_0_#5b7cce] dark:hover:shadow-[4px_4px_0_#5b7cce]",
+  visited: "shadow-[6px_6px_0_#f59e0b] hover:shadow-[4px_4px_0_#f59e0b] dark:shadow-[6px_6px_0_#d5a43e] dark:hover:shadow-[4px_4px_0_#d5a43e]",
+  favorite: "shadow-[6px_6px_0_#e03a3e] hover:shadow-[4px_4px_0_#e03a3e] dark:shadow-[6px_6px_0_#e35b5e] dark:hover:shadow-[4px_4px_0_#e35b5e]",
+  would_not_return: "shadow-[6px_6px_0_#000000] hover:shadow-[4px_4px_0_#000000] dark:shadow-[6px_6px_0_#b8ad9d] dark:hover:shadow-[4px_4px_0_#b8ad9d]",
+};
 
 export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
   const { t } = useTranslation();
@@ -68,7 +74,7 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
       <ContextMenuTrigger asChild>
         <article
           onClick={() => navigate(`/places/${place.public_id}`)}
-          className="bg-surface rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden group animate-fade-slide-up cursor-pointer select-none touch-manipulation [-webkit-touch-callout:none]"
+          className={`group cursor-pointer select-none overflow-hidden border-[3px] border-black bg-surface text-text transition-[transform,box-shadow] duration-150 hover:translate-x-[2px] hover:translate-y-[2px] focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-current touch-manipulation dark:border-[color:var(--color-border)] [-webkit-touch-callout:none] ${STATUS_SHADOW_CLASSES[place.status]}`}
           style={{ animationDelay: `${index * 55}ms` }}
         >
           <div className="relative overflow-hidden">
@@ -79,15 +85,11 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
               className="h-44 w-full object-cover group-hover:scale-105 transition-transform duration-500"
               spinnerClassName="rounded-none"
               fallback={
-                <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-background to-border/60">
+                <div className="flex h-44 w-full items-center justify-center bg-background">
                   <UtensilsCrossed className="h-10 w-10 text-muted opacity-25" />
                 </div>
               }
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-            <div className="absolute bottom-2.5 left-3">
-              <Badge status={place.status} />
-            </div>
           </div>
 
           <div className="space-y-3 p-4">
@@ -110,7 +112,7 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
                   href={sanitizeUrl(place.instagram_url)}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-text transition hover:bg-surface"
+                  className="inline-flex items-center gap-1.5 border-[3px] border-border bg-background px-2.5 py-1.5 text-xs font-bold text-text shadow-[3px_3px_0_var(--color-shadow)] transition-[transform,box-shadow] hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_var(--color-shadow)]"
                   aria-label={t("placeDetail.instagram")}
                   onClick={(event) => event.stopPropagation()}
                 >
@@ -128,7 +130,7 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
                   href={mapsHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-text transition hover:bg-surface"
+                  className="inline-flex items-center gap-1.5 border-[3px] border-border bg-background px-2.5 py-1.5 text-xs font-bold text-text shadow-[3px_3px_0_var(--color-shadow)] transition-[transform,box-shadow] hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_var(--color-shadow)]"
                   aria-label={t("placeDetail.maps")}
                   onClick={(event) => event.stopPropagation()}
                 >

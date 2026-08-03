@@ -26,8 +26,8 @@
   border: 3px solid var(--landing-ink);
   border-radius: 0;
   background: var(--landing-action);
-  box-shadow: 6px 6px 0 var(--landing-ink);
-  color: #ffffff;
+  box-shadow: 6px 6px 0 var(--landing-shadow);
+  color: var(--landing-paper);
   font-size: 1.1rem;
   letter-spacing: 0.04em;
   text-decoration: none;
@@ -37,7 +37,7 @@
 .neo-brutalist-cta:focus-visible { transform: translate(3px, 3px); box-shadow: 3px 3px 0 var(--landing-ink); }
 
 #neo-brutalist-hero-scene { display: flex; min-height: 0; background: var(--landing-action); }
-#neo-brutalist-scene { width: 100%; min-height: 32rem; border: 3px solid var(--landing-ink); background: var(--landing-paper); box-shadow: 6px 6px 0 var(--landing-ink); overflow: hidden; }
+#neo-brutalist-scene { width: 100%; min-height: 32rem; border: 3px solid var(--landing-ink); background: var(--landing-paper); box-shadow: 6px 6px 0 var(--landing-shadow); overflow: hidden; }
 #neo-brutalist-scene canvas { display: block; }
 
 @media (max-width: 860px) {

@@ -84,6 +84,7 @@
   --color-text: #000000;
   --color-muted: #3B3B3B;
   --color-border: #000000;
+  --color-shadow: #000000;
 
   /* shadcn/ui CSS variables (mapped to project palette) */
   --background: 0 0% 100%;
@@ -114,31 +115,32 @@
 }
 
 .dark {
-  --color-background: #000000;
-  --color-surface: #000000;
-  --color-text: #FFFFFF;
-  --color-muted: #D4D4D4;
-  --color-border: #FFFFFF;
+  --color-background: oklch(0.145 0.012 35);
+  --color-surface: oklch(0.205 0.014 35);
+  --color-text: oklch(0.93 0.018 80);
+  --color-muted: oklch(0.73 0.02 65);
+  --color-border: oklch(0.74 0.025 70);
+  --color-shadow: oklch(0.09 0.012 35);
 
   /* shadcn/ui dark mode */
-  --background: 0 0% 0%;
-  --foreground: 0 0% 100%;
-  --card: 0 0% 0%;
-  --card-foreground: 0 0% 100%;
-  --popover: 0 0% 0%;
-  --popover-foreground: 0 0% 100%;
+  --background: 24 15% 11%;
+  --foreground: 45 25% 92%;
+  --card: 24 14% 16%;
+  --card-foreground: 45 25% 92%;
+  --popover: 24 14% 16%;
+  --popover-foreground: 45 25% 92%;
   --primary: 358 74% 55%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 12%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 83%;
-  --accent: 0 0% 12%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 63% 31%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 100%;
-  --input: 0 0% 100%;
+  --secondary: 24 11% 23%;
+  --secondary-foreground: 45 25% 92%;
+  --muted: 24 11% 23%;
+  --muted-foreground: 42 15% 72%;
+  --accent: 24 11% 23%;
+  --accent-foreground: 45 25% 92%;
+  --destructive: 358 60% 40%;
+  --destructive-foreground: 45 25% 92%;
+  --border: 42 20% 68%;
+  --input: 42 20% 68%;
   --ring: 358 74% 55%;
 }
 

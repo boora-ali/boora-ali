@@ -11,7 +11,7 @@ export function LanguageToggle() {
 
   return (
     <div
-      className="inline-flex border-[3px] border-foreground bg-background p-1 shadow-[3px_3px_0_#000] dark:shadow-[3px_3px_0_#fff]"
+      className="inline-flex border-[3px] border-foreground bg-background p-1 shadow-[3px_3px_0_var(--color-shadow)]"
       role="group"
       aria-label={t("languageToggle.ariaLabel")}
     >
