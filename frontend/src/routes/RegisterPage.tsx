@@ -22,9 +22,11 @@ import { CharacterCount } from "../components/ui/CharacterCount";
 import { Label } from "@/components/ui/label";
 import { TurnstileWidget } from "../components/auth/TurnstileWidget";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { LottieState } from "../components/ui/LottieState";
 import { reportApiError } from "../utils/form-api-error";
 import { Footer } from "../components/layout/Footer";
 import { registerSchema, type RegisterFormValues } from "../schemas/auth";
+import "./AuthPage.css";
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -84,18 +86,40 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="auth-page">
       <Helmet>
         <title>Boora Ali — Crie sua conta</title>
         <meta name="description" content="Comece a registrar seus lugares favoritos gratuitamente. Crie sua conta no Boora Ali." />
         <link rel="canonical" href="https://booraali.com.br/register" />
       </Helmet>
-      <div className="flex-1 max-w-sm w-full mx-auto p-6 mt-8 space-y-2">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-            <h1 className="font-fraunces text-3xl font-bold text-center text-foreground">
-              {t("auth.register.title")}
-            </h1>
+      <main className="auth-page__main">
+        <aside className="auth-page__aside">
+          <Link to="/" className="auth-page__brand">
+            Boora Ali
+          </Link>
+          <LottieState
+            animation="login-pin"
+            label="Boora Ali"
+            className="auth-page__hero-mark"
+          />
+          <div className="auth-page__aside-copy">
+            <p className="auth-page__eyebrow">BORA ALI / CADASTRO</p>
+            <h2>{t("auth.register.title")}</h2>
+          </div>
+        </aside>
+        <section className="auth-page__form-area" aria-labelledby="register-title">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="auth-page__form space-y-4">
+            <div className="auth-page__title-row">
+              <h1 id="register-title" className="auth-page__title">
+                {t("auth.register.title")}
+              </h1>
+              <LottieState
+                animation="login-pin"
+                label="Boora Ali"
+                className="auth-page__title-mark"
+              />
+            </div>
             <FormField
               control={form.control}
               name="username"
@@ -208,9 +232,10 @@ export default function RegisterPage() {
                 {t("auth.register.signIn")}
               </Link>
             </p>
-          </form>
-        </Form>
-      </div>
+            </form>
+          </Form>
+        </section>
+      </main>
       <Footer />
     </div>
   );

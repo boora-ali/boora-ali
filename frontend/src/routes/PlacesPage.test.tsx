@@ -43,6 +43,16 @@ test("shows empty state when no places", async () => {
   await waitFor(() => expect(screen.getByText(/no places yet/i)).toBeInTheDocument());
 });
 
+test("renders the Places heading with the neo-brutalist display treatment", async () => {
+  (placesService.list as ReturnType<typeof vi.fn>).mockResolvedValue(emptyPage);
+  renderPage();
+
+  const title = await screen.findByRole("heading", { name: "Boora Ali" });
+  expect(title).toHaveClass("font-[Impact,_Arial_Black,_system-ui,_sans-serif]");
+  expect(title).toHaveClass("uppercase");
+  expect(title.nextElementSibling).toHaveClass("uppercase");
+});
+
 test("renders list of places", async () => {
   const places = [
     {
@@ -80,6 +90,31 @@ test("renders list of places", async () => {
   await waitFor(() => expect(placesService.list).toHaveBeenCalledTimes(2));
 });
 
+test("leaves room around cards for their external status shadows", async () => {
+  const places = [{
+    public_id: "place-shadow",
+    name: "Lugar com sombra",
+    category: "café",
+    address: "",
+    status: "want_to_visit",
+    created_at: "",
+    updated_at: "",
+  }];
+  (placesService.list as ReturnType<typeof vi.fn>).mockResolvedValue({
+    count: 1,
+    next: null,
+    previous: null,
+    results: places,
+  });
+
+  renderPage();
+
+  const card = await screen.findByRole("article");
+  expect(card.parentElement).toHaveClass("gap-6");
+  expect(card.parentElement).toHaveClass("pr-3");
+  expect(card.parentElement).toHaveClass("pb-3");
+});
+
 test("filters places by status when clicking Visited", async () => {
   (placesService.list as ReturnType<typeof vi.fn>).mockResolvedValue(emptyPage);
   renderPage();
@@ -94,6 +129,29 @@ test("filters places by status when clicking Visited", async () => {
       expect.objectContaining({ status: "visited" }),
     ),
   );
+});
+
+test("shows each status filter with its semantic border", async () => {
+  (placesService.list as ReturnType<typeof vi.fn>).mockResolvedValue(emptyPage);
+  renderPage();
+
+  await waitFor(() => expect(screen.getByText(/no places yet/i)).toBeInTheDocument());
+
+  expect(screen.getByRole("button", { name: /want to visit/i })).toHaveClass("border-blue-600");
+  expect(screen.getByRole("button", { name: /visited/i })).toHaveClass("border-yellow-500");
+  expect(screen.getByRole("button", { name: /favorite/i })).toHaveClass("border-primary");
+  expect(screen.getByRole("button", { name: /would not return/i })).toHaveClass("border-foreground");
+});
+
+test("fills the selected All filter so its white label stays readable", async () => {
+  (placesService.list as ReturnType<typeof vi.fn>).mockResolvedValue(emptyPage);
+  renderPage();
+
+  await waitFor(() => expect(screen.getByText(/no places yet/i)).toBeInTheDocument());
+
+  const allButton = screen.getByRole("button", { name: "All" });
+  expect(allButton).toHaveClass("bg-primary");
+  expect(allButton).not.toHaveClass("bg-surface");
 });
 
 test("searches places by text input", async () => {

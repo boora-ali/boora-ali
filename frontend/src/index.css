@@ -6,8 +6,8 @@
 
 @theme inline {
   /* Fonts */
-  --font-fraunces: "Fraunces", Georgia, serif;
-  --font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-fraunces: Impact, "Arial Black", system-ui, sans-serif;
+  --font-sans: Arial, system-ui, sans-serif;
 
   /* Project design tokens — reference CSS vars from :root */
   --color-primary: var(--color-primary);
@@ -79,33 +79,34 @@
   --color-primary: #E03A3E;
   --color-primary-dark: #B92D31;
   --color-accent: #8C9DB3;
-  --color-background: #F4F7FB;
+  --color-background: #FFFFFF;
   --color-surface: #FFFFFF;
-  --color-text: #121826;
-  --color-muted: #5E6A7A;
-  --color-border: #D9E1EA;
+  --color-text: #000000;
+  --color-muted: #3B3B3B;
+  --color-border: #000000;
+  --color-shadow: #000000;
 
   /* shadcn/ui CSS variables (mapped to project palette) */
-  --background: 214 40% 97%;
-  --foreground: 215 35% 10%;
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
   --card: 0 0% 100%;
-  --card-foreground: 215 35% 10%;
+  --card-foreground: 0 0% 0%;
   --popover: 0 0% 100%;
-  --popover-foreground: 215 35% 10%;
+  --popover-foreground: 0 0% 0%;
   --primary: 358 74% 55%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 213 27% 93%;
-  --secondary-foreground: 215 35% 10%;
-  --muted: 213 27% 93%;
-  --muted-foreground: 214 15% 42%;
-  --accent: 212 23% 89%;
-  --accent-foreground: 215 35% 10%;
+  --secondary: 0 0% 90%;
+  --secondary-foreground: 0 0% 0%;
+  --muted: 0 0% 90%;
+  --muted-foreground: 0 0% 24%;
+  --accent: 0 0% 90%;
+  --accent-foreground: 0 0% 0%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 213 27% 86%;
-  --input: 213 27% 86%;
+  --border: 0 0% 0%;
+  --input: 0 0% 0%;
   --ring: 358 74% 55%;
-  --radius: 0.75rem;
+  --radius: 0;
   --chart-1: 358 74% 55%;
   --chart-2: 212 23% 65%;
   --chart-3: 222 66% 52%;
@@ -114,37 +115,39 @@
 }
 
 .dark {
-  --color-background: #0D1117;
-  --color-surface: #141B24;
-  --color-text: #E8EDF3;
-  --color-muted: #93A0B2;
-  --color-border: #273142;
+  --color-background: oklch(0.145 0.012 35);
+  --color-surface: oklch(0.205 0.014 35);
+  --color-text: oklch(0.93 0.018 80);
+  --color-muted: oklch(0.73 0.02 65);
+  --color-border: oklch(0.74 0.025 70);
+  --color-shadow: oklch(0.09 0.012 35);
 
   /* shadcn/ui dark mode */
-  --background: 215 31% 7%;
-  --foreground: 214 33% 94%;
-  --card: 215 28% 12%;
-  --card-foreground: 214 33% 94%;
-  --popover: 215 28% 12%;
-  --popover-foreground: 214 33% 94%;
+  --background: 24 15% 11%;
+  --foreground: 45 25% 92%;
+  --card: 24 14% 16%;
+  --card-foreground: 45 25% 92%;
+  --popover: 24 14% 16%;
+  --popover-foreground: 45 25% 92%;
   --primary: 358 74% 55%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 214 22% 18%;
-  --secondary-foreground: 214 33% 94%;
-  --muted: 214 22% 18%;
-  --muted-foreground: 215 15% 61%;
-  --accent: 213 20% 24%;
-  --accent-foreground: 214 33% 94%;
-  --destructive: 0 63% 31%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 214 22% 18%;
-  --input: 214 22% 18%;
+  --secondary: 24 11% 23%;
+  --secondary-foreground: 45 25% 92%;
+  --muted: 24 11% 23%;
+  --muted-foreground: 42 15% 72%;
+  --accent: 24 11% 23%;
+  --accent-foreground: 45 25% 92%;
+  --destructive: 358 60% 40%;
+  --destructive-foreground: 45 25% 92%;
+  --border: 42 20% 68%;
+  --input: 42 20% 68%;
   --ring: 358 74% 55%;
 }
 
 body {
   @apply bg-background text-text;
-  font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: Arial, system-ui, sans-serif;
+  font-weight: 700;
   font-feature-settings: "cv11", "ss01";
   position: relative;
 }

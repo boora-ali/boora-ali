@@ -9,7 +9,7 @@ describe("App", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: /guarde lugares, visitas e experiências que valem lembrar/i,
+        name: /vá\. viva\. guarde\./i,
       }),
     ).toBeInTheDocument();
   });
