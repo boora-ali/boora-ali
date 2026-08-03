@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as Popover from "@radix-ui/react-popover";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "../ui/DatePicker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { PlaceFilters } from "../../services/places.service";
 import { PLACE_STATUSES } from "../../utils/constants";
 
@@ -15,9 +17,8 @@ interface Props {
   searchPlaceholder: string;
 }
 
-const selectClass =
-  "w-full border-[3px] border-border bg-surface px-3 py-2 text-sm font-bold text-text shadow-[3px_3px_0_currentColor] focus:outline-[3px] focus:outline-offset-2 focus:outline-primary";
 const labelClass = "block text-xs font-medium text-muted mb-1";
+const ALL = "__all__";
 
 export function PlaceFilterPopover({ filters, onApply, search, onSearchChange, searchPlaceholder }: Props) {
   const { t } = useTranslation();
@@ -96,49 +97,46 @@ export function PlaceFilterPopover({ filters, onApply, search, onSearchChange, s
           <form onSubmit={form.handleSubmit(handleSubmit)} className="p-4 space-y-4">
             <div>
               <label className={labelClass}>{t("filters.status")}</label>
-              <select {...form.register("status")} className={selectClass}>
-                <option value="">{t("places.all")}</option>
-                {PLACE_STATUSES.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {t(`status.${s.value}`)}
-                  </option>
-                ))}
-              </select>
+              <Controller control={form.control} name="status" render={({ field }) => (
+                <Select value={field.value || ALL} onValueChange={(value) => field.onChange(value === ALL ? "" : value)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>{t("places.all")}</SelectItem>
+                    {PLACE_STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{t(`status.${s.value}`)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelClass}>{t("filters.min_rating")}</label>
-                <select {...form.register("min_rating", { valueAsNumber: true })} className={selectClass}>
-                  <option value="">{t("filters.any")}</option>
-                  {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
+                <Controller control={form.control} name="min_rating" render={({ field }) => (
+                  <Select value={field.value ? String(field.value) : ALL} onValueChange={(value) => field.onChange(value === ALL ? "" : Number(value))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value={ALL}>{t("filters.any")}</SelectItem>{[1, 2, 3, 4, 5].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+                  </Select>
+                )} />
               </div>
               <div>
                 <label className={labelClass}>{t("filters.max_rating")}</label>
-                <select {...form.register("max_rating", { valueAsNumber: true })} className={selectClass}>
-                  <option value="">{t("filters.any")}</option>
-                  {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
+                <Controller control={form.control} name="max_rating" render={({ field }) => (
+                  <Select value={field.value ? String(field.value) : ALL} onValueChange={(value) => field.onChange(value === ALL ? "" : Number(value))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value={ALL}>{t("filters.any")}</SelectItem>{[1, 2, 3, 4, 5].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+                  </Select>
+                )} />
               </div>
             </div>
 
             <div>
               <label className={labelClass}>{t("filters.date_from")}</label>
-              <input
-                type="date"
-                {...form.register("date_from")}
-                className={selectClass}
-              />
+              <Controller control={form.control} name="date_from" render={({ field }) => <DatePicker aria-label={t("filters.date_from")} value={field.value} onChange={field.onChange} />} />
             </div>
 
             <div>
               <label className={labelClass}>{t("filters.date_to")}</label>
-              <input
-                type="date"
-                {...form.register("date_to")}
-                className={selectClass}
-              />
+              <Controller control={form.control} name="date_to" render={({ field }) => <DatePicker aria-label={t("filters.date_to")} value={field.value} onChange={field.onChange} />} />
             </div>
 
             <div className="flex gap-2 pt-1">
