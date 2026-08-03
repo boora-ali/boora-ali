@@ -50,6 +50,7 @@ import { categoriesService } from "../../services/categories.service";
 import type { Category } from "../../types/place";
 
 type PlacePayload = Partial<Omit<Place, "cover_photo">> & { cover_photo?: string | File };
+const CATEGORY_INITIAL_LIMIT = 6;
 
 type Props = {
   initial?: Partial<Place>;
@@ -97,7 +98,8 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl, onDirtyCha
   const categoryIds = useWatch({ control, name: "category_ids" }) ?? [];
   const visibleCategories = showAllCategories
     ? categories
-    : categories.filter((category, index) => index < 4 || categoryIds.includes(category.public_id));
+    : categories.filter((category, index) => index < CATEGORY_INITIAL_LIMIT || categoryIds.includes(category.public_id));
+  const hiddenCategoriesCount = categories.length - visibleCategories.length;
   const latitude = useWatch({ control, name: "latitude" });
   const longitude = useWatch({ control, name: "longitude" });
   const mapsUrlCoords = mapsUrl ? extractGoogleMapsCoords(mapsUrl) : null;
@@ -238,9 +240,13 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl, onDirtyCha
                 );
               })}
             </div>
-            {categories.length > 4 && !showAllCategories && (
-              <Button type="button" variant="ghost" size="sm" className="w-fit px-0" onClick={() => setShowAllCategories(true)}>
-                {t("placeForm.showAllCategories")}
+            {showAllCategories ? (
+              <Button type="button" variant="outline" size="sm" className="w-fit border-[3px] px-3 shadow-[3px_3px_0_var(--color-shadow)]" onClick={() => setShowAllCategories(false)}>
+                {t("placeForm.showLessCategories")}
+              </Button>
+            ) : hiddenCategoriesCount > 0 && (
+              <Button type="button" variant="outline" size="sm" className="w-fit border-[3px] px-3 shadow-[3px_3px_0_var(--color-shadow)]" onClick={() => setShowAllCategories(true)}>
+                {t("placeForm.showAllCategories", { count: hiddenCategoriesCount })}
               </Button>
             )}
             {categoriesError && <p role="alert" className="text-sm text-destructive">{t("common.error")}</p>}

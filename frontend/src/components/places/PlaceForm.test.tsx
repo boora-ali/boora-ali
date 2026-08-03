@@ -12,18 +12,22 @@ beforeEach(() => {
     { public_id: "33333333-3333-4333-8333-333333333333", name: "Museu" },
     { public_id: "44444444-4444-4444-8444-444444444444", name: "Parque" },
     { public_id: "55555555-5555-4555-8555-555555555555", name: "Praia" },
+    { public_id: "66666666-6666-4666-8666-666666666666", name: "Teatro" },
+    { public_id: "77777777-7777-4777-8777-777777777777", name: "Trilha" },
   ]);
 });
 
-test("shows four categories first and expands the rest on request", async () => {
+test("shows six categories first and toggles the remaining categories", async () => {
   render(<PlaceForm onSubmit={async () => {}} />);
 
   await screen.findByRole("button", { name: "Cafeteria" });
-  expect(screen.queryByRole("button", { name: "Praia" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Trilha" })).not.toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole("button", { name: /show more/i }));
+  fireEvent.click(screen.getByRole("button", { name: /show more \(1\)/i }));
 
-  expect(screen.getByRole("button", { name: "Praia" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Trilha" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /show less/i }));
+  expect(screen.queryByRole("button", { name: "Trilha" })).not.toBeInTheDocument();
 });
 
 test("requires name before submitting", async () => {
