@@ -36,6 +36,7 @@ import { validateImageFile, ALLOWED_IMAGE_ACCEPT } from "../../utils/url";
 import { ImageWithSpinner } from "../ui/ImageWithSpinner";
 import { visitItemSchema, type VisitItemFormValues } from "../../schemas/visit";
 import { useImagePreview } from "../../hooks/useImagePreview";
+import { VISIT_ITEM_FORM_ID } from "./visit-item-form.constants";
 
 type VisitItemPayload = Partial<Omit<VisitItem, "photo" | "price">> & { photo?: string | File; price?: number | string | null };
 
@@ -44,8 +45,6 @@ type Props = {
   onSave: (data: VisitItemPayload) => void;
   className?: string;
 };
-
-export const VISIT_ITEM_FORM_ID = "visit-item-form";
 
 export function VisitItemForm({ defaultValues, onSave, className = "" }: Props) {
   const { t } = useTranslation();

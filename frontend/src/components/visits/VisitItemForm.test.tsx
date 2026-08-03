@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, vi } from "vitest";
-import { VisitItemForm, VISIT_ITEM_FORM_ID } from "./VisitItemForm";
+import { VisitItemForm } from "./VisitItemForm";
+import { VISIT_ITEM_FORM_ID } from "./visit-item-form.constants";
 
 beforeEach(() => {
   vi.clearAllMocks();
