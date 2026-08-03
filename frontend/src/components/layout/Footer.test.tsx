@@ -4,7 +4,7 @@ vi.mock("../ui/DarkModeToggle", () => ({ DarkModeToggle: () => <div /> }));
 vi.mock("../ui/BotpressChatToggle", () => ({ BotpressChatToggle: () => <div /> }));
 
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { Footer } from "./Footer";
 
 test("mostra o botão de feedback no footer compartilhado", () => {

@@ -1,5 +1,5 @@
 import { startTransition, useEffect, useRef, useState, type ComponentType } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { placesService, placePageCache, type Page, type PlaceFilters } from "../services/places.service";
 import type { Place, PlacePin, PlaceStatus } from "../types/place";

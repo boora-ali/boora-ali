@@ -4,7 +4,7 @@ vi.mock("../../services/collections.service");
 
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import CollectionListPage from "../CollectionListPage";
 import { collectionsService } from "../../services/collections.service";
 

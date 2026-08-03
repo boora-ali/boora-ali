@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { HelmetProvider } from "react-helmet-async";
 import LandingPage from "./LandingPage";
 

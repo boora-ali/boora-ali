@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, vi } from "vitest";
 import { placesService } from "../services/places.service";
 import PlaceDetailPage from "./PlaceDetailPage";
@@ -40,8 +40,8 @@ vi.mock("@/components/ui/dropdown-menu", () => ({
 
 const navigateSpy = vi.fn();
 
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+vi.mock("react-router", async () => {
+  const actual = await vi.importActual<typeof import("react-router")>("react-router");
   return { ...actual, useNavigate: () => navigateSpy };
 });
 

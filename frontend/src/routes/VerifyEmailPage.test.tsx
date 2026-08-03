@@ -1,5 +1,5 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { HelmetProvider } from "react-helmet-async";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { authService } from "../services/auth.service";
