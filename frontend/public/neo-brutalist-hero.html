@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Boora Ali — Hero Neo-Brutalista</title>
+    <style>
+      :root {
+        --ink: #000000;
+        --paper: #ffffff;
+        --signal: #ffe500;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Impact, "Arial Black", system-ui, sans-serif;
+      }
+
+      #hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+        min-height: 100svh;
+        border: 3px solid var(--ink);
+      }
+
+      #hero-copy,
+      #hero-scene {
+        min-width: 0;
+        padding: clamp(1.5rem, 4vw, 4.5rem);
+      }
+
+      #hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border-right: 3px solid var(--ink);
+      }
+
+      #hero-copy p:first-child {
+        margin: 0 0 1rem;
+        font-family: Arial, sans-serif;
+        font-size: 0.875rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+      }
+
+      h1 {
+        max-width: 8ch;
+        margin: 0;
+        font-size: clamp(4.5rem, 10vw, 9.5rem);
+        font-weight: 900;
+        line-height: 0.82;
+        letter-spacing: -0.055em;
+      }
+
+      #hero-copy p:not(:first-child) {
+        max-width: 34rem;
+        margin: 2rem 0;
+        font-family: Arial, sans-serif;
+        font-size: clamp(1rem, 1.7vw, 1.25rem);
+        font-weight: 800;
+        line-height: 1.35;
+      }
+
+      button {
+        width: fit-content;
+        padding: 1rem 1.4rem;
+        border: 3px solid var(--ink);
+        border-radius: 0;
+        background: var(--signal);
+        box-shadow: 6px 6px 0 var(--ink);
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+        font-size: 1.1rem;
+        letter-spacing: 0.04em;
+      }
+
+      button:hover,
+      button:focus-visible {
+        transform: translate(3px, 3px);
+        box-shadow: 3px 3px 0 var(--ink);
+      }
+
+      #hero-scene {
+        display: flex;
+        min-height: 0;
+        background: var(--signal);
+      }
+
+      #scene {
+        width: 100%;
+        min-height: 32rem;
+        border: 3px solid var(--ink);
+        background: var(--paper);
+        box-shadow: 6px 6px 0 var(--ink);
+        overflow: hidden;
+      }
+
+      @media (max-width: 860px) {
+        #hero { grid-template-columns: 1fr; }
+
+        #hero-copy { border-right: 0; border-bottom: 3px solid var(--ink); }
+
+        #hero-scene { min-height: 32rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="hero">
+      <section id="hero-copy" aria-labelledby="hero-title">
+        <p>BOORA ALI / 01</p>
+        <h1 id="hero-title">VÁ. VIVA. GUARDE.</h1>
+        <p>Transforme cada lugar marcante em uma memória que continua com você.</p>
+        <button type="button">COMEÇAR AGORA</button>
+      </section>
+
+      <section id="hero-scene" aria-label="Memórias em movimento">
+        <div id="scene"></div>
+      </section>
+    </main>
+
+    <script type="module">
+      import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js";
+
+      const mount = document.querySelector("#scene");
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      const textureLoader = new THREE.TextureLoader();
+      const cards = [
+        { url: "https://picsum.photos/seed/boora-ali-1/800/1100", x: -1.85, y: 0.25, z: 0.1, rotation: -0.16 },
+        { url: "https://picsum.photos/seed/boora-ali-2/800/1100", x: 0, y: -0.15, z: 0.45, rotation: 0.04 },
+        { url: "https://picsum.photos/seed/boora-ali-3/800/1100", x: 1.85, y: 0.2, z: 0, rotation: 0.16 },
+      ];
+      const planes = [];
+
+      camera.position.z = 8;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      mount.append(renderer.domElement);
+
+      cards.forEach((card, index) => {
+        const texture = textureLoader.load(card.url);
+        texture.colorSpace = THREE.SRGBColorSpace;
+
+        const plane = new THREE.Mesh(
+          new THREE.PlaneGeometry(2.25, 3.1),
+          new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }),
+        );
+
+        plane.position.set(card.x, card.y, card.z);
+        plane.rotation.z = card.rotation;
+        plane.userData.baseY = card.y;
+        plane.userData.phase = index * 1.3;
+        scene.add(plane);
+        planes.push(plane);
+      });
+
+      const resizeObserver = new ResizeObserver(([entry]) => {
+        const { width, height } = entry.contentRect;
+        if (!width || !height) return;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height, false);
+      });
+
+      resizeObserver.observe(mount);
+
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let frameId;
+
+      function animate(time = 0) {
+        if (!reduceMotion) {
+          planes.forEach((plane) => {
+            plane.position.y = plane.userData.baseY + Math.sin(time * 0.001 + plane.userData.phase) * 0.18;
+          });
+        }
+
+        renderer.render(scene, camera);
+        if (!reduceMotion) frameId = requestAnimationFrame(animate);
+      }
+
+      animate();
+
+      window.addEventListener("pagehide", () => {
+        cancelAnimationFrame(frameId);
+        resizeObserver.disconnect();
+        renderer.dispose();
+      }, { once: true });
+    </script>
+  </body>
+</html>
