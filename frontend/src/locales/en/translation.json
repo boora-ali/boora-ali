@@ -404,6 +404,10 @@
     "timeCaption": "Time",
     "placeholder": "Select date and time"
   },
+  "datePicker": {
+    "clear": "Clear date",
+    "placeholder": "Select date"
+  },
   "languageToggle": {
     "ariaLabel": "Change language"
   },

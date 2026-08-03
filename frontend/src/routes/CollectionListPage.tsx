@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { collectionsService, type Collection } from "../services/collections.service";
 import { Card, CardContent } from "@/components/ui/card";

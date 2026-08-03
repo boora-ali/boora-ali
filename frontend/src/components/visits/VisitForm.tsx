@@ -18,7 +18,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { VisitItemForm, VISIT_ITEM_FORM_ID } from "./VisitItemForm";
+import { VisitItemForm } from "./VisitItemForm";
+import { VISIT_ITEM_FORM_ID } from "./visit-item-form.constants";
 import {
   Dialog,
   DialogContent,

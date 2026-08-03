@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { placesService } from "../services/places.service";
 import { PlaceForm } from "../components/places/PlaceForm";

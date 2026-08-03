@@ -34,7 +34,7 @@ test("forwards the GIS credential to the success callback", async () => {
     expect.objectContaining({
       theme: "filled_blue",
       size: "large",
-      shape: "pill",
+      shape: "rectangular",
       text: "continue_with",
       logo_alignment: "left",
       width: 320,

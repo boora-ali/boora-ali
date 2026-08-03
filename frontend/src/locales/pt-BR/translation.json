@@ -405,6 +405,10 @@
     "timeCaption": "Horário",
     "placeholder": "Selecione data e horário"
   },
+  "datePicker": {
+    "clear": "Limpar data",
+    "placeholder": "Selecionar data"
+  },
   "languageToggle": {
     "ariaLabel": "Trocar idioma"
   },

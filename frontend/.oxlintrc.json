@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "browser": true
+  },
+  "ignorePatterns": ["dist", "test-results", "playwright-report", "coverage"],
+  "plugins": ["react", "typescript", "unicorn", "oxc"],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "error",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/only-export-components": "warn"
+  }
+}

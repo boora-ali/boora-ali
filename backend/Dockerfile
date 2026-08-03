@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS builder
+FROM python:3.13-slim AS builder
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install gunicorn -r requirements.txt && \
@@ -7,7 +7,7 @@ RUN pip install --no-cache-dir --prefix=/install gunicorn -r requirements.txt &&
     find /install -name "tests" -type d -exec rm -rf {} + 2>/dev/null || true
 
 
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
