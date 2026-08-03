@@ -1,0 +1,47 @@
+#neo-brutalist-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  min-height: 100svh;
+  border: 3px solid var(--landing-ink);
+  background: var(--landing-paper);
+  color: var(--landing-ink);
+  font-family: Impact, "Arial Black", system-ui, sans-serif;
+}
+
+#neo-brutalist-hero *,
+#neo-brutalist-hero *::before,
+#neo-brutalist-hero *::after { box-sizing: border-box; }
+
+#neo-brutalist-hero-copy,
+#neo-brutalist-hero-scene { min-width: 0; padding: clamp(1.5rem, 4vw, 4.5rem); }
+
+#neo-brutalist-hero-copy { display: flex; flex-direction: column; justify-content: center; border-right: 3px solid var(--landing-ink); }
+.neo-brutalist-kicker { margin: 0 0 1rem; font-family: Arial, sans-serif; font-size: 0.875rem; font-weight: 900; letter-spacing: 0.12em; }
+#neo-brutalist-hero h1 { max-width: 8ch; margin: 0; font-size: clamp(4.5rem, 10vw, 9.5rem); font-weight: 900; line-height: 0.82; letter-spacing: -0.055em; }
+.neo-brutalist-description { max-width: 34rem; margin: 2rem 0; font-family: Arial, sans-serif; font-size: clamp(1rem, 1.7vw, 1.25rem); font-weight: 800; line-height: 1.35; }
+
+.neo-brutalist-cta {
+  width: fit-content;
+  padding: 1rem 1.4rem;
+  border: 3px solid var(--landing-ink);
+  border-radius: 0;
+  background: var(--landing-action);
+  box-shadow: 6px 6px 0 var(--landing-ink);
+  color: #ffffff;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.neo-brutalist-cta:hover,
+.neo-brutalist-cta:focus-visible { transform: translate(3px, 3px); box-shadow: 3px 3px 0 var(--landing-ink); }
+
+#neo-brutalist-hero-scene { display: flex; min-height: 0; background: var(--landing-action); }
+#neo-brutalist-scene { width: 100%; min-height: 32rem; border: 3px solid var(--landing-ink); background: var(--landing-paper); box-shadow: 6px 6px 0 var(--landing-ink); overflow: hidden; }
+#neo-brutalist-scene canvas { display: block; }
+
+@media (max-width: 860px) {
+  #neo-brutalist-hero { grid-template-columns: 1fr; }
+  #neo-brutalist-hero-copy { border-right: 0; border-bottom: 3px solid var(--landing-ink); }
+  #neo-brutalist-hero-scene { min-height: 32rem; }
+}

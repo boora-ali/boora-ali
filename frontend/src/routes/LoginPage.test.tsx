@@ -70,10 +70,11 @@ afterEach(() => {
 });
 
 test("renders username, password fields and Google button", () => {
-  renderPage();
+  const { container } = renderPage();
   expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /google sign in/i })).toBeInTheDocument();
+  expect(container.querySelector(".auth-page")).toBeInTheDocument();
 });
 
 describe("submit com credenciais válidas", () => {

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-03T00:00:00-04:00",
+  "title": "Design System: Boora Ali",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Vermelho de marca", "canonical": "#E03A3E", "tonalRamp": ["#4A0C10", "#701216", "#962027", "#B92D31", "#E03A3E", "#EC7376", "#F5ACAE", "#FCE6E7"] },
+      "background": { "role": "neutral", "displayName": "Papel frio", "canonical": "#F4F7FB", "tonalRamp": ["#17202C", "#293847", "#47596C", "#728196", "#A5B0BF", "#D1D8E1", "#E8EDF3", "#F4F7FB"] },
+      "surface": { "role": "neutral", "displayName": "Folha limpa", "canonical": "#FFFFFF", "tonalRamp": ["#1A1A1B", "#393A3C", "#626366", "#898B8F", "#B0B2B5", "#D5D7D9", "#ECEDEF", "#FFFFFF"] },
+      "accent": { "role": "secondary", "displayName": "Azul de caderno", "canonical": "#8C9DB3", "tonalRamp": ["#1C2532", "#344252", "#506276", "#6D8198", "#8C9DB3", "#B2BFCE", "#D2DAE3", "#EDF0F4"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Lugar", "purpose": "Nomes de lugares e títulos que carregam memória." },
+      "body": { "displayName": "Registro", "purpose": "Notas, formulários e leitura de rotina." },
+      "label": { "displayName": "Marcador", "purpose": "Categorias, ações auxiliares e metadados." }
+    },
+    "shadows": [
+      { "name": "elevation-low", "value": "0 1px 2px rgba(18, 24, 38, 0.05)", "purpose": "Menus e cards em repouso." },
+      { "name": "elevation-interactive", "value": "0 20px 25px rgba(18, 24, 38, 0.10)", "purpose": "Cards clicáveis no hover e superfícies flutuantes." }
+    ],
+    "motion": [
+      { "name": "fade-slide-up", "value": "opacity 0.45s ease-out, transform 0.45s ease-out", "purpose": "Entrada breve de conteúdo." },
+      { "name": "fade-in", "value": "opacity 0.3s ease-out", "purpose": "Transição de página." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal de um fluxo.",
+      "html": "<button class=\"ds-btn-primary\">Salvar lugar</button>",
+      "css": ".ds-btn-primary { height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: #E03A3E; color: #FFFFFF; font: 500 14px 'DM Sans', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms ease-out; } .ds-btn-primary:hover { background: #B92D31; } .ds-btn-primary:focus-visible { outline: 2px solid #E03A3E; outline-offset: 2px; } .ds-btn-primary:disabled { cursor: not-allowed; opacity: .5; }"
+    },
+    {
+      "name": "Botão secundário",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ação complementar que mantém a prioridade visual baixa.",
+      "html": "<button class=\"ds-btn-secondary\">Cancelar</button>",
+      "css": ".ds-btn-secondary { height: 40px; padding: 0 16px; border: 1px solid #D9E1EA; border-radius: 10px; background: #EAF0F6; color: #121826; font: 500 14px 'DM Sans', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms ease-out; } .ds-btn-secondary:hover { background: #D9E1EA; } .ds-btn-secondary:focus-visible { outline: 2px solid #E03A3E; outline-offset: 2px; }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Entrada de texto para formulários de registro.",
+      "html": "<label class=\"ds-field\">Nome do lugar<input class=\"ds-input\" placeholder=\"Ex.: Bar do Armando\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; color: #121826; font: 500 14px 'DM Sans', system-ui, sans-serif; } .ds-input { box-sizing: border-box; width: 100%; height: 40px; padding: 0 12px; border: 1px solid #D9E1EA; border-radius: 10px; background: #F4F7FB; color: #121826; font: 400 14px 'DM Sans', system-ui, sans-serif; } .ds-input::placeholder { color: #5E6A7A; } .ds-input:focus { outline: 2px solid #E03A3E; outline-offset: 2px; }"
+    },
+    {
+      "name": "Card de lugar",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Resumo clicável de uma memória de lugar.",
+      "html": "<article class=\"ds-place-card\"><strong>Mercado Adolpho Lisboa</strong><span>Centro, Manaus</span><p>Voltar para provar o tambaqui.</p></article>",
+      "css": ".ds-place-card { display: grid; gap: 6px; padding: 16px; border: 1px solid #D9E1EA; border-radius: 16px; background: #FFFFFF; color: #121826; box-shadow: 0 1px 2px rgba(18, 24, 38, .05); font-family: 'DM Sans', system-ui, sans-serif; transition: box-shadow 300ms ease-out, transform 300ms ease-out; } .ds-place-card:hover { box-shadow: 0 20px 25px rgba(18, 24, 38, .10); transform: translateY(-6px); } .ds-place-card strong { font: 600 17px Fraunces, Georgia, serif; } .ds-place-card span { color: #5E6A7A; font-size: 14px; } .ds-place-card p { margin: 4px 0 0; font-size: 14px; }"
+    },
+    {
+      "name": "Navegação da conta",
+      "kind": "nav",
+      "refersTo": "card-default",
+      "description": "Menu flutuante para ações da conta.",
+      "html": "<nav class=\"ds-account-nav\"><a href=\"#\">Minha conta</a><a href=\"#\">Lixeira</a><button>Sair</button></nav>",
+      "css": ".ds-account-nav { display: grid; width: 288px; padding: 12px; border: 1px solid #D9E1EA; border-radius: 16px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(18, 24, 38, .05); font: 500 14px 'DM Sans', system-ui, sans-serif; } .ds-account-nav a, .ds-account-nav button { padding: 10px 12px; border: 0; border-radius: 12px; background: transparent; color: #121826; text-align: left; text-decoration: none; cursor: pointer; } .ds-account-nav a:hover, .ds-account-nav button:hover { background: #F4F7FB; } .ds-account-nav a:focus-visible, .ds-account-nav button:focus-visible { outline: 2px solid #E03A3E; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "O caderno que cabe no bolso",
+    "overview": "Boora Ali é uma ferramenta pessoal, quente e prática. Ela guarda memória afetiva de lugares sem se vestir de plataforma de reviews, guia turístico ou rede social. A interface deve parecer bem-cuidada e viva, mas nunca preciosa ou burocrática.\n\nUse creme-azulado claro como campo de leitura, superfícies brancas para conteúdo e vermelho para ação. A hierarquia vem de texto, espaço e fotografia de lugares, não de uma parede de cards. No celular, a prioridade é leitura rápida e registro sem atrito.",
+    "keyCharacteristics": ["Afetivo e direto, como conversa de grupo de zap.", "Editorial apenas nos títulos, funcional no restante.", "Leve por padrão, com textura sutil e elevação discreta.", "Privado por padrão, sem métricas de engajamento ou urgência artificial."],
+    "rules": [
+      { "name": "The Red Is an Action Rule", "body": "Vermelho é ação ou estado importante, nunca decoração repetida.", "section": "colors" },
+      { "name": "The Place Name Rule", "body": "Nome de lugar recebe Fraunces; dados, instruções e ações recebem DM Sans.", "section": "typography" },
+      { "name": "The Quiet Lift Rule", "body": "Sombra sinaliza interação ou sobreposição; não serve como ornamento em toda superfície.", "section": "elevation" }
+    ],
+    "dos": ["Do usar o fundo de papel frio e superfícies brancas para criar camadas sem encher a tela de cards.", "Do reservar Fraunces para títulos e nomes de lugares; use DM Sans para a interface funcional.", "Do usar fotografia de lugares com texto alternativo descritivo quando ela ajudar a reconhecer uma memória.", "Do manter foco visível, contraste alto e controles de toque com ao menos 2.5rem.", "Do usar transições curtas de opacidade e transform, sem bounce ou movimento de layout."],
+    "donts": ["Don't fazer o produto parecer Zomato ou TripAdvisor, com estrelas, rankings e anúncios como centro da experiência.", "Don't fazer o produto parecer Notion, com minimalismo cinza asséptico.", "Don't fazer o produto parecer Google Maps, um utilitário sem alma.", "Don't usar template de dashboard SaaS, grade repetida de cards idênticos ou métricas de engajamento.", "Don't usar gradiente decorativo, glassmorphism, emoji como affordance principal ou urgência artificial."]
+  }
+}

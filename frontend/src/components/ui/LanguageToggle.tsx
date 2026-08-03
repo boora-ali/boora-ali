@@ -11,7 +11,7 @@ export function LanguageToggle() {
 
   return (
     <div
-      className="inline-flex rounded-xl border border-border bg-surface p-1 shadow-sm"
+      className="inline-flex border-[3px] border-foreground bg-background p-1 shadow-[3px_3px_0_#000] dark:shadow-[3px_3px_0_#fff]"
       role="group"
       aria-label={t("languageToggle.ariaLabel")}
     >
@@ -22,9 +22,9 @@ export function LanguageToggle() {
             key={language.value}
             type="button"
             onClick={() => i18n.changeLanguage(language.value)}
-            className={`min-w-11 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${
+            className={`min-w-11 px-3 py-1.5 text-sm font-bold transition-colors duration-150 ${
               isActive
-                ? "bg-primary text-white shadow-sm"
+                ? "bg-primary text-white"
                 : "text-text hover:bg-background"
             }`}
             aria-pressed={isActive}

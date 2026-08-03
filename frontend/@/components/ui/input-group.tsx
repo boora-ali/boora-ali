@@ -12,7 +12,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="input-group"
       role="group"
       className={cn(
-        "group/input-group border-input dark:bg-input/30 shadow-xs relative flex w-full items-center rounded-md border outline-none transition-[color,box-shadow]",
+        "group/input-group border-input dark:bg-input/30 relative flex w-full items-center border-[3px] bg-background shadow-[3px_3px_0_#000] outline-none transition-[color,box-shadow] dark:shadow-[3px_3px_0_#fff]",
         "h-9 has-[>textarea]:h-auto",
 
         // Variants based on alignment.
@@ -22,7 +22,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
         "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3",
 
         // Focus state.
-        "has-[[data-slot=input-group-control]:focus-visible]:ring-ring has-[[data-slot=input-group-control]:focus-visible]:ring-1",
+        "has-[[data-slot=input-group-control]:focus-visible]:outline-primary has-[[data-slot=input-group-control]:focus-visible]:outline-[3px] has-[[data-slot=input-group-control]:focus-visible]:outline-offset-2",
 
         // Error state.
         "has-[[data-slot][aria-invalid=true]]:ring-destructive/20 has-[[data-slot][aria-invalid=true]]:border-destructive dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",

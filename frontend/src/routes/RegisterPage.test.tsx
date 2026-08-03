@@ -57,6 +57,7 @@ beforeEach(() => {
 
 test("renders all registration fields", () => {
   const { container } = renderPage();
+  expect(container.querySelector(".auth-page")).toBeInTheDocument();
   expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();

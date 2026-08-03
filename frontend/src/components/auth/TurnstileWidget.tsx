@@ -112,7 +112,7 @@ export function TurnstileWidget({ onToken, onExpire, onReady, onError, resetKey 
   if (!siteKey) return null;
 
   return (
-    <div className="min-h-[70px] rounded-xl border border-border bg-surface/60 p-2">
+    <div className="min-h-[70px] border-[3px] border-border bg-surface p-2 shadow-[3px_3px_0_#000] dark:shadow-[3px_3px_0_#fff]">
       {status === "loading" && (
         <p className="px-2 py-4 text-sm text-text/70">{t("auth.turnstile.loading")}</p>
       )}

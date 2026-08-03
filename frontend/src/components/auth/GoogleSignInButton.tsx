@@ -76,7 +76,7 @@ export function GoogleSignInButton({ onSuccess }: Props) {
       google.accounts.id.renderButton(containerRef.current, {
         theme: "filled_blue",
         size: "large",
-        shape: "pill",
+        shape: "rectangular",
         text: "continue_with",
         logo_alignment: "left",
         width: buttonWidth,
@@ -126,8 +126,8 @@ export function GoogleSignInButton({ onSuccess }: Props) {
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-border bg-surface/70 p-3 shadow-sm">
-      <p className="text-sm font-medium text-text">{t("auth.login.google")}</p>
+    <div className="space-y-3 border-[3px] border-border bg-surface p-3 shadow-[3px_3px_0_#000] dark:shadow-[3px_3px_0_#fff]">
+      <p className="text-sm font-bold text-text">{t("auth.login.google")}</p>
       {loading && <p className="text-sm text-text/75">{t("auth.login.googleLoading")}</p>}
       <div ref={containerRef} />
       {error && <p className="text-sm text-danger">{error}</p>}
