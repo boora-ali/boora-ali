@@ -66,7 +66,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.13"
           cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
@@ -96,7 +96,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Install dependencies
         working-directory: frontend
@@ -124,7 +124,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.13"
           cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
@@ -157,7 +157,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Install dependencies
         working-directory: frontend
@@ -206,7 +206,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.13"
           cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
@@ -243,7 +243,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Install dependencies
         working-directory: frontend
@@ -254,4 +254,3 @@ jobs:
       - name: Run tests with coverage
         working-directory: frontend
         run: npm run test:coverage
-
