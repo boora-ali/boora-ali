@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,6 +46,8 @@ import {
 } from "../../utils/url";
 import { geocodeAddress } from "../../services/geocoding.service";
 import { placeSchema, type PlaceFormValues } from "../../schemas/place";
+import { categoriesService } from "../../services/categories.service";
+import type { Category } from "../../types/place";
 
 type PlacePayload = Partial<Omit<Place, "cover_photo">> & { cover_photo?: string | File };
 
@@ -53,15 +55,18 @@ type Props = {
   initial?: Partial<Place>;
   onSubmit: (data: PlacePayload) => Promise<void>;
   onResolveMapsUrl?: (data: PlacePayload) => Promise<void>;
+  onDirtyChange?: (isDirty: boolean) => void;
 };
 
-export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
+export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl, onDirtyChange }: Props) {
   const { t } = useTranslation();
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [removedCover, setRemovedCover] = useState(false);
   const { preview, setPreview, setPreviewFromFile, clearPreview } = useImagePreview(initial.cover_photo ?? null);
   const [geocoding, setGeocoding] = useState(false);
   const [resolvingMapsUrl, setResolvingMapsUrl] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesError, setCategoriesError] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const geocodeAbortRef = useRef<AbortController | null>(null);
   const lastGeocodedAddressRef = useRef<string>("");
@@ -70,7 +75,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
     resolver: zodResolver(placeSchema),
     defaultValues: {
       name: initial.name ?? "",
-      category: initial.category ?? "",
+      category_ids: initial.categories?.map((category) => category.public_id) ?? [],
       address: initial.address ?? "",
       instagram_url: initial.instagram_url ?? "",
       maps_url: initial.maps_url ?? "",
@@ -81,13 +86,22 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
     },
   });
 
-  const { handleSubmit, setError, setValue, getValues, control, formState: { errors, isSubmitting } } = form;
+  const { handleSubmit, setError, setValue, getValues, control, formState: { errors, isDirty, isSubmitting } } = form;
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty || coverFile !== null || removedCover);
+  }, [isDirty, coverFile, removedCover, onDirtyChange]);
 
   const mapsUrl = useWatch({ control, name: "maps_url" }) ?? "";
+  const categoryIds = useWatch({ control, name: "category_ids" }) ?? [];
   const latitude = useWatch({ control, name: "latitude" });
   const longitude = useWatch({ control, name: "longitude" });
   const mapsUrlCoords = mapsUrl ? extractGoogleMapsCoords(mapsUrl) : null;
   const canResolveMapsUrl = Boolean(onResolveMapsUrl && mapsUrl && isGoogleMapsUrl(mapsUrl) && !mapsUrlCoords);
+
+  useEffect(() => {
+    categoriesService.listAll().then(setCategories).catch(() => setCategoriesError(true));
+  }, []);
 
   const handleMapsUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -176,7 +190,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-3">
         <FormSection
           title={t("placeForm.sections.basic")}
           description={t("placeForm.sections.basicDescription")}
@@ -195,20 +209,33 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl }: Props) {
               </FormItem>
             )}
           />
-          <FormField
-            control={control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("placeForm.category")}</FormLabel>
-                <FormControl>
-                  <Input maxLength={100} placeholder={t("placeForm.categoryPlaceholder")} {...field} />
-                </FormControl>
-                <CharacterCount value={field.value} max={100} />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <FormItem>
+            <Label>{t("placeForm.category")}</Label>
+            <div className="flex flex-wrap gap-2" aria-label={t("placeForm.category")}>
+              {categories.map((category) => {
+                const selected = categoryIds.includes(category.public_id);
+                return (
+                  <Button
+                    key={category.public_id}
+                    type="button"
+                    size="sm"
+                    variant={selected ? "default" : "outline"}
+                    aria-pressed={selected}
+                    onClick={() => setValue(
+                      "category_ids",
+                      selected
+                        ? categoryIds.filter((id) => id !== category.public_id)
+                        : [...categoryIds, category.public_id],
+                      { shouldDirty: true, shouldValidate: true },
+                    )}
+                  >
+                    {category.name}
+                  </Button>
+                );
+              })}
+            </div>
+            {categoriesError && <p role="alert" className="text-sm text-destructive">{t("common.error")}</p>}
+          </FormItem>
           <FormField
             control={control}
             name="status"

@@ -41,7 +41,7 @@ export function PlaceFilterSheet({ open, onOpenChange, filters, onApply }: Props
         <SheetHeader>
           <SheetTitle>{t("filters.title")}</SheetTitle>
         </SheetHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="mt-6 space-y-5">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="mt-5 space-y-4">
           {/* Status */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">{t("filters.status")}</label>

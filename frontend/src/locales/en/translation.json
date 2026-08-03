@@ -345,6 +345,7 @@
     "save": "Save visit",
     "saveError": "Failed to save visit",
     "removeItemError": "Failed to remove item",
+    "removeItemTitle": "Remove item?",
     "newTitle": "New visit",
     "editTitle": "Edit visit",
     "loadError": "Failed to load the visit",
@@ -458,6 +459,7 @@
     "open": "View journal",
     "back": "Back",
     "home": "Home",
+    "unsavedChanges": "You have unsaved changes. Leave without saving?",
     "na": "N/A",
     "photo": "Photo"
   },
@@ -494,6 +496,7 @@
     "in_collections": "In {{count}} collection(s)",
     "remove_place": "Remove from collection",
     "delete": "Delete collection",
+    "remove_place_confirm": "Remove {{name}} from this collection?",
     "delete_confirm": "Delete this collection? Places will not be deleted.",
     "empty": "No collections yet",
     "empty_places": "No places in this collection",

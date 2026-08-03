@@ -189,3 +189,28 @@ test("confirming delete calls remove and onDeleted", async () => {
   await waitFor(() => expect(placesService.remove).toHaveBeenCalledWith("place-1"));
   await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));
 });
+
+test("keeps the delete confirmation open until the place is removed", async () => {
+  let resolveDelete!: () => void;
+  (placesService.remove as ReturnType<typeof vi.fn>).mockReturnValueOnce(
+    new Promise<void>((resolve) => { resolveDelete = resolve; }),
+  );
+
+  render(
+    <MemoryRouter>
+      <PlaceCard place={place} onDeleted={vi.fn()} />
+    </MemoryRouter>
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+  const dialog = await screen.findByRole("dialog");
+  const deleteButton = within(dialog).getByRole("button", { name: /delete/i });
+  fireEvent.click(deleteButton);
+
+  expect(deleteButton).toBeDisabled();
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+  resolveDelete();
+
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+});

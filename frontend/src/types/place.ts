@@ -1,10 +1,17 @@
 export type PlaceStatus = "want_to_visit" | "visited" | "favorite" | "would_not_return";
 export type PlaceCoordsStatus = "pending" | "resolved" | "failed";
 
+export interface Category {
+  public_id: string;
+  name: string;
+}
+
 export interface Place {
   public_id: string;
   name: string;
-  category: string;
+  categories?: Category[] | null;
+  /** @deprecated Compatibility with responses cached before the categories migration. */
+  category?: string;
   address: string;
   instagram_url?: string;
   maps_url?: string;
@@ -23,6 +30,7 @@ export interface Place {
 export interface PlacePin {
   public_id: string;
   name: string;
+  categories?: Category[] | null;
   category?: string | null;
   address?: string | null;
   latitude?: string | null;

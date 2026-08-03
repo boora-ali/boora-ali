@@ -7,7 +7,8 @@ import { VisitForm } from "../components/visits/VisitForm";
 import { BackButton } from "../components/ui/BackButton";
 import type { Visit } from "../types/visit";
 import { PageState } from "../components/ui/PageState";
-type LocationState = { visit?: Visit };
+import { useUnsavedChangesWarning } from "../hooks/useUnsavedChangesWarning";
+type LocationState = { visit?: Visit; placePublicId?: string };
 
 export default function EditVisitPage() {
   const { id } = useParams();
@@ -19,6 +20,8 @@ export default function EditVisitPage() {
   );
   const [loading, setLoading] = useState(!visit);
   const [loadError, setLoadError] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+  useUnsavedChangesWarning(isDirty);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,23 +61,27 @@ export default function EditVisitPage() {
 
   return (
     <div className="max-w-xl mx-auto p-4">
-      <BackButton />
+      <BackButton onBeforeNavigate={() => !isDirty || window.confirm(t("common.unsavedChanges"))} />
       <PageState loading={loading} error={loadError}>
         <>
           <h1 className="text-2xl font-bold mb-4">{t("visitForm.editTitle")}</h1>
           <VisitForm
             initial={visit ?? undefined}
             initialItems={visit?.items ?? []}
-            onItemSave={async (itemData, currentItem) => {
-              if (currentItem?.public_id) {
-                return visitItemsService.update(currentItem.public_id, itemData);
-              }
-
-              return visitItemsService.create(id!, itemData);
-            }}
-            onSubmit={async (visitData) => {
-              await visitsService.update(id!, visitData);
-              nav(-1);
+            onDirtyChange={setIsDirty}
+            onSubmit={async (visitData, items) => {
+              const previousItems = visit?.items ?? [];
+              const itemIds = new Set(items.flatMap((item) => item.public_id ? [item.public_id] : []));
+              await Promise.all([
+                visitsService.update(id!, visitData),
+                ...items.map(({ public_id, visit: _visit, created_at: _createdAt, updated_at: _updatedAt, ...item }) => public_id
+                  ? visitItemsService.update(public_id, item)
+                  : visitItemsService.create(id!, item)),
+                ...previousItems
+                  .filter((item) => !itemIds.has(item.public_id))
+                  .map((item) => visitItemsService.remove(item.public_id)),
+              ]);
+              nav(state.placePublicId ? `/places/${state.placePublicId}` : "/places", { replace: true });
             }}
           />
         </>

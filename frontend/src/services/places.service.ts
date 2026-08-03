@@ -67,7 +67,10 @@ export type PlaceWithVisits = Place & { visits: Visit[] } & {
   total_consumed_amount: string | null;
 };
 
-type PlacePayload = Partial<Omit<Place, "cover_photo">> & { cover_photo?: string | File };
+type PlacePayload = Partial<Omit<Place, "cover_photo" | "categories">> & {
+  category_ids?: string[];
+  cover_photo?: string | File;
+};
 
 function toPayload(data: PlacePayload) {
   const d = stripStringImages(data as Record<string, unknown>);

@@ -25,6 +25,7 @@ export default function TrashPage() {
   const [restoring, setRestoring] = useState<string | null>(null);
   const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<Place | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [actionError, setActionError] = useState("");
   const pageData = data ?? { count: 0, next: null, previous: null, results: [] };
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function TrashPage() {
 
   async function handleRestore(publicId: string) {
     setRestoring(publicId);
+    setActionError("");
     try {
       await placesService.restore(publicId);
       notifyPlacesChanged();
@@ -46,6 +48,8 @@ export default function TrashPage() {
           ? { ...prev, count: prev.count - 1, results: prev.results.filter((p) => p.public_id !== publicId) }
           : prev
       );
+    } catch {
+      setActionError(t("common.error"));
     } finally {
       setRestoring(null);
     }
@@ -54,6 +58,7 @@ export default function TrashPage() {
   async function handlePermanentDelete() {
     if (!permanentDeleteTarget) return;
     setDeleting(true);
+    setActionError("");
     try {
       await placesService.permanentDelete(permanentDeleteTarget.public_id);
       notifyPlacesChanged();
@@ -63,6 +68,8 @@ export default function TrashPage() {
           : prev
       );
       setPermanentDeleteTarget(null);
+    } catch {
+      setActionError(t("common.error"));
     } finally {
       setDeleting(false);
     }
@@ -93,7 +100,7 @@ export default function TrashPage() {
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-text truncate">{place.name}</p>
                 <p className="text-xs text-muted mt-0.5">
-                  {place.category}
+                  {place.categories?.map((category) => category.name).join(", ") || place.category}
                   {place.deleted_at && (
                     <> &middot; {t("trash.deletedAt", { date: fmtDeletedAt(place.deleted_at, i18n.language) })}</>
                   )}
@@ -122,6 +129,7 @@ export default function TrashPage() {
             </div>
           ))}
         </div>
+        {actionError && <p role="alert" className="text-sm text-destructive">{actionError}</p>}
       </PageState>
 
       {data && (data.next || data.previous) && (
@@ -164,6 +172,7 @@ export default function TrashPage() {
                 {deleting ? t("trash.permanentDeleting") : t("trash.permanentDelete")}
               </Button>
             </div>
+            {actionError && <p role="alert" className="text-sm text-destructive">{actionError}</p>}
           </div>
         </DialogContent>
       </Dialog>
