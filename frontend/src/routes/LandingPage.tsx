@@ -11,21 +11,30 @@ const trustPoints = [
   "Feito para revisitar, não só descobrir",
 ];
 
+const landingTitle = "Diário de lugares para salvar visitas, notas e fotos | Boora Ali";
+const landingDescription =
+  "Crie seu diário de lugares: salve endereços, registre visitas, notas e fotos. Organize o que quer conhecer e relembre o que já visitou.";
+
 const faq = [
   {
-    question: "Isso é um mapa genérico?",
+    question: "Como salvar lugares que quero visitar?",
     answer:
-      "Não. O foco é registrar os lugares que importam para você e deixar fácil voltar neles.",
+      "Crie um lugar com nome, categoria, endereço e as anotações que ajudam você a escolher quando voltar.",
   },
   {
-    question: "Posso compartilhar um lugar específico?",
+    question: "Posso registrar uma visita com notas e fotos?",
     answer:
-      "Sim. Você pode gerar um link de share para um lugar sem expor toda a sua conta.",
+      "Sim. Registre a visita e guarde notas, fotos e o contexto que vale lembrar sobre aquele lugar.",
   },
   {
-    question: "O que fica público?",
+    question: "Meu diário de lugares é privado?",
     answer:
-      "A landing é pública. O conteúdo do app continua controlado por autenticação e permissões.",
+      "Sim. Seus lugares ficam protegidos por conta e você decide o que quer compartilhar.",
+  },
+  {
+    question: "Como compartilhar um lugar específico?",
+    answer:
+      "Gere um link de compartilhamento para um lugar sem expor toda a sua conta ou seu diário.",
   },
 ];
 
@@ -62,7 +71,10 @@ function NotebookHeroGraphic() {
         src="/landing-assets/hero-notebook.png"
         alt="Diário aberto com mapa, anotações e foto de um lugar salvo no Boora Ali"
         className="block h-auto w-full rounded-[1.5rem] border border-border"
+        width="1024"
+        height="1536"
         loading="eager"
+        fetchPriority="high"
         decoding="async"
       />
     </div>
@@ -76,7 +88,9 @@ function PlaceNoteGraphic() {
         src="/landing-assets/place-note.png"
         alt="Cartão de lugar com título, categoria, endereço, notas, foto e tags"
         className="block h-auto w-full rounded-[1.5rem] border border-border"
-        loading="eager"
+        width="1024"
+        height="1536"
+        loading="lazy"
         decoding="async"
       />
     </div>
@@ -90,7 +104,9 @@ function MapGraphic() {
         src="/landing-assets/map-explore.png"
         alt="Mapa com rota marcada e cartão de lugar salvo"
         className="block h-auto w-full rounded-[1.5rem] border border-border"
-        loading="eager"
+        width="1536"
+        height="1024"
+        loading="lazy"
         decoding="async"
       />
     </div>
@@ -104,7 +120,9 @@ function PrivacyGraphic() {
         src="/landing-assets/privacy-share.png"
         alt="Cartões de privacidade e compartilhamento de um lugar"
         className="block h-auto w-full rounded-[1.5rem] border border-border"
-        loading="eager"
+        width="1536"
+        height="1024"
+        loading="lazy"
         decoding="async"
       />
     </div>
@@ -115,35 +133,22 @@ export default function LandingPage() {
   return (
     <>
       <Helmet>
-        <title>Boora Ali — Diário pessoal de lugares</title>
-        <meta
-          name="description"
-          content="Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares."
-        />
-        <meta
-          name="keywords"
-          content="diário de lugares, lugares para visitar, salvar lugares, registrar visitas, mapa pessoal"
-        />
+        <title>{landingTitle}</title>
+        <meta name="description" content={landingDescription} />
         <link rel="canonical" href="https://booraali.com.br/" />
         <meta name="robots" content="index, follow" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://booraali.com.br/" />
-        <meta property="og:title" content="Boora Ali — Diário pessoal de lugares" />
-        <meta
-          property="og:description"
-          content="Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares."
-        />
+        <meta property="og:title" content={landingTitle} />
+        <meta property="og:description" content={landingDescription} />
         <meta property="og:image" content="https://booraali.com.br/og-image.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="Boora Ali" />
         <meta property="og:locale" content="pt_BR" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Boora Ali — Diário pessoal de lugares" />
-        <meta
-          name="twitter:description"
-          content="Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares."
-        />
+        <meta name="twitter:title" content={landingTitle} />
+        <meta name="twitter:description" content={landingDescription} />
         <meta name="twitter:image" content="https://booraali.com.br/og-image.png" />
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
@@ -179,7 +184,7 @@ export default function LandingPage() {
             </Button>
             <Button asChild>
               <Link to="/register">
-                Começar agora
+                Criar meu diário
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -194,18 +199,18 @@ export default function LandingPage() {
             <div className="space-y-7">
               <div className="space-y-4">
                 <h1 className="max-w-2xl font-fraunces text-5xl font-bold leading-[0.92] tracking-tight text-[color:var(--color-text)] sm:text-6xl lg:text-7xl">
-                  Guarde lugares, visitas e experiências que valem lembrar.
+                  Seu diário de lugares para guardar visitas e experiências.
                 </h1>
                 <p className="max-w-xl text-base leading-8 text-muted sm:text-lg">
-                  O Boora Ali é seu diário pessoal de lugares. Salve endereços, registre visitas,
-                  mantenha notas, fotos e contexto de cada parada, e volte ao que fez sentido com mais rapidez.
+                  Salve endereços, registre visitas, notas e fotos. Organize os lugares que quer conhecer
+                  e relembre os que já visitou.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg">
                   <Link to="/register">
-                    Começar grátis
+                    Criar meu diário grátis
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -335,13 +340,13 @@ export default function LandingPage() {
               <div className="rounded-[2rem] border border-border bg-surface p-6 shadow-[0_18px_50px_rgba(26,18,8,0.05)] sm:p-8">
                 <div className="max-w-2xl">
                   <h2 className="font-fraunces text-3xl font-bold tracking-tight text-[color:var(--color-text)]">
-                    O básico que vale deixar claro antes de entrar.
+                    Perguntas frequentes sobre o diário de lugares.
                   </h2>
                 </div>
                 <div className="mt-8 grid gap-4 md:grid-cols-3 md:divide-x md:divide-border">
                   {faq.map((item) => (
                     <div key={item.question} className="space-y-3 md:px-4 first:pl-0 last:pr-0">
-                      <p className="text-base font-semibold text-[color:var(--color-text)]">{item.question}</p>
+                      <h3 className="text-base font-semibold text-[color:var(--color-text)]">{item.question}</h3>
                       <p className="text-sm leading-7 text-muted">{item.answer}</p>
                     </div>
                   ))}

@@ -18,9 +18,9 @@ describe("LandingPage", () => {
     renderPage();
 
     expect(
-      screen.getByRole("heading", { name: /guarde lugares, visitas e experiências que valem lembrar/i }),
+      screen.getByRole("heading", { name: /seu diário de lugares para guardar visitas e experiências/i }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /começar grátis/i })).toHaveAttribute("href", "/register");
+    expect(screen.getByRole("link", { name: /criar meu diário grátis/i })).toHaveAttribute("href", "/register");
     expect(screen.getByRole("link", { name: /já tenho conta/i })).toHaveAttribute("href", "/login");
     expect(screen.getAllByRole("switch").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByRole("link", { name: /entrar/i }).length).toBeGreaterThan(0);
@@ -43,5 +43,6 @@ describe("LandingPage", () => {
     expect(screen.getByAltText(/mapa com rota marcada e cartão de lugar salvo/i)).toBeInTheDocument();
     expect(screen.getByAltText(/cartões de privacidade e compartilhamento de um lugar/i)).toBeInTheDocument();
     expect(screen.getAllByText(/privado por padrão/i).length).toBeGreaterThan(1);
+    expect(screen.getByRole("heading", { name: /como salvar lugares que quero visitar/i, level: 3 })).toBeInTheDocument();
   });
 });
