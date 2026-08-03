@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { beforeEach, expect, test, vi } from "vitest";
 import { HelmetProvider } from "react-helmet-async";
 import { shareService } from "../../services/share.service";
@@ -9,8 +9,8 @@ import CollectionSharePage from "../CollectionSharePage";
 vi.mock("../../services/share.service");
 vi.mock("../../contexts/useAuth");
 const navigateMock = vi.fn();
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+vi.mock("react-router", async () => {
+  const actual = await vi.importActual<typeof import("react-router")>("react-router");
   return { ...actual, useNavigate: () => navigateMock };
 });
 vi.mock("../NotFoundPage", () => ({

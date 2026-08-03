@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import "./NeoBrutalistHero.css";
 
 const THREE_URL = "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js";

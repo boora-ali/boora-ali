@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { within } from "@testing-library/react";
 import { beforeEach, vi } from "vitest";
 import { PlaceCard } from "./PlaceCard";
@@ -9,8 +9,8 @@ import { placesService } from "../../services/places.service";
 
 const navigateSpy = vi.fn();
 
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+vi.mock("react-router", async () => {
+  const actual = await vi.importActual<typeof import("react-router")>("react-router");
   return { ...actual, useNavigate: () => navigateSpy };
 });
 
