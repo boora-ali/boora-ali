@@ -276,6 +276,7 @@
     "name": "Name",
     "namePlaceholder": "E.g. Morning Café",
     "category": "Category",
+    "showAllCategories": "Show more",
     "categoryPlaceholder": "Restaurant, gym, museum...",
     "address": "Address",
     "addressPlaceholder": "Street, number, neighborhood...",

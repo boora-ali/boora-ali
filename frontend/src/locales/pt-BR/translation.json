@@ -276,6 +276,7 @@
     "name": "Nome",
     "namePlaceholder": "Ex: Café Tia Maria",
     "category": "Categoria",
+    "showAllCategories": "Mostrar mais",
     "categoryPlaceholder": "Restaurante, academia, museu...",
     "address": "Endereço",
     "addressPlaceholder": "Rua, número, bairro...",

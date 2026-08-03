@@ -67,6 +67,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl, onDirtyCha
   const [resolvingMapsUrl, setResolvingMapsUrl] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesError, setCategoriesError] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const geocodeAbortRef = useRef<AbortController | null>(null);
   const lastGeocodedAddressRef = useRef<string>("");
@@ -94,6 +95,9 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl, onDirtyCha
 
   const mapsUrl = useWatch({ control, name: "maps_url" }) ?? "";
   const categoryIds = useWatch({ control, name: "category_ids" }) ?? [];
+  const visibleCategories = showAllCategories
+    ? categories
+    : categories.filter((category, index) => index < 4 || categoryIds.includes(category.public_id));
   const latitude = useWatch({ control, name: "latitude" });
   const longitude = useWatch({ control, name: "longitude" });
   const mapsUrlCoords = mapsUrl ? extractGoogleMapsCoords(mapsUrl) : null;
@@ -212,7 +216,7 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl, onDirtyCha
           <FormItem>
             <Label>{t("placeForm.category")}</Label>
             <div className="flex flex-wrap gap-2" aria-label={t("placeForm.category")}>
-              {categories.map((category) => {
+              {visibleCategories.map((category) => {
                 const selected = categoryIds.includes(category.public_id);
                 return (
                   <Button
@@ -234,6 +238,11 @@ export function PlaceForm({ initial = {}, onSubmit, onResolveMapsUrl, onDirtyCha
                 );
               })}
             </div>
+            {categories.length > 4 && !showAllCategories && (
+              <Button type="button" variant="ghost" size="sm" className="w-fit px-0" onClick={() => setShowAllCategories(true)}>
+                {t("placeForm.showAllCategories")}
+              </Button>
+            )}
             {categoriesError && <p role="alert" className="text-sm text-destructive">{t("common.error")}</p>}
           </FormItem>
           <FormField
