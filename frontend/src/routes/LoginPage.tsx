@@ -20,12 +20,13 @@ import { PasswordInput } from "../components/ui/PasswordInput";
 import { LanguageToggle } from "../components/ui/LanguageToggle";
 import { GoogleSignInButton } from "../components/auth/GoogleSignInButton";
 import { TurnstileWidget } from "../components/auth/TurnstileWidget";
-import { LottieState } from "../components/ui/LottieState";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { LottieState } from "../components/ui/LottieState";
 import { reportApiError } from "../utils/form-api-error";
 import { SESSION_INVALIDATED_KEY } from "../utils/constants";
 import { Footer } from "../components/layout/Footer";
 import { loginSchema, type LoginFormValues } from "../schemas/auth";
+import "./AuthPage.css";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -85,41 +86,47 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="auth-page">
       <Helmet>
         <title>Boora Ali — Entre na sua conta</title>
         <meta name="description" content="Acesse seu diário de lugares e experiências. Salve e reviva memórias dos lugares que você visitou." />
         <link rel="canonical" href="https://booraali.com.br/login" />
       </Helmet>
-      <div className="flex-1 mx-auto w-full mt-12 max-w-sm space-y-5 px-6 py-8 pb-0">
-        <div className="flex flex-col items-center gap-4">
+      <main className="auth-page__main">
+        <aside className="auth-page__aside">
+          <Link to="/" className="auth-page__brand">
+            Boora Ali
+          </Link>
           <LottieState
             animation="login-pin"
             label="Boora Ali"
-            className="h-28 w-28 scale-[2.7]"
-            fallback={
-              <img
-                src="/bora-ali-mark.svg"
-                alt=""
-                className="h-28 w-28 select-none object-contain drop-shadow-sm"
-                draggable={false}
-              />
-            }
+            className="auth-page__hero-mark"
           />
-          <div className="text-center">
-            <h1 className="font-fraunces text-3xl font-bold text-foreground">{t("auth.login.title")}</h1>
-            <p className="-mt-1 text-sm text-muted-foreground">{t("auth.login.subtitle")}</p>
+          <div className="auth-page__aside-copy">
+            <p className="auth-page__eyebrow">BORA ALI / ENTRAR</p>
+            <h2>{t("auth.login.title")}</h2>
+            <p>{t("auth.login.subtitle")}</p>
           </div>
-        </div>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        </aside>
+        <section className="auth-page__form-area" aria-labelledby="login-title">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="auth-page__form space-y-5">
+              <div className="auth-page__title-row">
+                <h1 id="login-title" className="auth-page__title">{t("auth.login.title")}</h1>
+                <LottieState
+                  animation="login-pin"
+                  label="Boora Ali"
+                  className="auth-page__title-mark"
+                />
+              </div>
+              <p className="auth-page__subtitle">{t("auth.login.subtitle")}</p>
             {showEmailSentMessage && (
-              <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+              <div className="auth-page__notice auth-page__notice--info">
                 {t("auth.login.emailSent")}
               </div>
             )}
             {showSessionMessage && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <div className="auth-page__notice auth-page__notice--warning">
                 {t("auth.login.sessionExpired")}
               </div>
             )}
@@ -189,9 +196,10 @@ export default function LoginPage() {
             <div className="flex justify-center pt-1">
               <LanguageToggle />
             </div>
-          </form>
-        </Form>
-      </div>
+            </form>
+          </Form>
+        </section>
+      </main>
       <Footer />
     </div>
   );

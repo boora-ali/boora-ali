@@ -16,7 +16,7 @@ interface Props {
 }
 
 const selectClass =
-  "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:ring-1 focus:ring-primary";
+  "w-full border-[3px] border-border bg-surface px-3 py-2 text-sm font-bold text-text shadow-[3px_3px_0_currentColor] focus:outline-[3px] focus:outline-offset-2 focus:outline-primary";
 const labelClass = "block text-xs font-medium text-muted mb-1";
 
 export function PlaceFilterPopover({ filters, onApply, search, onSearchChange, searchPlaceholder }: Props) {
@@ -51,14 +51,14 @@ export function PlaceFilterPopover({ filters, onApply, search, onSearchChange, s
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={searchPlaceholder}
-          className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 pr-12 text-sm text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+          className="w-full border-[3px] border-border bg-surface px-4 py-2.5 pr-12 text-sm font-bold text-text shadow-[4px_4px_0_currentColor] placeholder:text-muted focus:outline-[3px] focus:outline-offset-2 focus:outline-primary"
         />
 
         <Popover.Trigger asChild>
           <button
             type="button"
             aria-label={t("filters.title")}
-            className={`absolute right-2 flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 focus:outline-none
+            className={`absolute right-2 flex h-8 w-8 items-center justify-center border-[3px] border-border shadow-[2px_2px_0_currentColor] transition-[transform,box-shadow,background-color,color] duration-150 focus:outline-[3px] focus:outline-offset-2 focus:outline-primary
               ${open
                 ? "bg-primary text-white"
                 : activeCount > 0
@@ -68,7 +68,7 @@ export function PlaceFilterPopover({ filters, onApply, search, onSearchChange, s
           >
             <SlidersHorizontal className="h-4 w-4" />
             {activeCount > 0 && !open && (
-              <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white leading-none">
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center border-2 border-border bg-primary text-[9px] font-bold text-white leading-none">
                 {activeCount}
               </span>
             )}
@@ -80,13 +80,13 @@ export function PlaceFilterPopover({ filters, onApply, search, onSearchChange, s
         <Popover.Content
           align="end"
           sideOffset={6}
-          className="z-50 w-72 rounded-2xl border border-border bg-surface shadow-lg shadow-black/10 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2"
+          className="z-50 w-72 border-[3px] border-border bg-surface shadow-[6px_6px_0_currentColor] focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="text-sm font-semibold text-text">{t("filters.title")}</span>
             <Popover.Close asChild>
-              <button className="rounded-md p-0.5 text-muted hover:text-text transition-colors focus:outline-none">
+              <button className="border-2 border-transparent p-0.5 text-muted hover:border-border hover:text-text focus:outline-[3px] focus:outline-offset-2 focus:outline-primary">
                 <X className="h-4 w-4" />
               </button>
             </Popover.Close>

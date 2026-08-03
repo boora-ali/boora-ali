@@ -9,9 +9,9 @@ export default defineConfig({
   pages: [
     {
       pathname: "/",
-      title: "Boora Ali — Diário pessoal de lugares",
+      title: "Diário de lugares para salvar visitas, notas e fotos | Boora Ali",
       description:
-        "Salve lugares, registre visitas e guarde o que vale lembrar em um diário pessoal de lugares.",
+        "Crie seu diário de lugares: salve endereços, registre visitas, notas e fotos. Organize o que quer conhecer e relembre o que já visitou.",
     },
     {
       pathname: "/politica-de-privacidade",

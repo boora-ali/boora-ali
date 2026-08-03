@@ -31,10 +31,17 @@ const STATUS_ICONS: Record<string, ComponentType<{ className?: string }>> = {
 };
 
 const STATUS_ACTIVE_CLASSES: Record<string, string> = {
-  want_to_visit: "bg-blue-500 text-white border-blue-500 shadow-sm",
-  visited: "bg-green-500 text-white border-green-500 shadow-sm",
-  favorite: "bg-orange-500 text-white border-orange-500 shadow-sm",
-  would_not_return: "bg-red-500 text-white border-red-500 shadow-sm",
+  want_to_visit: "border-blue-600 bg-blue-600 text-white",
+  visited: "border-yellow-500 bg-yellow-400 text-black",
+  favorite: "border-primary bg-primary text-primary-foreground",
+  would_not_return: "border-foreground bg-foreground text-background",
+};
+
+const STATUS_INACTIVE_CLASSES: Record<string, string> = {
+  want_to_visit: "border-blue-600 bg-surface text-blue-700 hover:bg-blue-50",
+  visited: "border-yellow-500 bg-surface text-yellow-800 hover:bg-yellow-100",
+  favorite: "border-primary bg-surface text-primary hover:bg-primary/10",
+  would_not_return: "border-foreground bg-surface text-foreground hover:bg-foreground/10",
 };
 
 export default function PlacesPage() {
@@ -178,10 +185,10 @@ export default function PlacesPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-fraunces text-3xl font-bold text-text leading-none">
+          <h1 className="font-[Impact,_Arial_Black,_system-ui,_sans-serif] text-4xl font-black leading-[0.82] tracking-[-0.06em] text-text uppercase">
             {t("places.title")}
           </h1>
-          <p className="text-muted text-sm mt-1">{t("places.subtitle")}</p>
+          <p className="mt-2 text-xs font-black uppercase tracking-[0.12em] text-muted">{t("places.subtitle")}</p>
         </div>
         <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
           <Link to="/collections" className="flex-1 sm:flex-none">
@@ -211,10 +218,10 @@ export default function PlacesPage() {
       <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => { setPage(1); setStatus(""); }}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-150 ${
+          className={`border-[3px] px-3 py-1.5 text-sm font-bold shadow-[3px_3px_0_currentColor] transition-[transform,box-shadow,background-color,color] duration-150 hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_currentColor] focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             status === ""
-              ? "bg-primary text-white border-primary shadow-sm"
-              : "bg-surface text-text border-border hover:bg-muted/20 hover:border-muted"
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-black bg-surface text-text hover:bg-muted/20"
           }`}
         >
           {t("places.all")}
@@ -225,10 +232,10 @@ export default function PlacesPage() {
             <button
               key={s.value}
               onClick={() => { setPage(1); setStatus(s.value); }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-150 ${
+              className={`inline-flex items-center gap-1.5 border-[3px] px-3 py-1.5 text-sm font-bold shadow-[3px_3px_0_currentColor] transition-[transform,box-shadow,background-color,color] duration-150 hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_currentColor] focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 status === s.value
                   ? STATUS_ACTIVE_CLASSES[s.value]
-                  : "bg-surface text-text border-border hover:bg-muted/20 hover:border-muted"
+                  : STATUS_INACTIVE_CLASSES[s.value]
               }`}
             >
               {StatusIcon && <StatusIcon className="h-3.5 w-3.5" />}
@@ -264,7 +271,7 @@ export default function PlacesPage() {
                 const slidePlaces = cached ?? (slidePage === loadedPage && loadedQueryKey === queryKey ? data.results : undefined);
                 return (
                   <CarouselItem key={i}>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 gap-6 p-1 pb-3 pr-3 md:grid-cols-4">
                       {slidePlaces
                         ? slidePlaces.map((place, idx) => (
                             <PlaceCard key={place.public_id} place={place} index={idx} onDeleted={() => setRefreshTick((t) => t + 1)} />
@@ -272,7 +279,7 @@ export default function PlacesPage() {
                         : Array.from({ length: PAGE_SIZE }, (_, j) => (
                             <div
                               key={j}
-                              className="h-64 rounded-2xl bg-muted-foreground/10 animate-pulse"
+                              className="h-64 border-[3px] border-border bg-muted-foreground/10 shadow-[6px_6px_0_currentColor] animate-pulse"
                             />
                           ))}
                     </div>
