@@ -1,4 +1,4 @@
-FROM python:3.12-alpine AS builder
+FROM python:3.13-alpine AS builder
 
 WORKDIR /app
 
@@ -23,7 +23,7 @@ RUN python -m venv /venv && \
     find /venv -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 
 
-FROM python:3.12-alpine
+FROM python:3.13-alpine
 
 WORKDIR /app
 
