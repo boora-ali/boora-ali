@@ -21,6 +21,7 @@ import { LanguageToggle } from "../components/ui/LanguageToggle";
 import { GoogleSignInButton } from "../components/auth/GoogleSignInButton";
 import { TurnstileWidget } from "../components/auth/TurnstileWidget";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { LottieState } from "../components/ui/LottieState";
 import { reportApiError } from "../utils/form-api-error";
 import { SESSION_INVALIDATED_KEY } from "../utils/constants";
 import { Footer } from "../components/layout/Footer";
@@ -94,9 +95,13 @@ export default function LoginPage() {
       <main className="auth-page__main">
         <aside className="auth-page__aside">
           <Link to="/" className="auth-page__brand">
-            <img src="/bora-ali-mark.svg" alt="" />
             Boora Ali
           </Link>
+          <LottieState
+            animation="login-pin"
+            label="Boora Ali"
+            className="auth-page__hero-mark"
+          />
           <div className="auth-page__aside-copy">
             <p className="auth-page__eyebrow">BORA ALI / ENTRAR</p>
             <h2>{t("auth.login.title")}</h2>
@@ -106,7 +111,14 @@ export default function LoginPage() {
         <section className="auth-page__form-area" aria-labelledby="login-title">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="auth-page__form space-y-5">
-              <h1 id="login-title" className="auth-page__title">{t("auth.login.title")}</h1>
+              <div className="auth-page__title-row">
+                <h1 id="login-title" className="auth-page__title">{t("auth.login.title")}</h1>
+                <LottieState
+                  animation="login-pin"
+                  label="Boora Ali"
+                  className="auth-page__title-mark"
+                />
+              </div>
               <p className="auth-page__subtitle">{t("auth.login.subtitle")}</p>
             {showEmailSentMessage && (
               <div className="auth-page__notice auth-page__notice--info">

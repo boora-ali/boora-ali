@@ -6,6 +6,11 @@ vi.mock("../components/auth/GoogleSignInButton", () => ({
   ),
 }));
 vi.mock("../components/auth/TurnstileWidget", () => ({ TurnstileWidget: () => null }));
+vi.mock("../components/ui/LottieState", () => ({
+  LottieState: ({ animation, className }: { animation: string; className?: string }) => (
+    <div className={className} data-testid={`lottie-${animation}`} />
+  ),
+}));
 vi.mock("../contexts/useAuth");
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
@@ -75,6 +80,15 @@ test("renders username, password fields and Google button", () => {
   expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /google sign in/i })).toBeInTheDocument();
   expect(container.querySelector(".auth-page")).toBeInTheDocument();
+});
+
+test("renders Lottie marks for desktop and mobile auth layouts", () => {
+  renderPage();
+
+  const marks = screen.getAllByTestId("lottie-login-pin");
+  expect(marks[0]).toHaveClass("auth-page__hero-mark");
+  expect(marks[1]).toHaveClass("auth-page__title-mark");
+  expect(marks[1].previousElementSibling).toHaveAttribute("id", "login-title");
 });
 
 describe("submit com credenciais válidas", () => {

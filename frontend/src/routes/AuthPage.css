@@ -14,10 +14,9 @@
 }
 
 .auth-page__aside {
-  display: flex;
+  display: grid;
   min-height: 18rem;
-  flex-direction: column;
-  justify-content: space-between;
+  grid-template-rows: auto minmax(10rem, 1fr) auto;
   border-right: 3px solid var(--color-border);
   background: var(--color-primary);
   color: #ffffff;
@@ -36,12 +35,11 @@
   text-decoration: none;
 }
 
-.auth-page__brand img {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 3px solid currentColor;
-  background: #ffffff;
-  object-fit: contain;
+.auth-page__hero-mark {
+  align-self: center;
+  justify-self: center;
+  width: clamp(10rem, 24vw, 16rem);
+  height: clamp(10rem, 24vw, 16rem);
 }
 
 .auth-page__aside-copy {
@@ -92,6 +90,14 @@
   text-transform: uppercase;
 }
 
+.auth-page__title-row {
+  display: contents;
+}
+
+.auth-page__title-mark {
+  display: none;
+}
+
 .auth-page__subtitle {
   max-width: 42ch;
   margin: 0 0 2rem;
@@ -140,15 +146,29 @@
   }
 
   .auth-page__aside {
-    min-height: 0;
-    gap: 3rem;
-    border-right: 0;
-    border-bottom: 3px solid var(--color-border);
-    padding: 2rem;
+    display: none;
   }
 
-  .auth-page__aside h2 {
-    font-size: clamp(3rem, 16vw, 5rem);
+  .auth-page__hero-mark {
+    display: none;
+  }
+
+  .auth-page__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.75rem;
+  }
+
+  .auth-page__title-mark {
+    display: block;
+    width: 3rem;
+    height: 3rem;
+    flex: none;
+  }
+
+  .auth-page__title {
+    margin-bottom: 0;
   }
 
   .auth-page__form-area {

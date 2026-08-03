@@ -1,6 +1,11 @@
 import { vi } from "vitest";
 
 vi.mock("../components/auth/TurnstileWidget", () => ({ TurnstileWidget: () => null }));
+vi.mock("../components/ui/LottieState", () => ({
+  LottieState: ({ animation, className }: { animation: string; className?: string }) => (
+    <div className={className} data-testid={`lottie-${animation}`} />
+  ),
+}));
 vi.mock("../services/auth.service");
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
@@ -63,6 +68,15 @@ test("renders all registration fields", () => {
   expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
   expect(container.querySelector('input[name="website"]')).toBeInTheDocument();
+});
+
+test("renders Lottie marks for desktop and mobile auth layouts", () => {
+  renderPage();
+
+  const marks = screen.getAllByTestId("lottie-login-pin");
+  expect(marks[0]).toHaveClass("auth-page__hero-mark");
+  expect(marks[1]).toHaveClass("auth-page__title-mark");
+  expect(marks[1].previousElementSibling).toHaveAttribute("id", "register-title");
 });
 
 describe("validação Zod", () => {
