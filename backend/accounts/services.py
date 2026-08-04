@@ -272,7 +272,9 @@ def build_export_payload(user) -> dict[str, Any]:
                     {
                         "place_name": collection_place.place.name,
                         "place_categories": list(
-                            collection_place.place.categories.values_list("name", flat=True)
+                            collection_place.place.categories.values_list(
+                                "name", flat=True
+                            )
                         ),
                     }
                     for collection_place in collection.collection_places.all()
