@@ -17,6 +17,7 @@ from django.utils import timezone
 from core.image_service import ImageService
 
 from .models import (
+    Category,
     Collection,
     CollectionPlace,
     CollectionShare,
@@ -141,6 +142,10 @@ class PlaceLifecycleService:
 
 class PlaceShareService:
     @staticmethod
+    def category_names(place: Place) -> str:
+        return ", ".join(place.categories.values_list("name", flat=True))
+
+    @staticmethod
     def detect_content_type(data: bytes) -> str:
         return ImageService.detect_content_type(data)
 
@@ -181,7 +186,7 @@ class PlaceShareService:
         )
         return {
             "name": place.name,
-            "category": place.category,
+            "category": PlaceShareService.category_names(place),
             "address": place.address,
             "instagram_url": place.instagram_url,
             "maps_url": place.maps_url,
@@ -274,6 +279,8 @@ class PlaceShareService:
         if not created:
             return PlaceShareImportOutcome(status=PlaceShareImportStatus.DUPLICATE)
 
+        imported.categories.set(place.categories.all())
+
         if place.cover_photo:
             from .tasks import copy_shared_place_photo
 
@@ -291,7 +298,6 @@ class PlaceShareService:
     @staticmethod
     def create_import_defaults(place: Place) -> dict:
         return {
-            "category": place.category,
             "instagram_url": place.instagram_url,
             "maps_url": place.maps_url,
             "latitude": place.latitude,
@@ -426,7 +432,7 @@ class CollectionShareService:
                         share=share,
                         source_place_public_id=place.public_id,
                         name=place.name,
-                        category=place.category,
+                        category=PlaceShareService.category_names(place),
                         address=place.address,
                         instagram_url=place.instagram_url,
                         maps_url=place.maps_url,
@@ -449,7 +455,6 @@ class CollectionShareService:
     @staticmethod
     def _create_place_defaults(snapshot: CollectionSharePlaceSnapshot) -> dict:
         return {
-            "category": snapshot.category,
             "instagram_url": snapshot.instagram_url,
             "maps_url": snapshot.maps_url,
             "latitude": snapshot.latitude,
@@ -519,6 +524,9 @@ class CollectionShareService:
                     CollectionPlace(collection=collection, place=place)
                 )
                 if created:
+                    place.categories.set(
+                        Category.objects.filter(name__in=snapshot.category.split(", "))
+                    )
                     CollectionShareService._copy_place_cover_if_needed(
                         snapshot, share.owner_id, place
                     )

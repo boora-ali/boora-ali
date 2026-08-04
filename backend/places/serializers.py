@@ -239,12 +239,14 @@ class PlaceListSerializer(FlexFieldsModelSerializer):
 
 
 class PlaceMapPinSerializer(serializers.ModelSerializer):
+    categories = CategorySerializer(many=True, read_only=True)
+
     class Meta:
         model = Place
         fields = (
             "public_id",
             "name",
-            "category",
+            "categories",
             "address",
             "latitude",
             "longitude",

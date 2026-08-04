@@ -11,9 +11,16 @@ from model_bakery import baker
 from PIL import Image
 
 from core.image_service import ImageService
-from places.models import Place, PlaceShare
+from places.models import Category, Place, PlaceShare
 
 pytestmark = pytest.mark.django_db
+
+
+def make_place(*, category=None, **kwargs):
+    place = baker.make(Place, **kwargs)
+    if category:
+        place.categories.add(baker.make(Category, name=category))
+    return place
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +111,7 @@ def test_share_revoke_wrong_owner_returns_404(auth_client, user, other_user):
 
 
 def test_share_detail_returns_place_data(api_client, user):
-    place = baker.make(Place, user=user, name="Café X", category="cafe")
+    place = make_place(user=user, name="Café X", category="cafe")
     share = baker.make(PlaceShare, place=place, owner=user, is_active=True)
     r = api_client.get(f"/api/share/{share.token}/")
     assert r.status_code == 200
@@ -239,8 +246,7 @@ def test_share_media_storage_error_returns_404(api_client, user):
 
 
 def test_share_import_creates_place(auth_client, user, other_user):
-    place = baker.make(
-        Place,
+    place = make_place(
         user=other_user,
         name="Bar Y",
         address="Rua A, 1",

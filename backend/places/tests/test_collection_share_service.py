@@ -11,10 +11,17 @@ from model_bakery import baker
 from PIL import Image
 
 from core.image_service import ImageService
-from places.models import Collection, CollectionPlace, CollectionShare, Place
+from places.models import Category, Collection, CollectionPlace, CollectionShare, Place
 from places.services import CollectionShareImportStatus, CollectionShareService
 
 pytestmark = pytest.mark.django_db
+
+
+def make_place(*, category=None, **kwargs):
+    place = baker.make(Place, **kwargs)
+    if category:
+        place.categories.add(Category.objects.get_or_create(name=category)[0])
+    return place
 
 
 def _make_jpeg_bytes():
@@ -38,8 +45,7 @@ def test_build_share_url_includes_token():
 
 def test_create_share_materializes_snapshot(user):
     collection = baker.make(Collection, user=user, name="Favoritos", emoji="⭐")
-    place = baker.make(
-        "places.Place",
+    place = make_place(
         user=user,
         name="Café X",
         category="cafe",
@@ -68,11 +74,6 @@ def test_create_share_materializes_snapshot(user):
             "N" * 400,
         ),
         (
-            "category",
-            {"category": "C" * 400},
-            "C" * 400,
-        ),
-        (
             "address",
             {"address": "A" * 400},
             "A" * 400,
@@ -98,7 +99,7 @@ def test_create_share_identifies_long_snapshot_fields(
     user, field_name, place_kwargs, expected_value
 ):
     collection = baker.make(Collection, user=user, name="Favoritos", emoji="⭐")
-    place = baker.make("places.Place", user=user, **place_kwargs)
+    place = make_place(user=user, **place_kwargs)
     baker.make(CollectionPlace, collection=collection, place=place)
 
     with patch("places.services.transaction.on_commit"):
@@ -110,8 +111,7 @@ def test_create_share_identifies_long_snapshot_fields(
 
 def test_get_share_detail_returns_frozen_data(user):
     collection = baker.make(Collection, user=user, name="Origem", emoji="☕")
-    place = baker.make(
-        "places.Place",
+    place = make_place(
         user=user,
         name="Café antigo",
         category="cafe",
@@ -218,7 +218,7 @@ def test_finalize_collection_share_copies_cover_and_activates(user):
         share=share,
         source_place_public_id=place.public_id,
         name=place.name,
-        category=place.category,
+        category="",
         address=place.address,
         status=place.status,
         source_cover_photo_path=str(place.cover_photo),
@@ -248,8 +248,7 @@ def test_import_shared_collection_reuses_existing_place_and_creates_new_ones(
     user, other_user
 ):
     collection = baker.make(Collection, user=other_user, name="Origem", emoji="⭐")
-    existing_place = baker.make(
-        Place,
+    existing_place = make_place(
         user=user,
         name="Lugar repetido",
         address="Rua Repetida, 10",
@@ -257,8 +256,7 @@ def test_import_shared_collection_reuses_existing_place_and_creates_new_ones(
         status="favorite",
         notes="meu lugar",
     )
-    duplicate_snapshot_place = baker.make(
-        Place,
+    duplicate_snapshot_place = make_place(
         user=other_user,
         name=existing_place.name,
         address=existing_place.address,
@@ -266,8 +264,7 @@ def test_import_shared_collection_reuses_existing_place_and_creates_new_ones(
         status="favorite",
         notes="snapshot",
     )
-    new_snapshot_place = baker.make(
-        Place,
+    new_snapshot_place = make_place(
         user=other_user,
         name="Lugar novo",
         address="Rua Nova, 20",

@@ -163,7 +163,6 @@ class Place(BaseModel):
     def __str__(self) -> str:
         return self.name
 
-
 class Visit(BaseModel):
     objects = VisitQuerySet.as_manager()
     history = HistoricalRecords()

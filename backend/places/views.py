@@ -54,7 +54,7 @@ class PlaceViewSet(ViewSetBase):
     queryset = Place.objects.all()
     lookup_field = "public_id"
     filterset_class = PlaceFilter
-    search_fields = ("name", "category", "address")
+    search_fields = ("name", "categories__name", "address")
     ordering_fields = ("created_at", "updated_at", "name")
     pagination_class = FlexiblePageNumberPagination
     serializer_class = PlaceListSerializer
