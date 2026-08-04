@@ -6,7 +6,7 @@ vi.mock("react-router", async () => {
   return { ...actual, useParams: () => ({ id: "col-1" }) };
 });
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test } from "vitest";
 import { MemoryRouter } from "react-router";
 import CollectionDetailPage from "../CollectionDetailPage";
@@ -63,4 +63,20 @@ test("shows empty places state", async () => {
   await waitFor(() =>
     expect(screen.getByText(/no places in this collection/i)).toBeInTheDocument(),
   );
+});
+
+test("confirms before removing a place from the collection", async () => {
+  mockService.get.mockResolvedValueOnce(mockDetail);
+
+  render(
+    <MemoryRouter>
+      <CollectionDetailPage />
+    </MemoryRouter>,
+  );
+
+  await screen.findByText("Café X");
+  fireEvent.click(screen.getByTitle(/remove from collection/i));
+
+  expect(mockService.removePlace).not.toHaveBeenCalled();
+  expect(await screen.findByRole("dialog")).toBeInTheDocument();
 });

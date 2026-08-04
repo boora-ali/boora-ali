@@ -2,7 +2,7 @@ import { vi } from "vitest";
 
 vi.mock("../../services/collections.service");
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test } from "vitest";
 import { MemoryRouter } from "react-router";
 import CollectionListPage from "../CollectionListPage";
@@ -67,4 +67,23 @@ test("shows error state when list rejects", async () => {
   await waitFor(() =>
     expect(screen.getByText(/something went wrong/i)).toBeInTheDocument(),
   );
+});
+
+test("keeps collection creation recoverable when the request fails", async () => {
+  mockService.list.mockResolvedValueOnce([]);
+  mockService.create.mockRejectedValueOnce(new Error("network error"));
+
+  render(
+    <MemoryRouter>
+      <CollectionListPage />
+    </MemoryRouter>,
+  );
+
+  await screen.findByText(/no collections yet/i);
+  fireEvent.click(screen.getAllByRole("button", { name: /new collection/i })[0]);
+  fireEvent.change(screen.getByRole("textbox", { name: /collection name/i }), { target: { value: "Coffee" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/something went wrong/i));
+  expect(screen.getByRole("textbox", { name: /collection name/i })).toHaveValue("Coffee");
 });

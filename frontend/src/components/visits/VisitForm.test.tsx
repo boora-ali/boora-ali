@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, vi } from "vitest";
 import { toast } from "sonner";
@@ -12,9 +12,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test("deletes an existing consumable through the API when removing it", async () => {
-  (visitItemsService.remove as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
-
+test("keeps removing an existing consumable local until the visit is saved", async () => {
   render(
     <VisitForm
       initialItems={[
@@ -35,13 +33,13 @@ test("deletes an existing consumable through the API when removing it", async ()
   );
 
   screen.getByLabelText("Remove").click();
+  const dialog = await screen.findByRole("dialog");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Remove" }));
 
-  await waitFor(() => {
-    expect(visitItemsService.remove).toHaveBeenCalledWith("item-1");
-  });
   await waitFor(() => {
     expect(screen.queryByText("Espresso")).not.toBeInTheDocument();
   });
+  expect(visitItemsService.remove).not.toHaveBeenCalled();
 });
 
 test("renders translated visit item labels instead of raw i18n keys", async () => {
@@ -117,6 +115,8 @@ test("removes draft item from list without calling visitItemsService", async () 
 
   expect(screen.getByText("Draft drink")).toBeInTheDocument();
   fireEvent.click(screen.getByLabelText("Remove"));
+  const dialog = await screen.findByRole("dialog");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Remove" }));
 
   await waitFor(() =>
     expect(screen.queryByText("Draft drink")).not.toBeInTheDocument(),

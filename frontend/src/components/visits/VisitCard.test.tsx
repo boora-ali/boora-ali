@@ -102,16 +102,24 @@ test("delete button opens confirmation dialog", () => {
   expect(screen.getByRole("dialog")).toBeInTheDocument();
 });
 
-test("confirming delete calls onDelete prop", async () => {
-  const onDelete = vi.fn();
+test("keeps the confirmation open while deleting", async () => {
+  let resolveDelete!: () => void;
+  const onDelete = vi.fn(() => new Promise<void>((resolve) => { resolveDelete = resolve; }));
   render(<VisitCard visit={baseVisit} onDelete={onDelete} />);
 
   fireEvent.click(screen.getByRole("button", { name: /delete/i }));
 
   const dialog = await screen.findByRole("dialog");
-  fireEvent.click(within(dialog).getByRole("button", { name: /delete/i }));
+  const deleteButton = within(dialog).getByRole("button", { name: /delete/i });
+  fireEvent.click(deleteButton);
 
   expect(onDelete).toHaveBeenCalledTimes(1);
+  expect(deleteButton).toBeDisabled();
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+  resolveDelete();
+
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 });
 
 test("cancelling delete does not call onDelete", async () => {

@@ -254,7 +254,7 @@ def test_detail_avoids_n_plus_one_queries(auth_client, user):
         r = auth_client.get(f"/api/places/{place.public_id}/")
 
     assert r.status_code == 200
-    assert len(queries) == 2
+    assert len(queries) == 3
     assert "items" not in r.data["visits"][0]
 
 

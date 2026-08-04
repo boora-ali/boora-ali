@@ -30,6 +30,7 @@ export default function CollectionListPage() {
   const [newEmoji, setNewEmoji] = useState("📍");
   const [newDescription, setNewDescription] = useState("");
   const [creating, setCreating] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     collectionsService
@@ -42,6 +43,7 @@ export default function CollectionListPage() {
     e.preventDefault();
     if (!newName.trim()) return;
     setCreating(true);
+    setActionError("");
     try {
       const created = await collectionsService.create({
         name: newName.trim(),
@@ -56,6 +58,8 @@ export default function CollectionListPage() {
       setNewEmoji("📍");
       setNewDescription("");
       setShowForm(false);
+    } catch {
+      setActionError(t("common.error"));
     } finally {
       setCreating(false);
     }
@@ -91,6 +95,7 @@ export default function CollectionListPage() {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder={t("collections.title")}
+                  aria-label={t("collections.name_placeholder")}
                   className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
@@ -99,6 +104,7 @@ export default function CollectionListPage() {
                 value={newDescription}
                 onChange={(e) => setNewDescription(e.target.value)}
                 placeholder={t("collections.description_placeholder")}
+                aria-label={t("collections.description_placeholder")}
                 rows={2}
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
@@ -115,6 +121,7 @@ export default function CollectionListPage() {
                   {t("common.cancel")}
                 </Button>
               </div>
+              {actionError && <p role="alert" className="text-sm text-destructive">{actionError}</p>}
             </form>
           </CardContent>
         </Card>
@@ -200,6 +207,8 @@ export default function CollectionListPage() {
                       : null,
                   }));
                   setDeleteTarget(null);
+                } catch {
+                  setActionError(t("common.error"));
                 } finally {
                   setDeleting(false);
                 }
@@ -208,6 +217,7 @@ export default function CollectionListPage() {
               {t("collections.delete")}
             </Button>
           </DialogFooter>
+          {actionError && <p role="alert" className="text-sm text-destructive">{actionError}</p>}
         </DialogContent>
       </Dialog>
     </div>

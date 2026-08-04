@@ -1,6 +1,34 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { vi } from "vitest";
+import { beforeEach, vi } from "vitest";
 import { PlaceForm } from "./PlaceForm";
+import { categoriesService } from "../../services/categories.service";
+
+vi.mock("../../services/categories.service");
+
+beforeEach(() => {
+  (categoriesService.listAll as ReturnType<typeof vi.fn>).mockResolvedValue([
+    { public_id: "11111111-1111-4111-8111-111111111111", name: "Cafeteria" },
+    { public_id: "22222222-2222-4222-8222-222222222222", name: "Restaurante" },
+    { public_id: "33333333-3333-4333-8333-333333333333", name: "Museu" },
+    { public_id: "44444444-4444-4444-8444-444444444444", name: "Parque" },
+    { public_id: "55555555-5555-4555-8555-555555555555", name: "Praia" },
+    { public_id: "66666666-6666-4666-8666-666666666666", name: "Teatro" },
+    { public_id: "77777777-7777-4777-8777-777777777777", name: "Trilha" },
+  ]);
+});
+
+test("shows six categories first and toggles the remaining categories", async () => {
+  render(<PlaceForm onSubmit={async () => {}} />);
+
+  await screen.findByRole("button", { name: "Cafeteria" });
+  expect(screen.queryByRole("button", { name: "Trilha" })).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: /show more \(1\)/i }));
+
+  expect(screen.getByRole("button", { name: "Trilha" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /show less/i }));
+  expect(screen.queryByRole("button", { name: "Trilha" })).not.toBeInTheDocument();
+});
 
 test("requires name before submitting", async () => {
   const onSubmit = vi.fn();
@@ -14,26 +42,25 @@ test("requires name before submitting", async () => {
   expect(onSubmit).not.toHaveBeenCalled();
 });
 
-test("shows backend character limits for place text fields", () => {
+test("shows backend character limits for place text fields", async () => {
   render(<PlaceForm onSubmit={async () => {}} />);
 
+  await screen.findByRole("button", { name: "Cafeteria" });
   expect(screen.getAllByText("0/200")).toHaveLength(2);
-  expect(screen.getByText("0/100")).toBeInTheDocument();
   expect(screen.getByText("0/300")).toBeInTheDocument();
   expect(screen.getByText("0/2000")).toBeInTheDocument();
   expect(screen.getByText("0/5000")).toBeInTheDocument();
 });
 
-test("submits xss-like text fields as plain strings", async () => {
+test("submits selected category IDs instead of free category text", async () => {
   const onSubmit = vi.fn().mockResolvedValue(undefined);
   render(<PlaceForm onSubmit={onSubmit} />);
 
   fireEvent.change(screen.getByLabelText(/name/i), {
     target: { value: `<img src=x onerror=alert(1)>` },
   });
-  fireEvent.change(screen.getByLabelText(/category/i), {
-    target: { value: `<script>alert(1)</script>` },
-  });
+  await screen.findByRole("button", { name: "Cafeteria" });
+  fireEvent.click(screen.getByRole("button", { name: "Cafeteria" }));
   fireEvent.change(screen.getByPlaceholderText(/https:\/\/instagram\.com\/place/i), {
     target: { value: `javascript:alert(1)` },
   });
@@ -50,7 +77,7 @@ test("submits xss-like text fields as plain strings", async () => {
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
         name: `<img src=x onerror=alert(1)>`,
-        category: `<script>alert(1)</script>`,
+        category_ids: ["11111111-1111-4111-8111-111111111111"],
         instagram_url: `javascript:alert(1)`,
         address: `"><svg onload=alert(1)>`,
         notes: `<iframe srcdoc="<script>alert(1)</script>">`,

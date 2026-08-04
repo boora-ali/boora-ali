@@ -217,7 +217,6 @@ def test_place_old_cover_photo_deleted_on_update(tmp_path, settings, django_user
         instance=place,
         data={
             "name": place.name,
-            "category": place.category,
             "cover_photo": make_jpeg(),
         },
         partial=True,
@@ -236,7 +235,6 @@ def test_place_old_cover_photo_deleted_on_update(tmp_path, settings, django_user
         instance=place,
         data={
             "name": place.name,
-            "category": place.category,
             "cover_photo": make_jpeg(),
         },
         partial=True,

@@ -128,6 +128,8 @@ export default function PlaceDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [coverLightboxOpen, setCoverLightboxOpen] = useState(false);
   const [collectionSheetOpen, setCollectionSheetOpen] = useState(false);
   const [collections, setCollections] = useState<Collection[] | null>(null);
@@ -268,6 +270,21 @@ export default function PlaceDetailPage() {
     }
   }
 
+  async function handleDeletePlace() {
+    if (!place || deleting) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await placesService.remove(place.public_id);
+      notifyPlacesChanged();
+      nav("/places");
+    } catch {
+      setDeleteError(t("common.error"));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (notFound) {
     return <NotFoundPage />;
   }
@@ -313,7 +330,7 @@ export default function PlaceDetailPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1">
                 <h1 className="break-words font-fraunces text-3xl font-bold leading-tight text-text">{place.name}</h1>
-                <p className="mt-1 text-sm text-muted">{place.category}</p>
+                <p className="mt-1 text-sm text-muted">{place.categories?.map((category) => category.name).join(", ") || place.category}</p>
                 <div className="mt-2">
                   <Badge status={place.status} />
                 </div>
@@ -525,7 +542,7 @@ export default function PlaceDetailPage() {
           renderItem={(v) => (
             <VisitCard
               visit={v}
-              onEdit={() => nav(`/visits/${v.public_id}/edit`, { state: { visit: v } })}
+              onEdit={() => nav(`/visits/${v.public_id}/edit`, { state: { visit: v, placePublicId: place.public_id } })}
               onDelete={async () => {
                 await visitsService.remove(v.public_id);
                 const refreshed = await placesService.get(id!);
@@ -637,7 +654,7 @@ export default function PlaceDetailPage() {
         </SheetContent>
       </Sheet>
 
-      <Dialog open={deleteConfirmOpen} onOpenChange={(o) => { if (!o) setDeleteConfirmOpen(false); }}>
+      <Dialog open={deleteConfirmOpen} onOpenChange={(o) => { if (!o && !deleting) setDeleteConfirmOpen(false); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("placeDetail.deleteConfirmTitle")}</DialogTitle>
@@ -647,21 +664,20 @@ export default function PlaceDetailPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex gap-2 pt-1">
-              <Button variant="secondary" className="flex-1" onClick={() => setDeleteConfirmOpen(false)}>
+              <Button variant="secondary" className="flex-1" onClick={() => setDeleteConfirmOpen(false)} disabled={deleting}>
                 {t("common.cancel")}
               </Button>
               <Button
                 variant="destructive"
                 className="flex-1"
-                onClick={async () => {
-                  await placesService.remove(place.public_id);
-                  notifyPlacesChanged();
-                  nav("/places");
-                }}
+                onClick={() => void handleDeletePlace()}
+                disabled={deleting}
+                aria-busy={deleting}
               >
                 {t("placeDetail.delete")}
               </Button>
             </div>
+            {deleteError && <p role="alert" className="text-sm text-destructive">{deleteError}</p>}
           </div>
         </DialogContent>
       </Dialog>

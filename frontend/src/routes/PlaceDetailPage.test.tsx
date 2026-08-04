@@ -220,6 +220,31 @@ test("confirming delete calls remove and navigates to /places", async () => {
   await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith("/places"));
 });
 
+test("keeps the place deletion confirmation open while the request is pending", async () => {
+  let resolveDelete!: () => void;
+  (placesService.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    ...basePlace,
+    coords_status: "resolved",
+  });
+  (placesService.remove as ReturnType<typeof vi.fn>).mockReturnValueOnce(
+    new Promise<void>((resolve) => { resolveDelete = resolve; }),
+  );
+
+  renderDetail();
+  await screen.findByText("Café X");
+  fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+
+  const dialog = await screen.findByRole("dialog");
+  const deleteButton = within(dialog).getByRole("button", { name: /delete/i });
+  fireEvent.click(deleteButton);
+
+  expect(deleteButton).toBeDisabled();
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+  resolveDelete();
+  await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith("/places"));
+});
+
 test("cancelling delete does not call remove", async () => {
   (placesService.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
     ...basePlace,

@@ -122,16 +122,12 @@ def test_admin_dashboard_renders_with_unfold(client):
         ),
         (
             "boraali_admin:places_place_history",
-            lambda user: Place.objects.create(
-                user=user, name="Cafe Historico", category="Cafe"
-            ),
+            lambda user: Place.objects.create(user=user, name="Cafe Historico"),
         ),
         (
             "boraali_admin:places_visit_history",
             lambda user: Visit.objects.create(
-                place=Place.objects.create(
-                    user=user, name="Restaurante Historico", category="Restaurante"
-                ),
+                place=Place.objects.create(user=user, name="Restaurante Historico"),
                 visited_at=timezone.now(),
             ),
         ),
@@ -139,9 +135,7 @@ def test_admin_dashboard_renders_with_unfold(client):
             "boraali_admin:places_visititem_history",
             lambda user: VisitItem.objects.create(
                 visit=Visit.objects.create(
-                    place=Place.objects.create(
-                        user=user, name="Padaria Historica", category="Padaria"
-                    ),
+                    place=Place.objects.create(user=user, name="Padaria Historica"),
                     visited_at=timezone.now(),
                 ),
                 name="Cafe",
@@ -181,7 +175,7 @@ def test_place_admin_changelist_and_change_view_render(client):
         email="place-admin@example.com",
         password="secret",
     )
-    place = Place.objects.create(user=user, name="Cafe Norte", category="Cafe")
+    place = Place.objects.create(user=user, name="Cafe Norte")
     client.force_login(user)
 
     changelist_response = client.get(reverse("boraali_admin:places_place_changelist"))
@@ -200,7 +194,7 @@ def test_visit_admin_changelist_renders(client):
         email="visit-admin@example.com",
         password="secret",
     )
-    place = Place.objects.create(user=user, name="Cafe Centro", category="Cafe")
+    place = Place.objects.create(user=user, name="Cafe Centro")
     Visit.objects.create(place=place, visited_at=timezone.now())
     client.force_login(user)
 

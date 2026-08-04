@@ -83,7 +83,9 @@ def test_withdraw_consent_is_idempotent(auth_client, user):
 
 
 def test_export_returns_user_data(auth_client, user):
-    place = baker.make("places.Place", user=user, name="Café", category="cafe")
+    place = baker.make("places.Place", user=user, name="Café")
+    category = baker.make("places.Category", name="cafe")
+    place.categories.add(category)
     visit = baker.make("places.Visit", place=place)
     baker.make("places.VisitItem", visit=visit, name="Bolo")
     collection = baker.make(
@@ -109,7 +111,7 @@ def test_export_returns_user_data(auth_client, user):
         share=collection_share,
         source_place_public_id=place.public_id,
         name=place.name,
-        category=place.category,
+        category=category.name,
         status=place.status,
         order_index=0,
     )

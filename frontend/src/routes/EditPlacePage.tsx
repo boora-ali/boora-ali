@@ -7,6 +7,7 @@ import { PlaceForm } from "../components/places/PlaceForm";
 import { BackButton } from "../components/ui/BackButton";
 import { notifyPlacesChanged } from "../utils/places-state";
 import { PageState } from "../components/ui/PageState";
+import { useUnsavedChangesWarning } from "../hooks/useUnsavedChangesWarning";
 
 const COORDS_POLL_INTERVAL_MS = 1000;
 
@@ -17,6 +18,8 @@ export default function EditPlacePage() {
   const [place, setPlace] = useState<Place | null>(null);
   const [coordsStatus, setCoordsStatus] = useState<PlaceCoordsStatus | null>(null);
   const [waitingForCoords, setWaitingForCoords] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  useUnsavedChangesWarning(isDirty);
 
   useEffect(() => {
     placesService.get(id!).then((loadedPlace) => setPlace(loadedPlace));
@@ -56,7 +59,7 @@ export default function EditPlacePage() {
 
   return (
     <div className="max-w-xl mx-auto p-4">
-      <BackButton fallbackTo={backFallback} />
+      <BackButton fallbackTo={backFallback} onBeforeNavigate={() => !isDirty || window.confirm(t("common.unsavedChanges"))} />
       <h1 className="font-fraunces text-2xl font-bold mb-4 text-text">{t("editPlace.title")}</h1>
       {(waitingForCoords || activeCoordsStatus === "pending" || activeCoordsStatus === "failed") && (
         <div
@@ -82,6 +85,7 @@ export default function EditPlacePage() {
       <PlaceForm
         key={`${place.public_id}:${place.coords_status ?? ""}:${place.latitude ?? ""}:${place.longitude ?? ""}:${place.maps_url ?? ""}:${place.updated_at ?? ""}`}
         initial={place}
+        onDirtyChange={setIsDirty}
         onSubmit={async (d) => {
           const updatedPlace = await placesService.update(place.public_id, d);
           setPlace(updatedPlace);

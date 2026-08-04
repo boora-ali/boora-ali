@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    CategoryViewSet,
     CollectionPlaceView,
     CollectionShareCreateView,
     CollectionShareDetailView,
@@ -9,6 +10,7 @@ from .views import (
     CollectionShareMediaView,
     CollectionShareRevokeView,
     CollectionViewSet,
+    PlaceCategoryView,
     PlaceShareCreateView,
     PlaceShareDetailView,
     PlaceShareImportView,
@@ -24,8 +26,14 @@ router.register(r"places", PlaceViewSet, basename="place")
 router.register(r"visits", VisitViewSet, basename="visit")
 router.register(r"visit-items", VisitItemViewSet, basename="visit-item")
 router.register(r"collections", CollectionViewSet, basename="collection")
+router.register(r"categories", CategoryViewSet, basename="category")
 
 urlpatterns = router.urls + [
+    path(
+        "places/<place_public_id>/categories/<category_public_id>/",
+        PlaceCategoryView.as_view(),
+        name="place-category",
+    ),
     path(
         "collections/<collection_public_id>/places/<place_public_id>/",
         CollectionPlaceView.as_view(),

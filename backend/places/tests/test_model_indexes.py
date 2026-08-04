@@ -8,7 +8,7 @@ def _index_fields(model):
 def test_place_meta_indexes_cover_common_list_filters():
     indexes = _index_fields(Place)
     assert ("user", "status") in indexes
-    assert ("user", "category") in indexes
+    assert ("user", "deleted_at") in indexes
 
 
 def test_visit_meta_indexes_cover_common_list_filters():

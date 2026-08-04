@@ -8,40 +8,12 @@ import { visitItemsService } from "../services/visit-items.service";
 vi.mock("../services/visits.service");
 vi.mock("../services/visit-items.service");
 vi.mock("../components/visits/VisitForm", () => ({
-  VisitForm: ({ initialItems, onItemSave }: { initialItems: unknown[]; onItemSave?: (item: Record<string, unknown>, currentItem?: Record<string, unknown>) => Promise<unknown> }) => (
+  VisitForm: ({ initialItems, onSubmit }: { initialItems: unknown[]; onSubmit: (visit: Record<string, unknown>, items: Record<string, unknown>[]) => Promise<void> }) => (
     <div data-testid="visit-form" data-items={initialItems.length}>
-      <button
-        type="button"
-        onClick={() =>
-          onItemSave?.({
-            name: "Guarana",
-            type: "drink",
-            rating: 8,
-            price: "12",
-            would_order_again: true,
-          })
-        }
-      >
-        save-new-item
-      </button>
-      <button
-        type="button"
-        onClick={() =>
-          onItemSave?.(
-            {
-              name: "Espresso updated",
-              type: "coffee",
-              rating: 10,
-              price: "7.00",
-              would_order_again: true,
-            },
-            {
-              public_id: "item-1",
-            }
-          )
-        }
-      >
-        save-existing-item
+      <button type="button" onClick={() => void onSubmit({ overall_rating: 8 }, [
+        { name: "Guarana", type: "drink", rating: 8, price: "12", would_order_again: true },
+      ])}>
+        save-visit
       </button>
     </div>
   ),
@@ -122,7 +94,7 @@ test("loads visit detail when edit state is missing", async () => {
   await waitFor(() => expect(screen.getByTestId("visit-form")).toHaveAttribute("data-items", "1"));
 });
 
-test("creates a new item immediately from the modal when editing an existing visit", async () => {
+test("saves visit items only when the visit is saved", async () => {
   (visitsService.get as ReturnType<typeof vi.fn>).mockResolvedValue({
     public_id: "visit-1",
     place: 1,
@@ -149,9 +121,10 @@ test("creates a new item immediately from the modal when editing an existing vis
 
   await waitFor(() => expect(screen.getByTestId("visit-form")).toBeInTheDocument());
 
-  fireEvent.click(screen.getByRole("button", { name: "save-new-item" }));
+  fireEvent.click(screen.getByRole("button", { name: "save-visit" }));
 
   await waitFor(() => {
+    expect(visitsService.update).toHaveBeenCalledWith("visit-1", { overall_rating: 8 });
     expect(visitItemsService.create).toHaveBeenCalledWith("visit-1", {
       name: "Guarana",
       type: "drink",
@@ -162,8 +135,8 @@ test("creates a new item immediately from the modal when editing an existing vis
   });
 });
 
-test("updates an existing item immediately from the modal when editing an existing visit", async () => {
-  (visitsService.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+test("returns to the originating place after saving", async () => {
+  const visit = {
     public_id: "visit-1",
     place: 1,
     visited_at: "2026-05-01T12:00:00Z",
@@ -171,45 +144,22 @@ test("updates an existing item immediately from the modal when editing an existi
     service_rating: 9,
     overall_rating: 9,
     would_return: true,
-    items: [
-      {
-        public_id: "item-1",
-        visit: 1,
-        name: "Espresso",
-        type: "coffee",
-        rating: 9,
-        price: "5.00",
-        would_order_again: true,
-        created_at: "",
-        updated_at: "",
-      },
-    ],
+    items: [],
     created_at: "",
     updated_at: "",
-  });
-  (visitItemsService.update as ReturnType<typeof vi.fn>).mockResolvedValue({
-    public_id: "item-1",
-  });
+  };
+  (visitsService.update as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined);
 
   render(
-    <MemoryRouter initialEntries={["/visits/visit-1/edit"]}>
+    <MemoryRouter initialEntries={[{ pathname: "/visits/visit-1/edit", state: { visit, placePublicId: "place-1" } }]}>
       <Routes>
         <Route path="/visits/:id/edit" element={<EditVisitPage />} />
       </Routes>
     </MemoryRouter>
   );
 
-  await waitFor(() => expect(screen.getByTestId("visit-form")).toBeInTheDocument());
+  await screen.findByTestId("visit-form");
+  fireEvent.click(screen.getByRole("button", { name: "save-visit" }));
 
-  fireEvent.click(screen.getByRole("button", { name: "save-existing-item" }));
-
-  await waitFor(() => {
-    expect(visitItemsService.update).toHaveBeenCalledWith("item-1", {
-      name: "Espresso updated",
-      type: "coffee",
-      rating: 10,
-      price: "7.00",
-      would_order_again: true,
-    });
-  });
+  await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith("/places/place-1", { replace: true }));
 });
