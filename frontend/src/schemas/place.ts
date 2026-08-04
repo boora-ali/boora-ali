@@ -4,7 +4,7 @@ const PLACE_STATUSES = ["want_to_visit", "visited", "favorite", "would_not_retur
 
 export const placeSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
-  category: z.string().max(100).optional(),
+  category_ids: z.array(z.string().uuid()).optional(),
   address: z.string().max(300).optional(),
   instagram_url: z.string().max(200).optional(),
   maps_url: z.string().max(2000).optional(),

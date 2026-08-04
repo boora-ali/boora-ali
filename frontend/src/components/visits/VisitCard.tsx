@@ -13,13 +13,15 @@ import { SectionLoading } from "../ui/SectionLoading";
 type Props = {
   visit: Visit;
   onEdit?: () => void;
-  onDelete?: () => void;
+  onDelete?: () => Promise<void>;
 };
 
 export function VisitCard({ visit, onEdit, onDelete }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [details, setDetails] = useState<Visit | null>(
     visit.items !== undefined ? visit : null
@@ -59,6 +61,20 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
   }, [details, open, t, visit.public_id]);
 
   const visibleItems = details?.items ?? visit.items ?? [];
+
+  async function handleDelete() {
+    if (!onDelete || deleting) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await onDelete();
+      setDeleteConfirmOpen(false);
+    } catch {
+      setDeleteError(t("common.error"));
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <Card className="p-4">
@@ -170,7 +186,9 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+      <Dialog open={deleteConfirmOpen} onOpenChange={(nextOpen) => {
+        if (!deleting) setDeleteConfirmOpen(nextOpen);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("visitCard.deleteConfirmTitle")}</DialogTitle>
@@ -183,6 +201,7 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
                 variant="secondary"
                 className="flex-1"
                 onClick={() => setDeleteConfirmOpen(false)}
+                disabled={deleting}
               >
                 {t("common.cancel")}
               </Button>
@@ -190,11 +209,14 @@ export function VisitCard({ visit, onEdit, onDelete }: Props) {
                 type="button"
                 variant="destructive"
                 className="flex-1"
-                onClick={() => { setDeleteConfirmOpen(false); onDelete?.(); }}
+                onClick={() => void handleDelete()}
+                disabled={deleting}
+                aria-busy={deleting}
               >
                 {t("visitCard.delete")}
               </Button>
             </div>
+            {deleteError && <p role="alert" className="text-sm text-destructive">{deleteError}</p>}
           </div>
         </DialogContent>
       </Dialog>

@@ -37,6 +37,8 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
   const navigate = useNavigate();
   const [sharing, setSharing] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const mapsHref = getMapsHref({
     mapsUrl: place.maps_url,
     latitude: place.latitude,
@@ -64,9 +66,18 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
   }
 
   async function handleDelete() {
-    await placesService.remove(place.public_id);
-    setDeleteConfirmOpen(false);
-    onDeleted?.();
+    if (deleting) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await placesService.remove(place.public_id);
+      setDeleteConfirmOpen(false);
+      onDeleted?.();
+    } catch {
+      setDeleteError(t("common.error"));
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -97,7 +108,7 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
               <h3 className="font-fraunces font-semibold text-[1.05rem] leading-snug truncate text-text">
                 {place.name}
               </h3>
-              <p className="text-muted text-sm mt-0.5 truncate">{place.category}</p>
+              <p className="text-muted text-sm mt-0.5 truncate">{place.categories?.map((category) => category.name).join(", ") || place.category}</p>
               {place.address && (
                 <p className="text-muted text-xs mt-1 truncate">{place.address}</p>
               )}
@@ -165,7 +176,9 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
         </ContextMenuItem>
       </ContextMenuContent>
 
-      <Dialog open={deleteConfirmOpen} onOpenChange={(open) => setDeleteConfirmOpen(open)}>
+      <Dialog open={deleteConfirmOpen} onOpenChange={(open) => {
+        if (!deleting) setDeleteConfirmOpen(open);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("placeDetail.deleteConfirmTitle")}</DialogTitle>
@@ -177,6 +190,7 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
               variant="secondary"
               className="flex-1"
               onClick={() => setDeleteConfirmOpen(false)}
+              disabled={deleting}
             >
               {t("common.cancel")}
             </Button>
@@ -184,11 +198,14 @@ export function PlaceCard({ place, index = 0, onDeleted }: PlaceCardProps) {
               type="button"
               variant="destructive"
               className="flex-1"
-              onClick={handleDelete}
+              onClick={() => void handleDelete()}
+              disabled={deleting}
+              aria-busy={deleting}
             >
               {t("common.delete")}
             </Button>
           </div>
+          {deleteError && <p role="alert" className="text-sm text-destructive">{deleteError}</p>}
         </DialogContent>
       </Dialog>
     </ContextMenu>

@@ -58,7 +58,7 @@ export function PlacesMap({ places }: { places: PlacePin[] | Place[] }) {
       const popupHtml = `
         <div style="min-width:180px;padding:4px 2px">
           <p style="font-weight:600;font-size:15px;margin:0 0 2px;color:#1A1208">${place.name}</p>
-          <p style="font-size:12px;color:#6b7280;margin:0 0 8px">${place.category ?? ""}</p>
+          <p style="font-size:12px;color:#6b7280;margin:0 0 8px">${place.categories?.map((category) => category.name).join(", ") || place.category || ""}</p>
           ${place.address ? `<p style="font-size:12px;color:#6b7280;margin:0 0 8px">${place.address}</p>` : ""}
           <a href="/places/${place.public_id}"
              style="display:block;text-align:center;padding:6px 12px;background:#C1121F;color:#fff;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none">

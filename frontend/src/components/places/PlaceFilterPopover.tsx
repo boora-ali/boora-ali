@@ -94,7 +94,7 @@ export function PlaceFilterPopover({ filters, onApply, search, onSearchChange, s
           </div>
 
           {/* Form */}
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="p-4 space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="p-3 space-y-3">
             <div>
               <label className={labelClass}>{t("filters.status")}</label>
               <Controller control={form.control} name="status" render={({ field }) => (

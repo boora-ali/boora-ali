@@ -84,11 +84,6 @@ def test_collection_share_snapshot_str_includes_place_and_category():
             "N" * 1900,
         ),
         (
-            "category",
-            {"category": "C" * 1900},
-            "C" * 1900,
-        ),
-        (
             "address",
             {"address": "A" * 1900},
             "A" * 1900,

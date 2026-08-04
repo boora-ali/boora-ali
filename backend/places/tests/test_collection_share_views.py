@@ -11,9 +11,16 @@ from model_bakery import baker
 from PIL import Image
 
 from core.image_service import ImageService
-from places.models import Collection, CollectionPlace, CollectionShare, Place
+from places.models import Category, Collection, CollectionPlace, CollectionShare, Place
 
 pytestmark = pytest.mark.django_db
+
+
+def make_place(*, category=None, **kwargs):
+    place = baker.make(Place, **kwargs)
+    if category:
+        place.categories.add(Category.objects.get_or_create(name=category)[0])
+    return place
 
 
 def _make_share_sig(token: str, path: str, exp: int):
@@ -54,8 +61,7 @@ def test_collection_share_create_generates_new_token_each_time(auth_client, user
 
 def test_collection_share_create_handles_long_maps_url(auth_client, user):
     collection = baker.make(Collection, user=user)
-    place = baker.make(
-        "places.Place",
+    place = make_place(
         user=user,
         maps_url="https://maps.google.com/?q=" + "m" * 370,
     )
@@ -98,8 +104,7 @@ def test_collection_share_revoke_sets_inactive(auth_client, user):
 
 def test_collection_share_detail_returns_snapshot_data(api_client, user):
     collection = baker.make(Collection, user=user, name="Coleção", emoji="⭐")
-    place = baker.make(
-        "places.Place",
+    place = make_place(
         user=user,
         name="Café X",
         category="cafe",
@@ -122,7 +127,7 @@ def test_collection_share_detail_returns_snapshot_data(api_client, user):
         share=share,
         source_place_public_id=place.public_id,
         name=place.name,
-        category=place.category,
+        category="cafe",
         address=place.address,
         instagram_url="",
         maps_url="",
@@ -219,8 +224,7 @@ def test_collection_share_import_creates_collection(auth_client, user, other_use
     source_collection = baker.make(
         Collection, user=other_user, name="Coleção", emoji="⭐", description="descr"
     )
-    place = baker.make(
-        Place,
+    place = make_place(
         user=other_user,
         name="Café X",
         address="Rua A, 10",
@@ -242,7 +246,7 @@ def test_collection_share_import_creates_collection(auth_client, user, other_use
         share=share,
         source_place_public_id=place.public_id,
         name=place.name,
-        category=place.category,
+        category="cafe",
         address=place.address,
         instagram_url="",
         maps_url="",
@@ -268,16 +272,14 @@ def test_collection_share_import_reuses_existing_place(auth_client, user, other_
     source_collection = baker.make(
         Collection, user=other_user, name="Coleção", emoji="⭐"
     )
-    existing_place = baker.make(
-        Place,
+    existing_place = make_place(
         user=user,
         name="Repetido",
         address="Rua Repetida, 1",
         category="cafe",
         status="favorite",
     )
-    place = baker.make(
-        Place,
+    place = make_place(
         user=other_user,
         name=existing_place.name,
         address=existing_place.address,
@@ -299,7 +301,7 @@ def test_collection_share_import_reuses_existing_place(auth_client, user, other_
         share=share,
         source_place_public_id=place.public_id,
         name=place.name,
-        category=place.category,
+        category="cafe",
         address=place.address,
         instagram_url="",
         maps_url="",

@@ -271,7 +271,11 @@ def build_export_payload(user) -> dict[str, Any]:
                 "places": [
                     {
                         "place_name": collection_place.place.name,
-                        "place_category": collection_place.place.category,
+                        "place_categories": list(
+                            collection_place.place.categories.values_list(
+                                "name", flat=True
+                            )
+                        ),
                     }
                     for collection_place in collection.collection_places.all()
                 ],
@@ -320,7 +324,7 @@ def build_export_payload(user) -> dict[str, Any]:
         "places": [
             {
                 "name": place.name,
-                "category": place.category,
+                "categories": list(place.categories.values_list("name", flat=True)),
                 "address": place.address,
                 "instagram_url": place.instagram_url,
                 "maps_url": place.maps_url,

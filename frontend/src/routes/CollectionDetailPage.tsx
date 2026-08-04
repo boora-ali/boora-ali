@@ -33,6 +33,9 @@ export default function CollectionDetailPage() {
   const [showMap, setShowMap] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<Place | null>(null);
+  const [removingPlace, setRemovingPlace] = useState(false);
+  const [removeError, setRemoveError] = useState("");
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareTokenData, setShareTokenData] = useState<{ token: string; url: string } | null>(null);
@@ -58,15 +61,24 @@ export default function CollectionDetailPage() {
       });
   }, [id]);
 
-  async function handleRemovePlace(place: Place) {
-    if (!id) return;
-    await collectionsService.removePlace(id, place.public_id);
-    setState((prev) => {
-      if (!prev.data) return prev;
-      const places = prev.data.places.filter((p) => p.public_id !== place.public_id);
-      return { ...prev, data: { ...prev.data, places, place_count: places.length } };
-    });
-    toast(t("collections.place_removed"));
+  async function handleRemovePlace() {
+    if (!id || !removeTarget || removingPlace) return;
+    setRemovingPlace(true);
+    setRemoveError("");
+    try {
+      await collectionsService.removePlace(id, removeTarget.public_id);
+      setState((prev) => {
+        if (!prev.data) return prev;
+        const places = prev.data.places.filter((p) => p.public_id !== removeTarget.public_id);
+        return { ...prev, data: { ...prev.data, places, place_count: places.length } };
+      });
+      setRemoveTarget(null);
+      toast(t("collections.place_removed"));
+    } catch {
+      setRemoveError(t("common.error"));
+    } finally {
+      setRemovingPlace(false);
+    }
   }
 
   async function handleDeleteCollection() {
@@ -153,12 +165,12 @@ export default function CollectionDetailPage() {
       >
         <>
           <BackButton />
-          <div className="flex items-start justify-between gap-3 pb-2 border-b border-border">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-3 border-b border-border pb-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 items-center gap-4">
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-surface border border-border text-3xl shadow-sm">
                 {collection.emoji}
               </span>
-              <div>
+              <div className="min-w-0">
                 <h1 className="font-fraunces text-2xl font-bold text-text leading-tight">{collection.name}</h1>
                 <p className="mt-0.5 text-sm text-muted">
                   {collection.description
@@ -168,8 +180,8 @@ export default function CollectionDetailPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={handleCreateShare} disabled={shareLoading}>
+            <div className="flex items-center gap-2 sm:shrink-0">
+              <Button type="button" variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleCreateShare} disabled={shareLoading}>
                 <Share2 className="mr-2 h-4 w-4" />
                 {t("collections.share")}
               </Button>
@@ -178,7 +190,7 @@ export default function CollectionDetailPage() {
                 onClick={() => setShowDeleteDialog(true)}
                 disabled={deleting}
                 title={t("collections.delete")}
-                className="shrink-0 p-2 rounded-lg text-muted hover:text-destructive hover:bg-surface border border-transparent hover:border-border transition-colors"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted transition-colors hover:border-border hover:bg-surface hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -191,9 +203,9 @@ export default function CollectionDetailPage() {
                 <PlaceCard place={place} index={idx} />
                 <button
                   type="button"
-                  onClick={() => handleRemovePlace(place)}
+                  onClick={() => setRemoveTarget(place)}
                   title={t("collections.remove_place")}
-                  className="absolute top-2 right-2 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-black/60 text-white hover:bg-red-600 transition-colors sm:hidden sm:group-hover:flex"
+                  className="absolute right-2 top-2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-red-600 sm:hidden sm:group-hover:flex"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -252,6 +264,21 @@ export default function CollectionDetailPage() {
               {t("collections.delete")}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={removeTarget !== null} onOpenChange={(open) => {
+        if (!open && !removingPlace) setRemoveTarget(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("collections.remove_place")}</DialogTitle>
+            <DialogDescription>{t("collections.remove_place_confirm", { name: removeTarget?.name })}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="secondary" onClick={() => setRemoveTarget(null)} disabled={removingPlace}>{t("common.cancel")}</Button>
+            <Button variant="destructive" onClick={() => void handleRemovePlace()} disabled={removingPlace} aria-busy={removingPlace}>{t("common.remove")}</Button>
+          </DialogFooter>
+          {removeError && <p role="alert" className="text-sm text-destructive">{removeError}</p>}
         </DialogContent>
       </Dialog>
     </div>

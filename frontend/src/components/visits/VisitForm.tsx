@@ -34,7 +34,6 @@ import { ResponsiveCardCarousel } from "../ui/ResponsiveCardCarousel";
 import { useImagePreview } from "../../hooks/useImagePreview";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { reportApiError } from "../../utils/form-api-error";
-import { visitItemsService } from "../../services/visit-items.service";
 import { validateImageFile, ALLOWED_IMAGE_ACCEPT } from "../../utils/url";
 import { visitSchema, type VisitFormValues } from "../../schemas/visit";
 import { RatingInput } from "../ui/RatingInput";
@@ -47,7 +46,7 @@ type Props = {
   initial?: Partial<Visit>;
   initialItems?: ItemPayload[];
   onSubmit: (visit: VisitPayload, items: ItemPayload[]) => Promise<void>;
-  onItemSave?: (item: ItemPayload, currentItem?: ItemPayload) => Promise<ItemPayload>;
+  onDirtyChange?: (isDirty: boolean) => void;
 };
 function RatingDots({ value }: { value: number }) {
   return (
@@ -90,9 +89,10 @@ function VisitItemPhoto({ photo, alt, fallbackText }: { photo?: string | File; a
   );
 }
 
-export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSave }: Props) {
+export function VisitForm({ initial = {}, initialItems = [], onSubmit, onDirtyChange }: Props) {
   const { t } = useTranslation();
   const [items, setItems] = useState<ItemPayload[]>(initialItems);
+  const initialItemsRef = useRef(initialItems);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [removedPhoto, setRemovedPhoto] = useState(false);
   const { preview, setPreviewFromFile, clearPreview } = useImagePreview(initial.photo ?? null);
@@ -101,6 +101,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [itemDeleteIndex, setItemDeleteIndex] = useState<number | null>(null);
   const [draftKey, setDraftKey] = useState(0);
 
   const form = useForm<VisitFormValues>({
@@ -115,7 +116,11 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
     },
   });
 
-  const { handleSubmit, setError, control, formState: { isSubmitting } } = form;
+  const { handleSubmit, setError, control, formState: { isSubmitting, isDirty } } = form;
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty || items !== initialItemsRef.current || photoFile !== null || removedPhoto);
+  }, [isDirty, items, photoFile, removedPhoto, onDirtyChange]);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -128,20 +133,11 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
     setPreviewFromFile(file);
   }
 
-  async function handleRemoveItem(index: number) {
-    const item = items[index];
-    if (item.public_id) {
-      try {
-        await visitItemsService.remove(item.public_id);
-      } catch (error) {
-        reportApiError({
-          error,
-          fallbackMessage: t("visitForm.removeItemError"),
-        });
-        return;
-      }
-    }
+  function handleRemoveItem() {
+    if (itemDeleteIndex === null) return;
+    const index = itemDeleteIndex;
     setItems((prev) => prev.filter((_, i) => i !== index));
+    setItemDeleteIndex(null);
   }
 
   function openAdd() {
@@ -157,17 +153,13 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
   }
 
   async function handleItemSave(data: ItemPayload) {
-    const currentItem = editingIndex !== null ? items[editingIndex] : undefined;
-
     setIsSavingItem(true);
 
     try {
-      const nextItem = onItemSave ? await onItemSave(data, currentItem) : data;
-
       if (editingIndex !== null) {
-        setItems((prev) => prev.map((item, i) => (i === editingIndex ? nextItem : item)));
+        setItems((prev) => prev.map((item, i) => (i === editingIndex ? { ...item, ...data } : item)));
       } else {
-        setItems((prev) => [...prev, nextItem]);
+        setItems((prev) => [...prev, data]);
       }
       setModalOpen(false);
     } catch (error) {
@@ -197,7 +189,7 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-3">
         <FormSection title={t("visitForm.sections.when")}>
         <FormField
           control={control}
@@ -352,12 +344,12 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
                     )}
                     <div className="absolute right-1 top-1 flex gap-1">
                       <Button type="button" variant="ghost" size="sm" aria-label={t("common.edit")} onClick={() => openEdit(i)}
-                        className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
-                        <Pencil className="h-3 w-3" />
+                        className="h-10 w-10 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
+                        <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button type="button" variant="ghost" size="sm" aria-label={t("common.remove")} onClick={() => handleRemoveItem(i)}
-                        className="h-6 w-6 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
-                        <X className="h-3 w-3" />
+                      <Button type="button" variant="ghost" size="sm" aria-label={t("common.remove")} onClick={() => setItemDeleteIndex(i)}
+                        className="h-10 w-10 p-0 bg-black/50 text-white hover:bg-black/70 rounded-md">
+                        <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -405,6 +397,24 @@ export function VisitForm({ initial = {}, initialItems = [], onSubmit, onItemSav
           <DialogFooter className="shrink-0 pt-0">
             <Button variant="secondary" className="h-10" onClick={() => setModalOpen(false)} disabled={isSavingItem}>{t("common.cancel")}</Button>
             <Button type="submit" form={VISIT_ITEM_FORM_ID} className="h-10" disabled={isSavingItem}>{t("common.save")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={itemDeleteIndex !== null} onOpenChange={(open) => {
+        if (!open) setItemDeleteIndex(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("visitForm.removeItemTitle")}</DialogTitle>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="secondary" onClick={() => setItemDeleteIndex(null)}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleRemoveItem}>
+              {t("common.remove")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
