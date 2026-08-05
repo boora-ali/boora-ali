@@ -73,6 +73,38 @@ test("renders collection snapshot", async () => {
   expect(screen.getByText(/Os melhores/)).toBeInTheDocument();
 });
 
+test("uses the Places neo-brutalist card treatment", async () => {
+  vi.mocked(shareService.getCollectionShare).mockResolvedValue({
+    name: "Cafés favoritos",
+    emoji: "☕",
+    description: "Os melhores",
+    place_count: 1,
+    places: [
+      {
+        source_public_id: "place-1",
+        name: "Café X",
+        category: "cafe",
+        address: "Rua das Flores, 10",
+        instagram_url: "",
+        maps_url: "",
+        coords_status: "resolved",
+        latitude: null,
+        longitude: null,
+        status: "favorite",
+        notes: "",
+        cover_photo_url: null,
+      },
+    ],
+  });
+
+  renderShare();
+
+  const card = await screen.findByRole("article");
+  expect(card).toHaveClass("border-[3px]");
+  expect(card).toHaveClass("border-black");
+  expect(card).toHaveClass("shadow-[6px_6px_0_var(--color-shadow)]");
+});
+
 test("shows login CTA when user is not authenticated", async () => {
   vi.mocked(shareService.getCollectionShare).mockResolvedValue({
     name: "Cafés favoritos",
