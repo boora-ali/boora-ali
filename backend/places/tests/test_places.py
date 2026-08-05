@@ -206,6 +206,16 @@ def test_pagination(auth_client, user):
     assert len(r.data["results"]) == 4
 
 
+def test_categories_can_be_loaded_in_a_single_request(auth_client):
+    baker.make("places.Category", _quantity=21)
+
+    r = auth_client.get("/api/categories/?page_size=1000")
+
+    assert r.status_code == 200
+    assert r.data["count"] == 21
+    assert len(r.data["results"]) == 21
+
+
 def test_detail_includes_consumables_summary(auth_client, user):
     place = baker.make("places.Place", user=user)
     visit = baker.make("places.Visit", place=place)

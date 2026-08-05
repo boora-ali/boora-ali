@@ -84,17 +84,17 @@ export default function SharePage() {
         loadingNode={(
           <div className="min-h-[100dvh] bg-background px-5 py-6">
             <div className="mx-auto max-w-5xl space-y-4">
-              <div className="h-12 w-48 rounded-full bg-border/50 animate-pulse" />
+              <div className="h-12 w-48 border-[3px] border-border bg-border/50 animate-pulse" />
               <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                <div className="space-y-4 rounded-3xl border border-border bg-surface p-4 shadow-sm">
-                  <div className="aspect-[4/3] rounded-2xl bg-border/30 animate-pulse" />
+                <div className="space-y-4 border-[3px] border-border bg-surface p-4 shadow-[6px_6px_0_var(--color-shadow)]">
+                  <div className="aspect-[4/3] bg-border/30 animate-pulse" />
                   <div className="space-y-2.5">
                     <div className="h-2.5 w-16 rounded-full bg-border/50 animate-pulse" />
                     <div className="h-9 w-3/5 rounded-lg bg-border/50 animate-pulse" />
                     <div className="h-2.5 w-4/5 rounded-full bg-border/40 animate-pulse" />
                   </div>
                 </div>
-                <div className="space-y-4 rounded-3xl border border-border bg-surface p-5 shadow-sm">
+                <div className="space-y-4 border-[3px] border-border bg-surface p-5 shadow-[6px_6px_0_var(--color-shadow)]">
                   <div className="h-2.5 w-24 rounded-full bg-border/50 animate-pulse" />
                   <div className="h-24 rounded-2xl bg-border/30 animate-pulse" />
                   <div className="h-10 rounded-2xl bg-border/30 animate-pulse" />
@@ -115,7 +115,7 @@ export default function SharePage() {
                   {t("share.snapshot_label")}
                 </p>
                 <div className="flex flex-wrap items-end gap-4">
-                  <span className="flex h-16 w-16 items-center justify-center rounded-3xl border border-border bg-surface text-3xl shadow-sm">
+                  <span className="flex h-16 w-16 items-center justify-center border-[3px] border-black bg-surface text-3xl shadow-[4px_4px_0_var(--color-shadow)] dark:border-[color:var(--color-border)]">
                     <MapPin className="h-7 w-7 text-primary" />
                   </span>
                   <div>
@@ -128,7 +128,7 @@ export default function SharePage() {
               </header>
 
               <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                <article className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
+                <article className="overflow-hidden border-[3px] border-black bg-surface shadow-[6px_6px_0_var(--color-shadow)] dark:border-[color:var(--color-border)]">
                   <div className="relative aspect-[4/3] bg-border/20">
                     {data.cover_photo_url ? (
                       <ImageWithSpinner
@@ -152,7 +152,7 @@ export default function SharePage() {
                   </div>
                 </article>
 
-                <aside className="space-y-4 rounded-3xl border border-border bg-surface p-5 shadow-sm">
+                <aside className="space-y-4 border-[3px] border-black bg-surface p-5 shadow-[6px_6px_0_var(--color-shadow)] dark:border-[color:var(--color-border)]">
                   <div className="space-y-2">
                     <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-muted/70">
                       {t("share.snapshot_label")}
@@ -169,7 +169,7 @@ export default function SharePage() {
                           href={mapsHref}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-3 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-text transition hover:bg-surface"
+                          className="flex items-center gap-3 border-[3px] border-border bg-background px-4 py-3 text-sm font-bold text-text shadow-[3px_3px_0_var(--color-shadow)] transition-[transform,box-shadow,background-color] hover:translate-x-px hover:translate-y-px hover:bg-surface hover:shadow-[2px_2px_0_var(--color-shadow)]"
                         >
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface">
                             <MapPin className="h-4 w-4 text-primary" />
@@ -182,7 +182,7 @@ export default function SharePage() {
                           href={sanitizeUrl(data.instagram_url)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-3 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-text transition hover:bg-surface"
+                          className="flex items-center gap-3 border-[3px] border-border bg-background px-4 py-3 text-sm font-bold text-text shadow-[3px_3px_0_var(--color-shadow)] transition-[transform,box-shadow,background-color] hover:translate-x-px hover:translate-y-px hover:bg-surface hover:shadow-[2px_2px_0_var(--color-shadow)]"
                         >
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface">
                             <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-primary stroke-[1.8]">
@@ -211,7 +211,7 @@ export default function SharePage() {
                 type="button"
                 aria-label={t("common.back")}
                 onClick={() => nav(-1)}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-surface/70 text-muted transition hover:bg-surface active:scale-[0.97]"
+                className="flex h-12 w-12 shrink-0 items-center justify-center border-[3px] border-border bg-surface text-muted shadow-[3px_3px_0_var(--color-shadow)] transition-[transform,box-shadow,background-color] hover:translate-x-px hover:translate-y-px hover:bg-background hover:shadow-[2px_2px_0_var(--color-shadow)]"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
@@ -219,7 +219,7 @@ export default function SharePage() {
                 type="button"
                 onClick={handleImport}
                 disabled={importing || isLoading || isError}
-                className="h-12 flex-1 rounded-2xl text-sm font-medium tracking-wide"
+                className="h-12 flex-1 text-sm tracking-wide"
               >
                 {importing ? t("share.importing") : t("share.import_button")}
               </Button>
@@ -228,7 +228,7 @@ export default function SharePage() {
             <Link to={`/login?next=/share/${token}`} className="block">
               <button
                 type="button"
-                className="flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-medium tracking-wide text-white shadow-sm transition hover:bg-primary/90 active:scale-[0.98]"
+                className="flex h-12 w-full items-center justify-center border-[3px] border-foreground bg-primary text-sm font-bold tracking-wide text-primary-foreground shadow-[4px_4px_0_var(--color-shadow)] transition-[transform,box-shadow,background-color] hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
               >
                 {t("share.login_to_import")}
               </button>

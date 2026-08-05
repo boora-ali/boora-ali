@@ -84,6 +84,16 @@ describe("SharePage", () => {
     expect(screen.getByRole("link", { name: /instagram/i })).toBeInTheDocument();
   });
 
+  test("uses the Places neo-brutalist card treatment", async () => {
+    (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue(shareData);
+    renderShare();
+
+    const card = await screen.findByRole("article");
+    expect(card).toHaveClass("border-[3px]");
+    expect(card).toHaveClass("border-black");
+    expect(card).toHaveClass("shadow-[6px_6px_0_var(--color-shadow)]");
+  });
+
   test("shows maps link from coordinates when shared place has no Maps URL", async () => {
     (shareService.getShare as ReturnType<typeof vi.fn>).mockResolvedValue({
       ...shareData,
