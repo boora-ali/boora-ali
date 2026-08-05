@@ -302,6 +302,7 @@ class VisitItemViewSet(WriteViewSetBase):
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     lookup_field = "public_id"
+    pagination_class = FlexiblePageNumberPagination
     serializer_class = CategorySerializer
     filterset_class = CategoryFilter
     search_fields = ("name",)

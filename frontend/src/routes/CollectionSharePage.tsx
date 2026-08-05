@@ -102,10 +102,10 @@ export default function CollectionSharePage() {
         loadingNode={(
           <div className="min-h-[100dvh] bg-background px-5 py-6">
             <div className="mx-auto max-w-5xl space-y-4">
-              <div className="h-12 w-44 rounded-full bg-border/50 animate-pulse" />
+              <div className="h-12 w-44 border-[3px] border-border bg-border/50 animate-pulse" />
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, idx) => (
-                  <div key={idx} className="h-80 rounded-3xl border border-border bg-surface/60 animate-pulse" />
+                  <div key={idx} className="h-80 border-[3px] border-border bg-surface/60 shadow-[6px_6px_0_var(--color-shadow)] animate-pulse" />
                 ))}
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function CollectionSharePage() {
                   {t("collections.snapshot_label")}
                 </p>
                 <div className="flex flex-wrap items-end gap-4">
-                  <span className="flex h-16 w-16 items-center justify-center rounded-3xl border border-border bg-surface text-3xl shadow-sm">
+                  <span className="flex h-16 w-16 items-center justify-center border-[3px] border-black bg-surface text-3xl shadow-[4px_4px_0_var(--color-shadow)] dark:border-[color:var(--color-border)]">
                     {data.emoji}
                   </span>
                   <div>
@@ -135,7 +135,7 @@ export default function CollectionSharePage() {
               </header>
 
               {places.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 rounded-3xl border border-border bg-surface/70 px-6 py-16 text-center">
+                <div className="flex flex-col items-center gap-3 border-[3px] border-black bg-surface px-6 py-16 text-center shadow-[6px_6px_0_var(--color-shadow)] dark:border-[color:var(--color-border)]">
                   <FolderOpen className="h-8 w-8 text-muted" />
                   <p className="font-fraunces text-lg font-semibold text-text">{t("collections.empty_places")}</p>
                 </div>
@@ -156,7 +156,7 @@ export default function CollectionSharePage() {
                     return (
                       <article
                         key={place.source_public_id}
-                        className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm"
+                        className="overflow-hidden border-[3px] border-black bg-surface shadow-[6px_6px_0_var(--color-shadow)] dark:border-[color:var(--color-border)]"
                       >
                         <div className="relative aspect-[4/3] bg-border/20">
                           {place.cover_photo_url ? (
@@ -191,7 +191,7 @@ export default function CollectionSharePage() {
                                 href={mapsHref}
                                 target="_blank"
                                 rel="noreferrer noopener"
-                                className="rounded-full border border-border px-3 py-1.5 text-muted transition hover:text-text"
+                                className="border-[3px] border-border bg-background px-3 py-1.5 font-bold text-text shadow-[3px_3px_0_var(--color-shadow)] transition-[transform,box-shadow,background-color] hover:translate-x-px hover:translate-y-px hover:bg-surface hover:shadow-[2px_2px_0_var(--color-shadow)]"
                               >
                                 {t("share.view_maps")}
                               </a>
@@ -201,7 +201,7 @@ export default function CollectionSharePage() {
                                 href={instagramHref}
                                 target="_blank"
                                 rel="noreferrer noopener"
-                                className="rounded-full border border-border px-3 py-1.5 text-muted transition hover:text-text"
+                                className="border-[3px] border-border bg-background px-3 py-1.5 font-bold text-text shadow-[3px_3px_0_var(--color-shadow)] transition-[transform,box-shadow,background-color] hover:translate-x-px hover:translate-y-px hover:bg-surface hover:shadow-[2px_2px_0_var(--color-shadow)]"
                               >
                                 {t("share.view_instagram")}
                               </a>
@@ -222,11 +222,11 @@ export default function CollectionSharePage() {
         <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/90 px-5 pb-7 pt-4 backdrop-blur-md">
           <div className="mx-auto max-w-5xl">
             {authLoading ? (
-              <div className="h-12 rounded-2xl border border-border/60 bg-surface/70 animate-pulse" />
+              <div className="h-12 border-[3px] border-border bg-surface animate-pulse" />
             ) : user ? (
               <Button
                 type="button"
-                className="h-12 w-full rounded-2xl text-sm font-medium tracking-wide"
+                className="h-12 w-full text-sm tracking-wide"
                 onClick={handleSaveCollection}
                 disabled={saving}
               >
@@ -236,7 +236,7 @@ export default function CollectionSharePage() {
               <Link to={`/login?next=/share/collections/${token}`} className="block">
                 <button
                   type="button"
-                  className="flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-medium tracking-wide text-white shadow-sm transition hover:bg-primary/90 active:scale-[0.98]"
+                className="flex h-12 w-full items-center justify-center border-[3px] border-foreground bg-primary text-sm font-bold tracking-wide text-primary-foreground shadow-[4px_4px_0_var(--color-shadow)] transition-[transform,box-shadow,background-color] hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
                 >
                   {t("collections.login_to_save")}
                 </button>
